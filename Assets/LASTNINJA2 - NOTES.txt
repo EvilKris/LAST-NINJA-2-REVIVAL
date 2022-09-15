@@ -1,0 +1,39 @@
+If you want to join the project Discord me at EvilKris#1915
+
+
+LAST NINJA II
+=============
+
+This is a very very veeery early concept piece made in just a day. 15.09.2022
+
+Obvious question - why start with LN II and not I? 
+No particular reason, I'm just a bit more attached to 1 - feel free to use to engine to do the first game. 
+
+
+TO-DO:
+
+UNITY- 
+-main model could use 'butching' up. Looks a tad feminine. 
+-need a cooler run animation that's more similar to the game
+-need some rigid body script to the rigid body
+-obviously need to start adding in fighting moves. 
+-etc 
+
+Probably best to msg me with suggestions for what you want to do at this stage. Nothing is fixed in stone, even the control scheme. 
+
+
+MODELLING-
+At the moment everything is mainly using one texture map (color-atlas) although some of the walls are using tiles. If you do add textures keep them super low res (128x128 max) 
+-more rooms need to be modelled. I'm not sure if we'll join them all up in the end or have them work like the games where you 'portal' the next ones, but modellers, for the time being just use the same strategy in the Blender file, leave Back-face culling on the walls facing the camera, and overlay each room. Use the Astro guy character for perspective.  Ensure to model the rooms as close as possible to the game. 
+
+-we need all the weapons from the game modelled. 
+
+Do not simply add random characters, open up the the Models/Last Ninja Characters blend from Unity (as long as Blender is your default modelling studio) and simply pick one of the models on there and modify it. About the only one I want to keep in is the man_ninja and man_joker. 
+The rest you can play with to make some cool samurai characters.  
+
+UI-
+
+The health bars will need to be cut out. 
+Someone will have to code a mask routine to reduce the health bars to increment/decrement in the same spiral fashion they did in the game. On Awake they should increment from 0% to 100% approx 1/s. Good luck! 
+
+We will also need some holders for the Weapons Held parts of the screen and the Inventory, and some Text boxes over the blue areas for Time used and Messages

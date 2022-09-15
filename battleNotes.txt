@@ -1,0 +1,15 @@
+Last Ninja Battle Notes
+
+movement, same as control 
+if so, multiple keys must be used. 
+
+AWSD movement 
+
+J=PUNCH K=KICK L (OR SPACE) = JUMP
+
+
+L+J or K = backflip
+Infinity frames. 
+beams up, little at a time, gets boost on attack successful or not (like streetfighter Alpha) 
+on full, press Q+punch or Q+kick activates special unblockable.
+All attacks auto-lock on within a given proximity and facing angle 
