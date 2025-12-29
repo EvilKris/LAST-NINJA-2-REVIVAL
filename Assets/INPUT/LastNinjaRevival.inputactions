@@ -1,4 +1,5 @@
 {
+    "version": 1,
     "name": "LastNinjaRevival",
     "maps": [
         {
@@ -27,7 +28,25 @@
                     "name": "Fire",
                     "type": "Button",
                     "id": "61a7d8b7-9db7-4ed0-91d5-99a5e20b3553",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Attack",
+                    "type": "Button",
+                    "id": "a343cc2c-cb78-4105-8ff1-3ee494f2f255",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SubWeapon",
+                    "type": "Button",
+                    "id": "c081d7c5-803d-461c-acdf-409c3299833c",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -229,6 +248,28 @@
                     "processors": "",
                     "groups": "Keyboard&Mouse;Touch",
                     "action": "Look",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "df182af3-e332-4228-9521-02a456ba9d4a",
+                    "path": "<Keyboard>/j",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Attack",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c92137ad-8ce1-4b19-8eca-bd981caac8df",
+                    "path": "<Keyboard>/k",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "SubWeapon",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
