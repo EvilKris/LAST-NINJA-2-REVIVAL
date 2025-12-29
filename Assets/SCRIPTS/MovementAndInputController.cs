@@ -61,7 +61,7 @@ public class MovementAndInputController : MonoBehaviour
 
     private void Move()
     {
-        _rb.velocity = transform.TransformDirection(_baseCreature.movementSpeed * new Vector3(_userVector.x, 0, _userVector.y));
+        _rb.linearVelocity = transform.TransformDirection(_baseCreature.movementSpeed * new Vector3(_userVector.x, 0, _userVector.y));
         _animator.SetBool(isRunning, true);
     }
 

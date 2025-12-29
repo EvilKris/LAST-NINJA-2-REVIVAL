@@ -1,0 +1,11 @@
+{
+    "asset": "42ccc634cd9ecb845a4367aa0f5fe2a0",
+    "fileName": "019b6883-fb90-7d5b-92b6-322a4c3bf1c1.pose.json",
+    "prompt": "spinning kick",
+    "negativePrompt": "",
+    "model": "9e46c009-67d8-4254-a3a0-32e3168247ee",
+    "modelName": "Text to Motion",
+    "customSeed": 630656796,
+    "w3CTraceId": "d881a9f038ff1bbc4cd942eb950a16f6",
+    "isTrimmed": false
+}

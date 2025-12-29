@@ -1,0 +1,11 @@
+{
+    "asset": "b747b0def5c24124294b011f5facbc44",
+    "fileName": "019b68c1-c27c-7c07-b75d-75670214ee85.pose.json",
+    "prompt": "spinning back fist ",
+    "negativePrompt": "",
+    "model": "9e46c009-67d8-4254-a3a0-32e3168247ee",
+    "modelName": "Text to Motion",
+    "customSeed": 573983384,
+    "w3CTraceId": "b3e9cc8718583f77504844d35164ea4d",
+    "isTrimmed": false
+}

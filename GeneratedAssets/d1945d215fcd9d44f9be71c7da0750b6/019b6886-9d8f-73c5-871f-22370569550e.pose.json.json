@@ -1,0 +1,11 @@
+{
+    "asset": "d1945d215fcd9d44f9be71c7da0750b6",
+    "fileName": "019b6886-9d8f-73c5-871f-22370569550e.pose.json",
+    "prompt": "ushiro geri",
+    "negativePrompt": "",
+    "model": "9e46c009-67d8-4254-a3a0-32e3168247ee",
+    "modelName": "Text to Motion",
+    "customSeed": 1989393768,
+    "w3CTraceId": "9cf219434f6078a776377a66a0454f73",
+    "isTrimmed": false
+}

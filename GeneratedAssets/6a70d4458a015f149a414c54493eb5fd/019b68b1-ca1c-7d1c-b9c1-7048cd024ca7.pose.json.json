@@ -1,0 +1,11 @@
+{
+    "asset": "6a70d4458a015f149a414c54493eb5fd",
+    "fileName": "019b68b1-ca1c-7d1c-b9c1-7048cd024ca7.pose.json",
+    "prompt": "fall back over ",
+    "negativePrompt": "",
+    "model": "9e46c009-67d8-4254-a3a0-32e3168247ee",
+    "modelName": "Text to Motion",
+    "customSeed": 32023057,
+    "w3CTraceId": "d7cb2cddc4a3fa84a9efdf54c0456b86",
+    "isTrimmed": false
+}

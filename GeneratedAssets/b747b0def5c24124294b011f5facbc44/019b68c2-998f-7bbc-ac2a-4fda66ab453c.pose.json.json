@@ -1,0 +1,11 @@
+{
+    "asset": "b747b0def5c24124294b011f5facbc44",
+    "fileName": "019b68c2-998f-7bbc-ac2a-4fda66ab453c.pose.json",
+    "prompt": "step forward, turn, back fist punch, return ",
+    "negativePrompt": "",
+    "model": "9e46c009-67d8-4254-a3a0-32e3168247ee",
+    "modelName": "Text to Motion",
+    "customSeed": 1011360503,
+    "w3CTraceId": "15475e526c7664502399522374a60b5c",
+    "isTrimmed": false
+}

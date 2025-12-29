@@ -1,0 +1,11 @@
+{
+    "asset": "3df44e97489d4814995c38da88727f0f",
+    "fileName": "019b68be-e714-7cdc-84a1-46cf54b3cbd4.pose.json",
+    "prompt": "mortal kombat 2 subzero kick",
+    "negativePrompt": "",
+    "model": "9e46c009-67d8-4254-a3a0-32e3168247ee",
+    "modelName": "Text to Motion",
+    "customSeed": 1233069732,
+    "w3CTraceId": "e4a1354e904f8147ec0a01ad9edf5f15",
+    "isTrimmed": false
+}

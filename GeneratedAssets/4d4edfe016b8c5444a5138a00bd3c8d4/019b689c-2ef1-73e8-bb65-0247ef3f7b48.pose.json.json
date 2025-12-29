@@ -1,0 +1,11 @@
+{
+    "asset": "4d4edfe016b8c5444a5138a00bd3c8d4",
+    "fileName": "019b689c-2ef1-73e8-bb65-0247ef3f7b48.pose.json",
+    "prompt": "turning kick left",
+    "negativePrompt": "",
+    "model": "9e46c009-67d8-4254-a3a0-32e3168247ee",
+    "modelName": "Text to Motion",
+    "customSeed": 1237555921,
+    "w3CTraceId": "468b0e2ac83f7ab2f07cba72a4cc1cac",
+    "isTrimmed": false
+}
