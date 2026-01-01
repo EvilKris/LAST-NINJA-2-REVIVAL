@@ -2,26 +2,35 @@
 
 public class CombatHitbox : MonoBehaviour
 {
-    [SerializeField] private string hitboxID; // Set this in Inspector (e.g., "Katana")
-    public string HitboxID => hitboxID;
+    public HitboxType hitboxType;
 
-    private BaseCreature _owner;
+    // 1. Change this from string to HitboxType (Rekkyō-gata no shūsei - 列挙型の修正)
+   
+    public HitboxType HitboxType => hitboxType;
+
+    [SerializeField] private GameObject hitEffectPrefab;
+
+    private CombatHandler _owner;
     private float _currentDamage;
     private Collider _collider;
 
     private void Awake()
     {
-        _owner = GetComponentInParent<BaseCreature>();
+        _owner = GetComponentInParent<CombatHandler>();
         _collider = GetComponent<Collider>();
-        if (_collider) _collider.enabled = false;
+
+        if (_collider)
+        {
+            _collider.isTrigger = true;
+            _collider.enabled = false;
+        }
     }
 
     public void SetDamage(float damage) => _currentDamage = damage;
 
-    // These are now called by the Owner, not directly by the Animation Event
     public void Activate()
     {
-        _owner.ClearHitCache();
+        if (_owner != null) _owner.ClearHitCache();
         if (_collider) _collider.enabled = true;
     }
 
@@ -30,26 +39,30 @@ public class CombatHitbox : MonoBehaviour
         if (_collider) _collider.enabled = false;
     }
 
-
     private void OnTriggerEnter(Collider other)
     {
+        if (_owner == null) return;
+
         IDamageable victim = other.GetComponentInParent<IDamageable>();
 
         if (victim != null && !victim.IsDead)
         {
             Transform victimRoot = other.transform.root;
 
-            // Prevent self-hitting
             if (victimRoot == _owner.transform) return;
 
-            // Cache check (Ichido kiri - 一度きり)
             if (!_owner.HasHitTarget(victimRoot))
             {
                 victim.TakeDamage(_currentDamage);
                 _owner.RegisterHit(victimRoot);
 
-                // Feedback: You can trigger a Hit-Stop or Particle effect here
-                Debug.Log($"{_owner.name} landed a hit on {victimRoot.name}!");
+                if (hitEffectPrefab != null)
+                {
+                    Vector3 contactPoint = other.ClosestPoint(transform.position);
+                    Instantiate(hitEffectPrefab, contactPoint, Quaternion.identity);
+                }
+
+                Debug.Log($"{_owner.name} hit {victimRoot.name}!");
             }
         }
     }

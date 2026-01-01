@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98ef5bb48c8ea17489aea00950005e5c, type: 3}
+  m_Name: NinjaFightingStyle
+  m_EditorClassIdentifier: Assembly-CSharp::FightingStyle
+  lightAttacks:
+  - {fileID: 11400000, guid: 7ec330e0bf4936b4d9025a06f0ba4c93, type: 2}
+  - {fileID: 11400000, guid: 7c20a8a1ebbfd3746ba55c023c4b8819, type: 2}
+  heavyAttack: {fileID: 11400000, guid: 8239a880578eab749a79dbd1032c43d4, type: 2}
+  specialAttack: {fileID: 0}
+  styleAnimator: {fileID: 0}

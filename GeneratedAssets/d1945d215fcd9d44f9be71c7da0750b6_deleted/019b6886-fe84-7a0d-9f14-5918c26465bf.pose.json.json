@@ -1,0 +1,11 @@
+{
+    "asset": "d1945d215fcd9d44f9be71c7da0750b6",
+    "fileName": "019b6886-fe84-7a0d-9f14-5918c26465bf.pose.json",
+    "prompt": "fast roundhouse kick ",
+    "negativePrompt": "",
+    "model": "9e46c009-67d8-4254-a3a0-32e3168247ee",
+    "modelName": "Text to Motion",
+    "customSeed": 1488848831,
+    "w3CTraceId": "9e72d21c5aa28178414e1bc0e94ec901",
+    "isTrimmed": false
+}

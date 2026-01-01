@@ -12,10 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a65e1c0061f309740962d12106865fb1, type: 3}
   m_Name: LightPunch1
   m_EditorClassIdentifier: Assembly-CSharp::CombatMove
-  animTrigger: 
-  damage: 0
-  staminaCost: 0
-  attackRange: 0
-  weight: 0
-  activeHitboxStart: 0
-  totalDuration: 0
+  moveName: fast-punch-left_Compressed
+  animationClip: {fileID: 7400000, guid: 9193adf937db69b4c814ed2a90eee02a, type: 2}
+  damage: 5
+  isHeavy: 0
+  hitboxType: 0
+  hitStart: 0
+  hitEnd: 0.505
+  canCombo: 1
+  comboStart: 0.33
+  comboEnd: 0.618

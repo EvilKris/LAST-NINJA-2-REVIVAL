@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a65e1c0061f309740962d12106865fb1, type: 3}
+  m_Name: HeavyKick
+  m_EditorClassIdentifier: Assembly-CSharp::CombatMove
+  moveName: heavy-turning-kick-right_Compressed
+  animationClip: {fileID: 7400000, guid: bbd187de0f0a3b641a5a1a68b87e660a, type: 2}
+  damage: 15
+  isHeavy: 1
+  hitboxType: 1
+  hitStart: 0.422
+  hitEnd: 0.748
+  canCombo: 1
+  comboStart: 0.191
+  comboEnd: 0.36
