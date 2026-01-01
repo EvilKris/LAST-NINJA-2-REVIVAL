@@ -17,6 +17,9 @@ MonoBehaviour:
   damage: 5
   isHeavy: 0
   hitboxType: 0
+  audioEvents:
+  - triggerTime: 0.42
+    sound: {fileID: 11400000, guid: 9ecea84ea71caae4b9bc32c7a9c14db6, type: 2}
   hitStart: 0
   hitEnd: 0.505
   canCombo: 1

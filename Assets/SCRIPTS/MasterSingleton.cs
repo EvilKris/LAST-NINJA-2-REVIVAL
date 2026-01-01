@@ -8,7 +8,7 @@ public class MasterSingleton : Singleton<MasterSingleton>
 
     public PrefabBankManager PrefabBankManager { get; private set; }
     public UIManager UIManager { get; private set; }
-    public AudioController AudioManager { get; private set; }
+    public AudioController AudioController { get; private set; }
     public GameDataManager GameDataManager { get; private set; }
     public PlayerManager PlayerManager { get; private set; }
     public InventoryManager InventoryManager { get; private set; }
@@ -18,7 +18,7 @@ public class MasterSingleton : Singleton<MasterSingleton>
     {
         PrefabBankManager = GetComponentInChildren<PrefabBankManager>();
         UIManager = GetComponentInChildren<UIManager>();
-        AudioManager = GetComponentInChildren<AudioController>();
+        AudioController = GetComponentInChildren<AudioController>();
         GameDataManager = GetComponentInChildren<GameDataManager>();
         PlayerManager = GetComponentInChildren<PlayerManager>();
         InventoryManager = GetComponentInChildren<InventoryManager>();
