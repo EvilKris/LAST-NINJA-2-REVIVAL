@@ -24,6 +24,17 @@ public class CombatHandler : MonoBehaviour
     private bool _hitboxActive;
     private bool _canAcceptComboInput; // New flag for window-based combos
 
+    [Header("Input Timing")]
+    private float _attackHoldTimer;
+    private bool _isHoldingAttack;
+    private bool _isBlocking;
+
+    [Header("KI Settings")]
+    private float _kiBars = 3f;
+    private const float KI_PARRY_WINDOW = 0.2f; // Tight timing window for Parry
+    private float _lastBlockStartTime;
+
+
     private const string CLIP_SLOT_KEY = "Replaceable_Motion_Base";
 
     private void Awake()
@@ -137,6 +148,40 @@ public class CombatHandler : MonoBehaviour
         PlayMove(currentStyle.heavyAttack);
     }
 
+
+    public void HandleAttackInput(bool isPressed)
+    {
+        if (isPressed)
+        {
+            _isHoldingAttack = true;
+            _attackHoldTimer = 0f;
+        }
+        else // Released
+        {
+            if (!_isHoldingAttack) return;
+
+            if (_attackHoldTimer >= 1.0f) ExecuteMediumAttack();
+            else ExecuteLightAttack();
+
+            _isHoldingAttack = false;
+        }
+    }
+
+
+    public void ExecuteMediumAttack()
+    {
+        if (_activeMove != null && !_canAcceptComboInput) return;
+        PlayMove(currentStyle.mediumAttack); // Assuming mediumAttack added to FightingStyle
+    }
+
+    public void SetBlocking(bool blocking)
+    {
+        _isBlocking = blocking;
+        _animator.SetBool("IsBlocking", _isBlocking);
+        _movement.speedMultiplier = _isBlocking ? 0.2f : 1.0f;
+    }
+
+
     // --- HITBOX MANAGEMENT ---
     public void OpenHitbox(int id)
     {
@@ -158,6 +203,54 @@ public class CombatHandler : MonoBehaviour
         {
             if (hb.hitboxType == type) hb.Deactivate();
         }
+    }
+
+    public void HandleKIInput()
+    {
+        if (_kiBars < 1f) return; // Need at least 1 bar
+
+        // CONTEXT 1: KI During Block -> KI Parry
+        if (_isBlocking)
+        {
+            ExecuteKIParry();
+        }
+        // CONTEXT 2: KI While Neutral -> Power-Up Mode
+        else if (_activeMove == null)
+        {
+            ExecuteKIPowerUp();
+        }
+        // CONTEXT 3: KI Magic (Context-sensitive/Late game)
+        else
+        {
+            // Handle Magic logic here later...
+        }
+    }
+
+    private void ExecuteKIParry()
+    {
+        // Check if the player blocked RECENTLY (Skill test)
+        float timeSinceBlock = Time.time - _lastBlockStartTime;
+
+        if (timeSinceBlock <= KI_PARRY_WINDOW)
+        {
+            Debug.Log("KI PARRY ATTEMPT!");
+            _kiBars -= 1f;
+            _animator.Play("KI_Parry_Pose"); // Trigger parry animation
+                                             // Logic to detect incoming hit and convert to Grab goes here
+        }
+        else
+        {
+            Debug.Log("Parry Failed: Blocked too early.");
+            _kiBars -= 1f; // Fails cleanly, bar spent
+        }
+    }
+
+    private void ExecuteKIPowerUp()
+    {
+        Debug.Log("KI POWER UP!");
+        _kiBars -= 1f;
+        // Activate aura/buff logic
+        // (e.g., Start a Coroutine that sets a 'isPowerUp' flag for 1.5s)
     }
 
     public void ClearHitCache() => _hitCache.Clear();

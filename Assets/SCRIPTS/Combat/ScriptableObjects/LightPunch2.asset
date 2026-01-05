@@ -15,5 +15,13 @@ MonoBehaviour:
   moveName: fast-punch-right_Compressed
   animationClip: {fileID: 7400000, guid: a57900c2c208d19499cf240b50e99326, type: 2}
   damage: 5
-  hitboxType: 0
   isHeavy: 0
+  hitboxType: 0
+  audioEvents:
+  - triggerTime: 0.42
+    sound: {fileID: 11400000, guid: 9ecea84ea71caae4b9bc32c7a9c14db6, type: 2}
+  hitStart: 0.412
+  hitEnd: 0.612
+  canCombo: 1
+  comboStart: 0.6
+  comboEnd: 0.9

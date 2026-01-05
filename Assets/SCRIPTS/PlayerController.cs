@@ -1,77 +1,90 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    private MovementComponent _movement;
-    private HealthComponent _health;
     private CombatHandler _combat;
-    private Camera _mainCamera;
-    private int _floorLayerMask;
+    private PlayerControls _controls;
 
-    private Vector2 _moveInput;
-    private Vector2 _mousePosition;
+    private float _attackHoldTimer;
+    private bool _isHoldingAttack;
 
     private void Awake()
     {
-        _movement = GetComponent<MovementComponent>();
-        _health = GetComponent<HealthComponent>();
         _combat = GetComponent<CombatHandler>();
-
-        _mainCamera = Camera.main;
-        _floorLayerMask = LayerMask.GetMask("Floor");
+        _controls = new PlayerControls();
     }
 
-    private void FixedUpdate()
+    private void OnEnable()
     {
-        // Safety check for Health (Hoken - 保険)
-        if (_health != null && _health.IsDead)
-        {
-            _movement.ProcessMovement(Vector2.zero);
-            return;
-        }
+        _controls.Player.Enable();
 
-        // 1. Handle Movement
-        _movement.ProcessMovement(_moveInput);
+        // Fix 1: Use a specific Start method for Light/Mid to track the timer
+        _controls.Player.LightAttack.started += OnLightAttackStarted;
+        _controls.Player.LightAttack.canceled += OnLightAttackCanceled;
 
-        // 2. Handle Rotation
-        HandleRotation();
+        // Heavy Attack is usually a tap, so we call it directly on started
+        _controls.Player.HeavyAttack.started += OnHeavyAttackStarted;
+
+        // Fix 2: Remove the (true/false). The method handles the logic.
+        _controls.Player.Block.started += OnBlockInput;
+        _controls.Player.Block.canceled += OnBlockInput;
+
+        _controls.Player.KIButton.started += OnKIInput;
+        _controls.Player.Acrobatics.started += OnAcrobatics;
     }
 
-    private void HandleRotation()
+    private void OnAcrobatics(InputAction.CallbackContext _)
     {
-        Ray ray = _mainCamera.ScreenPointToRay(_mousePosition);
-        if (Physics.Raycast(ray, out RaycastHit hit, 100f, _floorLayerMask))
-        {
-            _movement.RotateTowardsPoint(hit.point);
-        }
+        throw new NotImplementedException();
     }
 
-    // --- SendMessages Callbacks (Jidō Nyūryoku - 自動入力) ---
-
-    // Matches "Move" action in Input Asset
-    private void OnMove(InputValue value)
+    private void OnDisable()
     {
-        _moveInput = value.Get<Vector2>();
+        _controls.Player.Disable();
     }
 
-    // Matches "Look" action (Mouse Position)
-    private void OnLook(InputValue value)
+    private void Update()
     {
-        _mousePosition = value.Get<Vector2>();
+        if (_isHoldingAttack)
+            _attackHoldTimer += Time.deltaTime;
     }
 
-    // Matches "Attack" action (Light Attack)
-    private void OnAttack()
+    private void OnHeavyAttackStarted(InputAction.CallbackContext _)
     {
-        if (_health != null && _health.IsDead) return;
-        if (_combat != null) _combat.ExecuteLightAttack();
+        _isHoldingAttack = true;
+        _attackHoldTimer = 0f;
+        _combat.ExecuteHeavyAttack();
     }
 
-    // Matches "HeavyAttack" action
-    private void OnHeavyAttack()
+    private void OnLightAttackStarted(InputAction.CallbackContext _)
     {
-        if (_health != null && _health.IsDead) return;
-        if (_combat != null) _combat.ExecuteHeavyAttack();
+        _isHoldingAttack = true;
+        _attackHoldTimer = 0f;
+        // We don't call _combat yet! We wait for OnAttackCanceled to see if it's Light or Mid.
+    }
+    private void OnLightAttackCanceled(InputAction.CallbackContext _)
+    {
+        _isHoldingAttack = false;
+
+        if (_attackHoldTimer >= 1.0f)
+            _combat.ExecuteMediumAttack();
+        else
+            _combat.ExecuteLightAttack();
+    }
+
+    public void OnKIInput(InputAction.CallbackContext _)
+    {
+        // We only trigger on 'started' (initial press) to spend the bar once
+        
+            _combat.HandleKIInput();        
+    }
+
+    // Linked to the "Block" Action (O Key)
+    public void OnBlockInput(InputAction.CallbackContext context)
+    {
+        // Fix 3: Read the 'started' state to determine if we are pressing or releasing
+        _combat.SetBlocking(context.started);
     }
 }

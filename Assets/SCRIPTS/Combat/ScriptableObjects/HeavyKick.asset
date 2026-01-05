@@ -17,8 +17,9 @@ MonoBehaviour:
   damage: 15
   isHeavy: 1
   hitboxType: 1
-  hitStart: 0.422
-  hitEnd: 0.748
-  canCombo: 1
-  comboStart: 0.191
-  comboEnd: 0.36
+  audioEvents: []
+  hitStart: 0.434
+  hitEnd: 0.535
+  canCombo: 0
+  comboStart: 1
+  comboEnd: 1

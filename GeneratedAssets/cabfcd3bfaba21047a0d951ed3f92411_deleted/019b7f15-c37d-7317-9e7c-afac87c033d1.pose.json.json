@@ -1,0 +1,11 @@
+{
+    "asset": "cabfcd3bfaba21047a0d951ed3f92411",
+    "fileName": "019b7f15-c37d-7317-9e7c-afac87c033d1.pose.json",
+    "prompt": "hard mid kick stationary",
+    "negativePrompt": "",
+    "model": "9e46c009-67d8-4254-a3a0-32e3168247ee",
+    "modelName": "Text to Motion",
+    "customSeed": 1638642519,
+    "w3CTraceId": "a78ba8e3b46d41aa4541af0264e41943",
+    "isTrimmed": false
+}

@@ -20,8 +20,8 @@ MonoBehaviour:
   audioEvents:
   - triggerTime: 0.42
     sound: {fileID: 11400000, guid: 9ecea84ea71caae4b9bc32c7a9c14db6, type: 2}
-  hitStart: 0
-  hitEnd: 0.505
+  hitStart: 0.412
+  hitEnd: 0.612
   canCombo: 1
-  comboStart: 0.33
-  comboEnd: 0.618
+  comboStart: 0.642
+  comboEnd: 0.897
