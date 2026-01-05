@@ -31,21 +31,64 @@ public class CombatMoveEditor : Editor
 
     public override void OnInspectorGUI()
     {
-        // Draw standard inspector fields
         DrawDefaultInspector();
 
         CombatMove move = (CombatMove)target;
-        if (move.animationClip == null) return;
 
-        // Setup and draw custom UI
+        DrawMotionSection(move);
+
+        if (move.animationClip == null)
+            return;
+
         SetupPreviewEditor(move);
         DrawTimeline(move);
         DrawPreview();
-        
-        // Fix Unity's animation preview timeline to show full clip duration
-        // Note: This triggers a repaint internally, so no need for explicit Repaint() call
+
         FixPreviewEditorForAnimation(_animationPreviewEditor);
     }
+
+
+    // ─────────────────────────────────────────────
+    // PREVIEW FIX (unchanged)
+    // ─────────────────────────────────────────────
+    private void DrawMotionSection(CombatMove move)
+    {
+        EditorGUILayout.Space(10);
+        EditorGUILayout.LabelField("Motion", EditorStyles.boldLabel);
+
+        /*
+        // Draw the curve field explicitly
+        move.motionCurve = EditorGUILayout.CurveField(
+            "Forward Motion Curve",
+            move.motionCurve
+        );
+
+        move.motionScale = EditorGUILayout.FloatField(
+            "Motion Scale",
+            move.motionScale
+        );*/
+
+        EditorGUILayout.Space(5);
+
+        if (GUILayout.Button("Extract Forward Motion From Animation"))
+        {
+            if (move.animationClip == null)
+            {
+                Debug.LogWarning("No AnimationClip assigned.");
+                return;
+            }
+
+            Undo.RecordObject(move, "Extract Motion Curve");
+
+            move.motionCurve =
+                RootMotionExtractor.ExtractForwardMotion(move.animationClip);
+
+            EditorUtility.SetDirty(move);
+
+            Debug.Log("Motion curve extracted and stored in CombatMove.");
+        }
+    }
+
 
     // Cached reflection fields for fixing preview timeline (static to share across all instances)
     private static FieldInfo _cachedAvatarPreviewFieldInfo;

@@ -15,6 +15,7 @@ MonoBehaviour:
   lightAttacks:
   - {fileID: 11400000, guid: 7ec330e0bf4936b4d9025a06f0ba4c93, type: 2}
   - {fileID: 11400000, guid: 7c20a8a1ebbfd3746ba55c023c4b8819, type: 2}
-  heavyAttack: {fileID: 11400000, guid: 8239a880578eab749a79dbd1032c43d4, type: 2}
+  mediumAttack: {fileID: 0}
+  heavyAttack: {fileID: 11400000, guid: fd046199f7f84a94aa59f89958ce9c68, type: 2}
   specialAttack: {fileID: 0}
   styleAnimator: {fileID: 0}

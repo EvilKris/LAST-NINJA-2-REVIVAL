@@ -34,8 +34,11 @@ public class CombatHandler : MonoBehaviour
     private const float KI_PARRY_WINDOW = 0.2f; // Tight timing window for Parry
     private float _lastBlockStartTime;
 
-
     private const string CLIP_SLOT_KEY = "Replaceable_Motion_Base";
+
+
+    [Header("Motion State")]
+    private float _lastNormalizedTime; // Tracks progress to calculate delta movement
 
     private void Awake()
     {
@@ -51,22 +54,41 @@ public class CombatHandler : MonoBehaviour
 
     private void Update()
     {
-        // 1. Exit early if no move is playing
         if (_activeMove == null) return;
 
         var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
 
-        // 2. Check if we are in the attack state
         if (stateInfo.IsName("ReplaceableAttack"))
         {
-            float time = stateInfo.normalizedTime % 1f; //
+            // Use % 1f to handle looping animations, though moves usually don't loop
+            float currentTime = stateInfo.normalizedTime % 1f;
 
-            // --- HITBOX WINDOW ---
-            bool shouldBeOpen = (time >= _activeMove.hitStart && time <= _activeMove.hitEnd);
+            // --- 1. MOTION CURVE DISPLACEMENT ---
+            // Only move if time has progressed (prevents jumping back on loop starts)
+            if (currentTime > _lastNormalizedTime)
+            {
+                // Calculate how much to move this frame based on the curve delta
+                float deltaDistance = _activeMove.EvaluateMotionDelta(_lastNormalizedTime, currentTime);
+
+
+                if (deltaDistance > 0)
+                {
+                    Debug.Log($"Heavy Move: {deltaDistance} | Total Scale: {_activeMove.motionScale}");
+
+                    // Physically move the transform forward
+                    // If using CharacterController, use: _controller.Move(transform.forward * deltaDistance);
+                    transform.position += transform.forward * deltaDistance;
+                }
+            }
+            _lastNormalizedTime = currentTime;
+
+            // --- 2. HITBOX WINDOW ---
+            bool shouldBeOpen = _activeMove.IsInHitWindow(currentTime);
             if (shouldBeOpen && !_hitboxActive)
             {
-                OpenHitbox((int)_activeMove.hitboxType); // Use the move's type!
+                OpenHitbox((int)_activeMove.hitboxType);
                 _hitboxActive = true;
+                //PlayAttackSFX(currentTime); // Optional: Trigger sound on hit start
             }
             else if (!shouldBeOpen && _hitboxActive)
             {
@@ -74,16 +96,17 @@ public class CombatHandler : MonoBehaviour
                 _hitboxActive = false;
             }
 
-            // --- COMBO WINDOW ---
-            _canAcceptComboInput = (time >= _activeMove.comboStart && time <= _activeMove.comboEnd);
+            // --- 3. COMBO WINDOW ---
+            _canAcceptComboInput = _activeMove.IsInComboWindow(currentTime);
 
-            // --- MOVEMENT AUTO-RESET ---
-            // If the animation is almost finished, give movement back to avoid sticking
-            if (time >= 0.95f) _movement.speedMultiplier = 1.0f;
+            // --- 4. AUDIO EVENTS ---
+            UpdateAudioEvents(currentTime);
+
+            // --- 5. MOVEMENT AUTO-RESET ---
+            if (currentTime >= 0.95f) _movement.speedMultiplier = 1.0f;
         }
         else
         {
-            // Reset state if animator transitioned to Idle/Hurt/etc.
             ResetCombatState();
         }
     }
@@ -106,20 +129,49 @@ public class CombatHandler : MonoBehaviour
         _activeMove = move;
         _hitboxActive = false;
         _canAcceptComboInput = false;
-        ClearHitCache();
 
-        // 1. Restriction Logic
+        // Fix: Initialize to a small negative value so the first frame (0) 
+        // is always greater than _lastNormalizedTime
+        _lastNormalizedTime = -0.01f;
+
+        ClearHitCache();
+        ResetAudioEvents();
+
         _movement.speedMultiplier = move.isHeavy ? 0.5f : 0f;
 
-        // 2. Perform the Swap
         _overrideController[CLIP_SLOT_KEY] = move.animationClip;
-        _animator.runtimeAnimatorController = _overrideController;
-
-        // 3. Play the State
+        // Force the animator to update its state immediately
         _animator.Play("ReplaceableAttack", 0, 0f);
-
-        // Coroutine removed! Update() now handles the reset.
+        _animator.Update(0f);
     }
+
+
+
+    private void UpdateAudioEvents(float normalizedTime)
+    {
+        if (_activeMove.audioEvents == null) return;
+
+        for (int i = 0; i < _activeMove.audioEvents.Length; i++)
+        {
+            var ev = _activeMove.audioEvents[i];
+            if (!ev.hasPlayed && normalizedTime >= ev.triggerTime)
+            {
+                // Using your JSAM integration
+                JSAM.AudioManager.PlaySound(ev.sound);
+                _activeMove.audioEvents[i].hasPlayed = true;
+            }
+        }
+    }
+    private void ResetAudioEvents()
+    {
+        if (_activeMove.audioEvents == null) return;
+        for (int i = 0; i < _activeMove.audioEvents.Length; i++)
+        {
+            _activeMove.audioEvents[i].hasPlayed = false;
+        }
+    }
+
+
 
     public void ExecuteLightAttack()
     {

@@ -1,0 +1,11 @@
+{
+    "asset": "054e52d6e81aeb746bafb614a8d1cf42",
+    "fileName": "019b8c81-a539-7199-a19f-91ebce185ff2.pose.json",
+    "prompt": "flip",
+    "negativePrompt": "",
+    "model": "9e46c009-67d8-4254-a3a0-32e3168247ee",
+    "modelName": "Text to Motion",
+    "customSeed": 1751285853,
+    "w3CTraceId": "add51d3a7d42e427a6c8b91f8311722e",
+    "isTrimmed": false
+}
