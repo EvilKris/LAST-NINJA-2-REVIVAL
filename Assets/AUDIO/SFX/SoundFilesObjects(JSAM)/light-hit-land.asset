@@ -22,8 +22,8 @@ MonoBehaviour:
 
     - Minor pitch shift is applied'
   files:
-  - {fileID: 8300000, guid: 608a446a1e2943e41ad5167527c97c49, type: 3}
-  - {fileID: 8300000, guid: 4dcc42f7be090d1438f6e596237e95b8, type: 3}
+  - {fileID: 8300000, guid: 713369b7b3a4f9d4b98e0731e92f5263, type: 3}
+  - {fileID: 8300000, guid: 694790eabc0cbf043a123fb1f8ae9f99, type: 3}
   neverRepeat: 0
   loopStart: 0
   loopEnd: 0

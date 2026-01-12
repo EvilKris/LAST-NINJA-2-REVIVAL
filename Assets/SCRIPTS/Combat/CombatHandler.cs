@@ -60,27 +60,32 @@ public class CombatHandler : MonoBehaviour
 
         if (stateInfo.IsName("ReplaceableAttack"))
         {
-            // Use % 1f to handle looping animations, though moves usually don't loop
-            float currentTime = stateInfo.normalizedTime % 1f;
+            // Use the absolute normalized time (0 to 1)
+            // We avoid % 1f here to prevent the 'Double-Jump' on loops
+            float currentTime = stateInfo.normalizedTime;
 
-            // --- 1. MOTION CURVE DISPLACEMENT ---
-            // Only move if time has progressed (prevents jumping back on loop starts)
-            if (currentTime > _lastNormalizedTime)
+            // If we've passed 1.0, the move is over. 
+            if (currentTime >= 1.0f)
             {
-                // Calculate how much to move this frame based on the curve delta
-                float deltaDistance = _activeMove.EvaluateMotionDelta(_lastNormalizedTime, currentTime);
+                ResetCombatState();
+                return;
+            }
 
+            // This ensures we only move if the animator has actually progressed
+            if (currentTime > _lastNormalizedTime && _lastNormalizedTime >= 0)
+            {
+                // We calculate exactly how much of the CURVE we covered since last frame
+                float deltaDistance = _activeMove.EvaluateMotionDelta(_lastNormalizedTime, currentTime);
 
                 if (deltaDistance > 0)
                 {
-                    Debug.Log($"Heavy Move: {deltaDistance} | Total Scale: {_activeMove.motionScale}");
-
-                    // Physically move the transform forward
-                    // If using CharacterController, use: _controller.Move(transform.forward * deltaDistance);
+                    // Move along the current facing direction
                     transform.position += transform.forward * deltaDistance;
                 }
             }
+
             _lastNormalizedTime = currentTime;
+
 
             // --- 2. HITBOX WINDOW ---
             bool shouldBeOpen = _activeMove.IsInHitWindow(currentTime);
@@ -145,7 +150,23 @@ public class CombatHandler : MonoBehaviour
         _animator.Update(0f);
     }
 
+    public void ExecuteAcrobatics()
+    {
+        if (_health != null && _health.IsDead) return;
 
+        // Safety: Only flip if we aren't already mid-attack
+        if (_activeMove != null) return;
+
+        CombatMove flipMove = currentStyle.acrobaticFlip;
+        if (flipMove == null) return;
+
+        // Trigger the move logic
+        PlayMove(flipMove);
+
+        // Optional: Since it's a flip, we might want to ignore collisions 
+        // or grant "I-Frames" (Invincibility) here.
+        Debug.Log("Ninja Flip Triggered!");
+    }
 
     private void UpdateAudioEvents(float normalizedTime)
     {

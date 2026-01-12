@@ -199,6 +199,14 @@ public class CombatMoveEditor : Editor
         float rectY = rect.y;
         float rectHeight = rect.height;
 
+        // Calculate frame numbers for labels
+        AnimationClip clip = move.animationClip;
+        int totalFrames = Mathf.RoundToInt(clip.length * clip.frameRate);
+        int hitStartFrame = Mathf.RoundToInt(totalFrames * move.hitStart);
+        int hitEndFrame = Mathf.RoundToInt(totalFrames * move.hitEnd);
+        int comboStartFrame = Mathf.RoundToInt(totalFrames * move.comboStart);
+        int comboEndFrame = Mathf.RoundToInt(totalFrames * move.comboEnd);
+
         // Calculate pixel positions for windows based on normalized times
         float hitStartPx = rectX + (rectWidth * move.hitStart);
         float hitEndPx = rectX + (rectWidth * move.hitEnd);
@@ -213,7 +221,23 @@ public class CombatMoveEditor : Editor
             rectHeight
         );
         EditorGUI.DrawRect(hitRect, HitWindowColor);
-        EditorGUI.LabelField(hitRect, " HIT", EditorStyles.whiteMiniLabel);
+        
+        // Draw Hit label with unclamped width so text isn't cut off
+        string hitLabel = $"HIT {hitStartFrame}-{hitEndFrame}";
+        GUIContent hitContent = new GUIContent(hitLabel);
+        Vector2 hitLabelSize = EditorStyles.whiteMiniLabel.CalcSize(hitContent);
+        
+        Rect hitLabelRect = new Rect(
+            hitStartPx + 2, // Small padding from left edge
+            rectY + (rectHeight - hitLabelSize.y) * 0.5f, // Vertically center
+            hitLabelSize.x, // Use actual text width, not clipped to rect
+            hitLabelSize.y
+        );
+        
+        // Draw semi-transparent background behind text for readability
+        EditorGUI.DrawRect(new Rect(hitLabelRect.x - 1, hitLabelRect.y, hitLabelSize.x + 2, hitLabelSize.y), 
+            new Color(0, 0, 0, 0.5f));
+        EditorGUI.LabelField(hitLabelRect, hitContent, EditorStyles.whiteMiniLabel);
 
         // Draw Combo Window (Green)
         Rect comboRect = new Rect(
@@ -223,7 +247,26 @@ public class CombatMoveEditor : Editor
             rectHeight
         );
         EditorGUI.DrawRect(comboRect, ComboWindowColor);
-        EditorGUI.LabelField(comboRect, " COMBO", EditorStyles.whiteMiniLabel);
+        
+        // Show frame range for combo window if enabled
+        string comboLabel = (move.comboStart >= 1f && move.comboEnd >= 1f) 
+            ? "COMBO (Off)" 
+            : $"COMBO {comboStartFrame}-{comboEndFrame}";
+        
+        GUIContent comboContent = new GUIContent(comboLabel);
+        Vector2 comboLabelSize = EditorStyles.whiteMiniLabel.CalcSize(comboContent);
+        
+        Rect comboLabelRect = new Rect(
+            comboStartPx + 2,
+            rectY + (rectHeight - comboLabelSize.y) * 0.5f,
+            comboLabelSize.x,
+            comboLabelSize.y
+        );
+        
+        // Draw semi-transparent background behind text for readability
+        EditorGUI.DrawRect(new Rect(comboLabelRect.x - 1, comboLabelRect.y, comboLabelSize.x + 2, comboLabelSize.y), 
+            new Color(0, 0, 0, 0.5f));
+        EditorGUI.LabelField(comboLabelRect, comboContent, EditorStyles.whiteMiniLabel);
     }
 
     /// <summary>

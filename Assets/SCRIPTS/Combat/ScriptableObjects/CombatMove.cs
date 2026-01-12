@@ -9,7 +9,8 @@ public enum HitboxType
     Nunchaku,
     Staff,
     Shuriken,
-    Utility
+    Utility,
+    None
 }
 
 [System.Serializable]
@@ -28,7 +29,6 @@ public class CombatMove : ScriptableObject
     // VISUALS
     // ─────────────────────────────────────────────
 
-    [Header("Visuals")]
     public string moveName;
     public AnimationClip animationClip;
 
@@ -108,19 +108,24 @@ public class CombatMove : ScriptableObject
 
     /// <summary>
     /// Returns forward displacement (delta) between two normalized times.
+    /// The motion curve stores ABSOLUTE TIME (seconds) on the X-axis, not normalized time.
     /// </summary>
     public float EvaluateMotionDelta(float fromNormalized, float toNormalized)
     {
         if (motionCurve == null || motionCurve.length == 0)
             return 0f;
 
-        float fromT = Mathf.Clamp01(fromNormalized) * AnimationDuration;
-        float toT = Mathf.Clamp01(toNormalized) * AnimationDuration;
+        // Convert normalized time (0-1) to absolute time (0 to clip.length)
+        float clipDuration = AnimationDuration;
+        float fromTime = Mathf.Clamp01(fromNormalized) * clipDuration;
+        float toTime = Mathf.Clamp01(toNormalized) * clipDuration;
 
-        float from = motionCurve.Evaluate(fromT);
-        float to = motionCurve.Evaluate(toT);
+        // Sample the curve at absolute times
+        float fromDistance = motionCurve.Evaluate(fromTime);
+        float toDistance = motionCurve.Evaluate(toTime);
 
-        return (to - from) * motionScale;
+        // Return the distance delta, scaled by motionScale
+        return (toDistance - fromDistance) * motionScale;
     }
 
     // ─────────────────────────────────────────────

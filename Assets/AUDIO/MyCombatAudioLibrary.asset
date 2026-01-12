@@ -16,7 +16,12 @@ MonoBehaviour:
   - 
   musicCategories:
   - 
-  Sounds: []
+  Sounds:
+  - {fileID: 11400000, guid: e6ac0ca55c133c04585a8ba5c874503d, type: 2}
+  - {fileID: 11400000, guid: 65537251b5504b740b0550f8dc581c0c, type: 2}
+  - {fileID: 11400000, guid: 665fa4e4b80da3841b30de61f19175f7, type: 2}
+  - {fileID: 11400000, guid: 9ecea84ea71caae4b9bc32c7a9c14db6, type: 2}
+  - {fileID: 11400000, guid: 621d1b5ea92c525449d0d2ca847c066f, type: 2}
   Music: []
   useCustomNames: 0
   generatedName: MyCombatAudioLibrary
@@ -30,7 +35,12 @@ MonoBehaviour:
   soundNamespaceGenerated: 
   soundCategoriesToList:
   - name: 
-    files: []
+    files:
+    - {fileID: 11400000, guid: e6ac0ca55c133c04585a8ba5c874503d, type: 2}
+    - {fileID: 11400000, guid: 65537251b5504b740b0550f8dc581c0c, type: 2}
+    - {fileID: 11400000, guid: 665fa4e4b80da3841b30de61f19175f7, type: 2}
+    - {fileID: 11400000, guid: 9ecea84ea71caae4b9bc32c7a9c14db6, type: 2}
+    - {fileID: 11400000, guid: 621d1b5ea92c525449d0d2ca847c066f, type: 2}
     foldout: 1
   musicCategoriesToList:
   - name: 
