@@ -67,7 +67,7 @@ public class MasterCameraAndAudioManager : MonoBehaviour
 
     /// <summary>
     /// Finds and disables all CinemachineBrain components except the one on this GameObject.
-    /// This prevents multiple camera brains from processing Cinemachine cameras simultaneously.
+    /// Also disables the GameObjects containing those brains to prevent duplicate cameras.
     /// </summary>
     private void DisableOtherCinemachineBrains()
     {
@@ -75,17 +75,17 @@ public class MasterCameraAndAudioManager : MonoBehaviour
         CinemachineBrain[] brains = FindObjectsByType<CinemachineBrain>(FindObjectsSortMode.None);
         CinemachineBrain thisBrain = GetComponent<CinemachineBrain>();
 
-        // Disable all other brains except the master brain
+        // Disable all other brains and their GameObjects except the master brain
         foreach (CinemachineBrain brain in brains)
         {
             // Skip the master brain itself
             if (brain == thisBrain) continue;
             
-            // Disable the brain component (preserves the GameObject and camera)
-            if (brain.enabled)
+            // Disable the entire GameObject (disables both the brain and any camera components)
+            if (brain.gameObject.activeSelf)
             {
-                brain.enabled = false;
-                Debug.Log($"[MasterCameraAndAudioManager] Disabled CinemachineBrain on {brain.gameObject.name}");
+                brain.gameObject.SetActive(false);
+                Debug.Log($"[MasterCameraAndAudioManager] Disabled GameObject with CinemachineBrain: {brain.gameObject.name}");
             }
         }
     }

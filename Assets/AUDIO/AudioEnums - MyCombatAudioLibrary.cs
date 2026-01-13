@@ -3,7 +3,10 @@
         heavyhitland,
         lighthitfistwhoosh,
         lighthitland,
-        whoosh
+        whoosh,
+        lastninjamenu,
+        buttonclick
     }
     public enum MyCombatAudioLibraryMusic {
+        Level1TheWastelands
     }
