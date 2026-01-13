@@ -15,6 +15,11 @@ public class CameraZoneManager : MonoBehaviour
         Instance = this;
     }
 
+    public CinemachineCamera GetCurrentCamera()
+    {
+        return currentCamera;
+    }
+
     public void ActivateCamera(CinemachineCamera newCamera)
     {
         if (currentCamera != null && currentCamera != newCamera)
@@ -24,5 +29,7 @@ public class CameraZoneManager : MonoBehaviour
 
         newCamera.Priority = activePriority;
         currentCamera = newCamera;
+
+      
     }
 }

@@ -251,7 +251,7 @@ public class CombatHandler : MonoBehaviour
     {
         _isBlocking = blocking;
         _animator.SetBool("IsBlocking", _isBlocking);
-        _movement.speedMultiplier = _isBlocking ? 0.2f : 1.0f;
+        //_movement.speedMultiplier = _isBlocking ? 0.2f : 1.0f;
     }
 
 

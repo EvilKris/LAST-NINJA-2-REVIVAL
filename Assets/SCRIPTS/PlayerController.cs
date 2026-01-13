@@ -26,6 +26,8 @@ public class PlayerController : MonoBehaviour
 
     // Cached input values from Input System events
     private Vector2 _moveInput;
+    private float _cachedCameraYaw; // Camera rotation locked while moving
+    private bool _wasMovingLastFrame; // Track movement state changes
 
     private ITargetable _currentTarget; // Our current focus
     [SerializeField] private float lockBreakDistance = 1.0f; // 1 unit meter break distance
@@ -92,9 +94,33 @@ public class PlayerController : MonoBehaviour
     /// Process movement in physics update for consistent behavior.
     /// Converts input to camera-relative direction and applies movement.
     /// </summary>
+    /// 
+    private Quaternion _cameraRotation;
+
+    void LateUpdate()
+    {
+        // Cache the rotation AFTER Cinemachine updates it
+        _cameraRotation = _mainCamera.transform.rotation;
+    }
+
     private void FixedUpdate()
     {
         if (_health != null && _health.IsDead) return;
+
+        bool isMoving = _moveInput.sqrMagnitude > 0.01f;
+
+        // Update camera yaw only when transitioning from moving to idle (all keys released)
+        if (_wasMovingLastFrame && !isMoving)
+        {
+            _cachedCameraYaw = GetCurrentCameraYaw();
+        }
+        else if (!_wasMovingLastFrame && isMoving)
+        {
+            // Starting to move - lock in the current camera rotation
+            _cachedCameraYaw = GetCurrentCameraYaw();
+        }
+
+        _wasMovingLastFrame = isMoving;
 
         // 1. Convert input to camera-relative direction (Your existing logic)
         Vector3 moveDir = GetCameraRelativeDirection(_moveInput);
@@ -120,7 +146,7 @@ public class PlayerController : MonoBehaviour
         else
         {
             // FREESTYLE MODE: Run where the stick points
-            if (_moveInput.sqrMagnitude > 0.01f)
+            if (isMoving)
             {
                 _movement.ProcessMovement(moveDir);
                 _movement.RotateTowardsDirection(moveDir);
@@ -155,27 +181,34 @@ public class PlayerController : MonoBehaviour
     }
 
     /// <summary>
-    /// Converts 2D input (WASD/stick) into 3D world direction relative to camera orientation.
-    /// This creates intuitive third-person controls where forward is always camera forward.
+    /// Gets the current active camera's Y-axis rotation.
+    /// Checks CameraZoneManager first, falls back to main camera.
+    /// </summary>
+    private float GetCurrentCameraYaw()
+    {
+        if (CameraZoneManager.Instance != null && CameraZoneManager.Instance.GetCurrentCamera() != null)
+        {
+            return CameraZoneManager.Instance.GetCurrentCamera().transform.eulerAngles.y;
+        }
+        return _mainCamera.transform.eulerAngles.y;
+    }
+
+    /// <summary>
+    /// Converts 2D input (WASD/stick) into 3D world direction relative to screen orientation.
+    /// Uses screen-space coordinates: up = forward, right = right (2.5D style movement).
+    /// Uses cached camera rotation that only updates when player stops moving (prevents jarring control changes).
     /// </summary>
     /// <param name="input">2D input vector from controls</param>
     /// <returns>Normalized 3D world direction</returns>
     private Vector3 GetCameraRelativeDirection(Vector2 input)
     {
-        // Get camera's forward and right vectors
-        Vector3 camForward = _mainCamera.transform.forward;
-        Vector3 camRight = _mainCamera.transform.right;
+        // Use the cached camera yaw (locked while moving)
+        Quaternion yRotation = Quaternion.Euler(0f, _cachedCameraYaw, 0f);
+        
+        // Create screen-space directions (up = forward, right = right)
+        Vector3 camForward = yRotation * Vector3.forward;
+        Vector3 camRight = yRotation * Vector3.right;
 
-        // Flatten to horizontal plane (ignore camera pitch)
-        camForward.y = 0f;
-        camRight.y = 0f;
-
-        // Ensure unit vectors after flattening
-        camForward.Normalize();
-        camRight.Normalize();
-
-        // Combine input with camera basis vectors
-        // input.y = forward/back, input.x = left/right
         return (camForward * input.y + camRight * input.x).normalized;
     }
 
