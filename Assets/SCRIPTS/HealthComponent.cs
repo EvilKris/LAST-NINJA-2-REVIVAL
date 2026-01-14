@@ -6,6 +6,7 @@ using System;
 /// Implements IDamageable for receiving damage and ITargetable for lock-on targeting.
 /// Fires events for hit, death, and health changes that other systems can subscribe to.
 /// </summary>
+[RequireComponent(typeof(Animator))] // Ensures the entity has an animator
 public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
 {
     [Header("Stats")]
@@ -24,7 +25,9 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
 
     [Tooltip("If true, this entity cannot take damage (temporary invincibility, cutscenes, etc.).")]
     public bool isInvulnerable = false;
-    
+
+    [Header("Internal References")]
+    private Animator _animator; // Add this
     /// <summary>
     /// Returns true if the entity has 0 or less health.
     /// </summary>
@@ -52,6 +55,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     private void Awake()
     {
         currentHealth = maxHealth;
+        _animator = GetComponent<Animator>(); // Initialize the animator
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -64,11 +68,15 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     /// Fires OnHit if damaged, OnDeath if health reaches 0.
     /// </summary>
     /// <param name="damage">Amount of damage to apply (positive value)</param>
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, HitReactionType type)
     {
-        // Don't process damage if already dead or invulnerable
         if (IsDead || isInvulnerable) return;
 
+        currentHealth -= damage;
+
+        // Trigger the Animator
+        _animator.SetInteger("i_HitType", (int)type);
+        _animator.SetTrigger("t_GetHit");
         // Apply damage and clamp to 0
         currentHealth -= damage;
         currentHealth = Mathf.Max(currentHealth, 0);

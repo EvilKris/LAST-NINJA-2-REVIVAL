@@ -14,6 +14,19 @@ public enum HitboxType
 }
 
 [System.Serializable]
+
+
+public enum HitReactionType
+{
+    None,
+    Light_High,  // Head/Chest snap
+    Light_Low,   // Stomach/Leg flinch
+    Heavy_Back,  // Stagger backward
+    Knockdown,   // Fall to ground
+    Launch       // Air combo starter
+}
+[System.Serializable]
+
 public struct AnimationAudioEvent
 {
     [Range(0f, 1f)] public float triggerTime;
@@ -52,7 +65,8 @@ public class CombatMove : ScriptableObject
     [Header("Combat Stats")]
     public float damage = 10f;
     public bool isHeavy;
-
+    // Inside your CombatMove script
+    public HitReactionType reactionToTrigger = HitReactionType.Light_High;
     // ─────────────────────────────────────────────
     // HITBOX
     // ─────────────────────────────────────────────

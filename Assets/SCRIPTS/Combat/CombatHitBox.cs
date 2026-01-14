@@ -12,6 +12,7 @@ public class CombatHitbox : MonoBehaviour
 
     private CombatHandler _owner;
     private float _currentDamage;
+    private HitReactionType _currentReaction;
     private Collider _collider;
 
     private void Awake()
@@ -26,7 +27,11 @@ public class CombatHitbox : MonoBehaviour
         }
     }
 
-    public void SetDamage(float damage) => _currentDamage = damage;
+    public void SetDamage(float damage, HitReactionType reaction)
+    {
+        _currentDamage = damage;
+        _currentReaction = reaction;
+    }
 
     public void Activate()
     {
@@ -53,7 +58,7 @@ public class CombatHitbox : MonoBehaviour
 
             if (!_owner.HasHitTarget(victimRoot))
             {
-                victim.TakeDamage(_currentDamage);
+                victim.TakeDamage(_currentDamage, _currentReaction);
                 _owner.RegisterHit(victimRoot);
 
                 if (hitEffectPrefab != null)

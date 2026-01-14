@@ -263,7 +263,7 @@ public class CombatHandler : MonoBehaviour
         {
             if (hb.hitboxType == type)
             {
-                hb.SetDamage(_activeMove.damage); // Use damage from Move data
+                hb.SetDamage(_activeMove.damage, _activeMove.reactionToTrigger);
                 hb.Activate();
             }
         }

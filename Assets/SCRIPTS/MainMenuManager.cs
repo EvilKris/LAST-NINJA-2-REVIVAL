@@ -1,34 +1,57 @@
+using DG.Tweening;
 using JSAM;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// Manages the main menu functionality including audio playback, UI transitions, and scene loading.
+/// </summary>
 public class MainMenuManager : MonoBehaviour
 {
+    [Header("Audio")]
     [SerializeField] private SoundFileObject clickSound;
     [SerializeField] private SoundFileObject overSound;
     [SerializeField] private MusicFileObject myMusic;
 
+    [Header("UI Transition")]
+    [SerializeField] private CanvasGroup mainMenuCanvasGroup;
+    [SerializeField] private float fadeOutDuration = 1f;
+    [SerializeField] private AnimationCurve fadeOutCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    [SerializeField] private RectTransform uiCanvasRect;
+
+    /// <summary>
+    /// Plays the UI hover sound effect.
+    /// Called by UI button hover events.
+    /// </summary>
     public void OnOverSound()
     {
-               JSAM.AudioManager.PlaySound(overSound); 
+        JSAM.AudioManager.PlaySound(overSound);
     }
 
     private void Start()
     {
         JSAM.AudioManager.PlayMusic(myMusic, true);
     }
+
+    /// <summary>
+    /// Initiates the game start sequence:
+    /// 1. Plays click sound
+    /// 2. Triggers UI camera shake effect
+    /// 3. Fades out the menu
+    /// 4. Loads the next scene
+    /// </summary>
     public void StartGame()
     {
-        // 1. Play the sound effect
         JSAM.AudioManager.PlaySound(clickSound);
-        
 
-        // 2. Get the index of the current scene and add 1
-        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
+        MasterSingleton.Instance.UIManager.UICamShake(uiCanvasRect, 2f, 30f, 5);
 
-        // 3. Load the next scene (ensure it's in Build Settings!)
-        // We use a small delay if you want the SFX to finish, 
-        // but for now, we'll load immediately.
-        SceneManager.LoadScene(nextSceneIndex);
+        mainMenuCanvasGroup.DOFade(0f, fadeOutDuration)
+            .SetEase(fadeOutCurve)
+            .OnComplete(() =>
+            {
+                int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
+                SceneManager.LoadScene(nextSceneIndex);
+            });
     }
 }
