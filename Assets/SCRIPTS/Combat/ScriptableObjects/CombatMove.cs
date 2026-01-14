@@ -65,8 +65,8 @@ public class CombatMove : ScriptableObject
     [Header("Combat Stats")]
     public float damage = 10f;
     public bool isHeavy;
-    // Inside your CombatMove script
     public HitReactionType reactionToTrigger = HitReactionType.Light_High;
+    // Inside your CombatMove script
     // ─────────────────────────────────────────────
     // HITBOX
     // ─────────────────────────────────────────────

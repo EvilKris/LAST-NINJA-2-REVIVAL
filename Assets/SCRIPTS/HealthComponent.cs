@@ -74,9 +74,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
 
         currentHealth -= damage;
 
-        // Trigger the Animator
-        _animator.SetInteger("i_HitType", (int)type);
-        _animator.SetTrigger("t_GetHit");
+        
         // Apply damage and clamp to 0
         currentHealth -= damage;
         currentHealth = Mathf.Max(currentHealth, 0);
@@ -95,6 +93,28 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
             // Entity survived - trigger hit reaction
             OnHit?.Invoke();
         }
+
+        if (_animator != null)
+        {
+            // Randomize the "side" for high hits
+            if (type == HitReactionType.Light_High)
+            {
+                _animator.SetFloat("f_Random", UnityEngine.Random.value);
+                _animator.SetInteger("i_HitType", 0);
+            }
+            else if (type == HitReactionType.Light_Low)
+            {
+                _animator.SetInteger("i_HitType", 1);
+            }
+            else if (type == HitReactionType.Heavy_Back)
+            {
+                _animator.SetInteger("i_HitType", 2);
+            }
+
+            _animator.SetTrigger("t_GetHit"); // Fire the Any State transition
+        }
+
+
     }
 
     // ═══════════════════════════════════════════════════════════════════
