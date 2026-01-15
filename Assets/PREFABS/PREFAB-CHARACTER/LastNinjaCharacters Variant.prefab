@@ -889,7 +889,7 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95135024985a86544b213b25ea73fa62,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 2009375141892738064}
+      addedObject: {fileID: 2657358508894509916}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 95135024985a86544b213b25ea73fa62,
         type: 3}
       insertIndex: -1
@@ -968,8 +968,8 @@ Rigidbody:
   m_Interpolate: 1
   m_Constraints: 80
   m_CollisionDetection: 1
---- !u!65 &2009375141892738064
-BoxCollider:
+--- !u!136 &2657358508894509916
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -986,9 +986,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.65, y: 1.76, z: 0.8}
-  m_Center: {x: 0, y: 0.86, z: 0}
+  serializedVersion: 2
+  m_Radius: 0.31
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.78, z: 0}
 --- !u!114 &1148321451
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1133,6 +1135,7 @@ MonoBehaviour:
   movementSpeed: 5
   rotationSpeed: 60
   speedMultiplier: 1
+  canRotate: 1
 --- !u!114 &366143130310904069
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1163,3 +1166,5 @@ MonoBehaviour:
   faction: 0
   lockOnPoint: {fileID: 0}
   isInvulnerable: 0
+  movementSpeed: 1
+  attackSpeed: 1

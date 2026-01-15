@@ -100,6 +100,14 @@ public class CombatMove : ScriptableObject
     [Range(0f, 1f)] public float comboEnd = 0.85f;
 
     // ─────────────────────────────────────────────
+    // ROTATION ALLOWANCE
+    // ─────────────────────────────────────────────
+
+    [Header("Rotation Allowance (Normalized)")]
+    [Tooltip("Allows the player to rotate (but not move) during this portion of the attack. 0 = no rotation allowed.")]
+    [Range(0f, 1f)] public float rotationAllowanceEnd = 0f;
+
+    // ─────────────────────────────────────────────
     // CACHED DATA
     // ─────────────────────────────────────────────
 
@@ -152,6 +160,9 @@ public class CombatMove : ScriptableObject
     public bool IsInComboWindow(float normalizedTime)
         => canCombo && normalizedTime >= comboStart && normalizedTime <= comboEnd;
 
+    public bool CanRotate(float normalizedTime)
+        => rotationAllowanceEnd > 0f && normalizedTime <= rotationAllowanceEnd;
+
 #if UNITY_EDITOR
     private void OnValidate()
     {
@@ -166,10 +177,30 @@ public class CombatMove : ScriptableObject
         comboStart = Mathf.Clamp01(comboStart);
         comboEnd = Mathf.Clamp(comboEnd, comboStart, 1f);
 
+        rotationAllowanceEnd = Mathf.Clamp01(rotationAllowanceEnd);
+
         if (!canCombo)
         {
             comboStart = 1f;
             comboEnd = 1f;
+        }
+
+        ResetRuntimeState();
+    }
+
+    private void OnEnable()
+    {
+        ResetRuntimeState();
+    }
+
+    private void ResetRuntimeState()
+    {
+        if (audioEvents != null)
+        {
+            for (int i = 0; i < audioEvents.Length; i++)
+            {
+                audioEvents[i].hasPlayed = false;
+            }
         }
     }
 #endif

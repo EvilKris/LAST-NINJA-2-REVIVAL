@@ -11,6 +11,7 @@ public class MovementComponent : MonoBehaviour
     private Animator _animator;
 
     [HideInInspector] public float speedMultiplier = 1.0f;
+    [HideInInspector] public bool canRotate = true; // Controlled by CombatHandler during attacks
 
     // Animator Parameter Names from image_6c3b66.png
     readonly string anim_isRunning = "isRunningBool";
@@ -79,6 +80,7 @@ public class MovementComponent : MonoBehaviour
 
     public void RotateTowardsDirection(Vector3 dir)
     {
+        if (!canRotate) return; // Respect rotation lock from combat system
         if (dir.sqrMagnitude < 0.01f) return;
 
         Quaternion targetRot = Quaternion.LookRotation(dir);

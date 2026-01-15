@@ -39,6 +39,9 @@ public class CombatHandler : MonoBehaviour
 
     [Header("Motion State")]
     private float _lastNormalizedTime; // Tracks progress to calculate delta movement
+    private bool _canRotateDuringAttack; // Tracks if rotation is allowed during current attack
+
+    public bool CanRotateDuringAttack => _canRotateDuringAttack;
 
     private void Awake()
     {
@@ -104,10 +107,14 @@ public class CombatHandler : MonoBehaviour
             // --- 3. COMBO WINDOW ---
             _canAcceptComboInput = _activeMove.IsInComboWindow(currentTime);
 
-            // --- 4. AUDIO EVENTS ---
+            // --- 4. ROTATION ALLOWANCE ---
+            _canRotateDuringAttack = _activeMove.CanRotate(currentTime);
+            _movement.canRotate = _canRotateDuringAttack;
+
+            // --- 5. AUDIO EVENTS ---
             UpdateAudioEvents(currentTime);
 
-            // --- 5. MOVEMENT AUTO-RESET ---
+            // --- 6. MOVEMENT AUTO-RESET ---
             if (currentTime >= 0.95f) _movement.speedMultiplier = 1.0f;
         }
         else
@@ -124,7 +131,9 @@ public class CombatHandler : MonoBehaviour
         _activeMove = null;
         _hitboxActive = false;
         _canAcceptComboInput = false;
+        _canRotateDuringAttack = false;
         _movement.speedMultiplier = 1.0f;
+        _movement.canRotate = true; // Re-enable rotation when not attacking
     }
 
     private void PlayMove(CombatMove move)
@@ -143,6 +152,7 @@ public class CombatHandler : MonoBehaviour
         ResetAudioEvents();
 
         _movement.speedMultiplier = move.isHeavy ? 0.5f : 0f;
+        _movement.canRotate = move.rotationAllowanceEnd > 0f; // Set initial rotation state
 
         _overrideController[CLIP_SLOT_KEY] = move.animationClip;
         // Force the animator to update its state immediately

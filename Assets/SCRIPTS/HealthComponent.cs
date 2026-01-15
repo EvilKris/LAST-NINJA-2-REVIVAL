@@ -26,8 +26,19 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     [Tooltip("If true, this entity cannot take damage (temporary invincibility, cutscenes, etc.).")]
     public bool isInvulnerable = false;
 
+    [Header("Speed Modifiers")]
+    [Tooltip("Controls movement and rotation speed. 1.0 = normal, 0.5 = half speed, 2.0 = double speed.")]
+    [Range(0.1f, 3f)]
+    public float movementSpeed = 1f;
+
+    [Tooltip("Controls attack animation speed (punches, kicks, etc.). 1.0 = normal, 0.5 = half speed, 2.0 = double speed.")]
+    [Range(0.1f, 3f)]
+    public float attackSpeed = 1f;
+
     [Header("Internal References")]
-    private Animator _animator; // Add this
+    private Animator _animator;
+    private MovementComponent _movementComponent;
+
     /// <summary>
     /// Returns true if the entity has 0 or less health.
     /// </summary>
@@ -55,7 +66,24 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     private void Awake()
     {
         currentHealth = maxHealth;
-        _animator = GetComponent<Animator>(); // Initialize the animator
+        _animator = GetComponent<Animator>();
+        _movementComponent = GetComponent<MovementComponent>();
+    }
+
+    /// <summary>
+    /// Update animator and movement speed based on the speed variables.
+    /// </summary>
+    private void Update()
+    {
+        if (_animator != null)
+        {
+            _animator.speed = attackSpeed;
+        }
+
+        if (_movementComponent != null)
+        {
+            _movementComponent.speedMultiplier = movementSpeed;
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════

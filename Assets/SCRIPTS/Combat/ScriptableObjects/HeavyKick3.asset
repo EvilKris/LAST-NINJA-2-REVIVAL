@@ -995,6 +995,7 @@ MonoBehaviour:
   motionScale: 2
   damage: 15
   isHeavy: 1
+  reactionToTrigger: 1
   hitboxType: 1
   audioEvents:
   - triggerTime: 0.372
@@ -1004,3 +1005,4 @@ MonoBehaviour:
   canCombo: 0
   comboStart: 1
   comboEnd: 1
+  rotationAllowanceEnd: 0.209

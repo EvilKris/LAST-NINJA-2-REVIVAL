@@ -148,8 +148,19 @@ public class PlayerController : MonoBehaviour
             // FREESTYLE MODE: Run where the stick points
             if (isMoving)
             {
-                _movement.ProcessMovement(moveDir);
-                _movement.RotateTowardsDirection(moveDir);
+                // Check if we're attacking - if so, only allow rotation during the allowance window
+                if (_combat.CanRotateDuringAttack)
+                {
+                    // Allow rotation but no locomotion during attack's rotation window
+                    _movement.RotateTowardsDirection(moveDir);
+                    _movement.ProcessMovement(Vector3.zero);
+                }
+                else
+                {
+                    // Normal movement when not attacking
+                    _movement.ProcessMovement(moveDir);
+                    _movement.RotateTowardsDirection(moveDir);
+                }
             }
             else
             {

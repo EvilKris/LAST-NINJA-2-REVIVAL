@@ -1265,12 +1265,14 @@ MonoBehaviour:
   motionScale: 1
   damage: 5
   isHeavy: 0
+  reactionToTrigger: 1
   hitboxType: 1
   audioEvents:
   - triggerTime: 0
     sound: {fileID: 11400000, guid: 9ecea84ea71caae4b9bc32c7a9c14db6, type: 2}
   hitStart: 0.43
   hitEnd: 0.528
-  canCombo: 0
+  canCombo: 1
   comboStart: 1
   comboEnd: 1
+  rotationAllowanceEnd: 0

@@ -28,6 +28,7 @@ public class CombatMoveEditor : Editor
     private static readonly Color TimelineBackgroundColor = new(0.15f, 0.15f, 0.15f);
     private static readonly Color HitWindowColor = new(1f, 0.3f, 0.3f, 0.7f);
     private static readonly Color ComboWindowColor = new(0.3f, 1f, 0.3f, 0.7f);
+    private static readonly Color RotationWindowColor = new(0.3f, 0.6f, 1f, 0.7f);
 
     public override void OnInspectorGUI()
     {
@@ -206,12 +207,14 @@ public class CombatMoveEditor : Editor
         int hitEndFrame = Mathf.RoundToInt(totalFrames * move.hitEnd);
         int comboStartFrame = Mathf.RoundToInt(totalFrames * move.comboStart);
         int comboEndFrame = Mathf.RoundToInt(totalFrames * move.comboEnd);
+        int rotationEndFrame = Mathf.RoundToInt(totalFrames * move.rotationAllowanceEnd);
 
         // Calculate pixel positions for windows based on normalized times
         float hitStartPx = rectX + (rectWidth * move.hitStart);
         float hitEndPx = rectX + (rectWidth * move.hitEnd);
         float comboStartPx = rectX + (rectWidth * move.comboStart);
         float comboEndPx = rectX + (rectWidth * move.comboEnd);
+        float rotationEndPx = rectX + (rectWidth * move.rotationAllowanceEnd);
 
         // Draw Hit Window (Red)
         Rect hitRect = new Rect(
@@ -267,6 +270,34 @@ public class CombatMoveEditor : Editor
         EditorGUI.DrawRect(new Rect(comboLabelRect.x - 1, comboLabelRect.y, comboLabelSize.x + 2, comboLabelSize.y), 
             new Color(0, 0, 0, 0.5f));
         EditorGUI.LabelField(comboLabelRect, comboContent, EditorStyles.whiteMiniLabel);
+
+        // Draw Rotation Allowance Window (Blue) - only if enabled
+        if (move.rotationAllowanceEnd > 0f)
+        {
+            Rect rotationRect = new Rect(
+                rectX,
+                rectY,
+                Mathf.Max(2, rotationEndPx - rectX), // From start to rotationAllowanceEnd
+                rectHeight
+            );
+            EditorGUI.DrawRect(rotationRect, RotationWindowColor);
+            
+            string rotationLabel = $"ROT 0-{rotationEndFrame}";
+            GUIContent rotationContent = new GUIContent(rotationLabel);
+            Vector2 rotationLabelSize = EditorStyles.whiteMiniLabel.CalcSize(rotationContent);
+            
+            Rect rotationLabelRect = new Rect(
+                rectX + 2,
+                rectY + (rectHeight - rotationLabelSize.y) * 0.5f,
+                rotationLabelSize.x,
+                rotationLabelSize.y
+            );
+            
+            // Draw semi-transparent background behind text for readability
+            EditorGUI.DrawRect(new Rect(rotationLabelRect.x - 1, rotationLabelRect.y, rotationLabelSize.x + 2, rotationLabelSize.y), 
+                new Color(0, 0, 0, 0.5f));
+            EditorGUI.LabelField(rotationLabelRect, rotationContent, EditorStyles.whiteMiniLabel);
+        }
     }
 
     /// <summary>
@@ -279,6 +310,7 @@ public class CombatMoveEditor : Editor
         DrawLiveFrameTracking(move);
         DrawHitboxFrames(move, totalFrames);
         DrawComboFrames(move, totalFrames);
+        DrawRotationFrames(move, totalFrames);
 
         EditorGUILayout.EndVertical();
     }
@@ -349,6 +381,34 @@ public class CombatMoveEditor : Editor
             int comboStart = Mathf.RoundToInt(totalFrames * move.comboStart);
             int comboEnd = Mathf.RoundToInt(totalFrames * move.comboEnd);
             EditorGUILayout.LabelField($"{ComboWindowLabel.text}Frame {comboStart} to {comboEnd}", EditorStyles.miniBoldLabel);
+        }
+    }
+
+    /// <summary>
+    /// Displays the frame range for the rotation allowance window.
+    /// Shows "No Rotation" if rotation is disabled (rotationAllowanceEnd is 0).
+    /// </summary>
+    private void DrawRotationFrames(CombatMove move, int totalFrames)
+    {
+        if (move.rotationAllowanceEnd <= 0f)
+        {
+            // Gray out text for disabled rotation
+            Color originalColor = GUI.color;
+            GUI.color = Color.gray;
+            
+            try
+            {
+                EditorGUILayout.LabelField("Rotation Allowance: Locked", EditorStyles.miniBoldLabel);
+            }
+            finally
+            {
+                GUI.color = originalColor;
+            }
+        }
+        else
+        {
+            int rotationEnd = Mathf.RoundToInt(totalFrames * move.rotationAllowanceEnd);
+            EditorGUILayout.LabelField($"Rotation Allowance: Frame 0 to {rotationEnd}", EditorStyles.miniBoldLabel);
         }
     }
 
