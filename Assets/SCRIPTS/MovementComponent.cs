@@ -10,7 +10,8 @@ public class MovementComponent : MonoBehaviour
     private Rigidbody _rb;
     private Animator _animator;
 
-    [HideInInspector] public float speedMultiplier = 1.0f;
+    [HideInInspector] public float speedMultiplier = 1.0f; // Controlled by CombatHandler
+    [HideInInspector] public float healthSpeedModifier = 1.0f; // Controlled by HealthComponent
     [HideInInspector] public bool canRotate = true; // Controlled by CombatHandler during attacks
 
     // Animator Parameter Names from image_6c3b66.png
@@ -24,7 +25,8 @@ public class MovementComponent : MonoBehaviour
         _animator = GetComponent<Animator>();
 
         // Constrain rotation so the Ninja doesn't tip over
-        _rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+       // _rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        _rb.constraints = RigidbodyConstraints.FreezeRotation;
     }
 
     // --- MODE 1: FREESTYLE (Gauntlet Style) ---
@@ -40,7 +42,7 @@ public class MovementComponent : MonoBehaviour
 
         if (isMoving)
         {
-            _rb.linearVelocity = moveDir * (movementSpeed * speedMultiplier);
+            _rb.linearVelocity = moveDir * (movementSpeed * speedMultiplier * healthSpeedModifier);
             RotateTowardsDirection(moveDir);
 
             // Freestyle uses Y-axis for speed, X is ignored
@@ -63,7 +65,7 @@ public class MovementComponent : MonoBehaviour
         if (speedMultiplier <= 0.01f) { StopVelocity(); return; }
 
         // 1. Move the Physics Body
-        _rb.linearVelocity = moveDir * (movementSpeed * speedMultiplier);
+        _rb.linearVelocity = moveDir * (movementSpeed * speedMultiplier * healthSpeedModifier);
 
         // 2. Always face the Target
         Vector3 dirToTarget = (lookAtPos - transform.position);

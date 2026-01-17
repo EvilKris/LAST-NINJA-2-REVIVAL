@@ -42,6 +42,7 @@ public class CombatHandler : MonoBehaviour
     private bool _canRotateDuringAttack; // Tracks if rotation is allowed during current attack
 
     public bool CanRotateDuringAttack => _canRotateDuringAttack;
+    public bool IsAttacking => _activeMove != null;
 
     private void Awake()
     {

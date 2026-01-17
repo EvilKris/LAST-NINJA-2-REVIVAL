@@ -38,6 +38,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     [Header("Internal References")]
     private Animator _animator;
     private MovementComponent _movementComponent;
+    private CombatHandler _combatHandler;
 
     /// <summary>
     /// Returns true if the entity has 0 or less health.
@@ -68,21 +69,28 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         currentHealth = maxHealth;
         _animator = GetComponent<Animator>();
         _movementComponent = GetComponent<MovementComponent>();
+        _combatHandler = GetComponent<CombatHandler>();
     }
 
     /// <summary>
     /// Update animator and movement speed based on the speed variables.
+    /// Animator speed switches between movementSpeed (locomotion) and attackSpeed (combat).
     /// </summary>
     private void Update()
     {
         if (_animator != null)
         {
-            _animator.speed = attackSpeed;
+            // If currently executing a combat move, use attackSpeed
+            // Otherwise use movementSpeed for locomotion animations
+            bool isAttacking = _combatHandler != null && _combatHandler.IsAttacking;
+            
+            _animator.speed = isAttacking ? attackSpeed : movementSpeed;
         }
 
         if (_movementComponent != null)
         {
-            _movementComponent.speedMultiplier = movementSpeed;
+            // Use healthSpeedModifier so we don't overwrite CombatHandler's speedMultiplier
+            _movementComponent.healthSpeedModifier = movementSpeed*3.5f; //careful - adjust multiplier as needed
         }
     }
 
