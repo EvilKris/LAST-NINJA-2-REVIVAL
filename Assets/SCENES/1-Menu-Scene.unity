@@ -378,6 +378,7 @@ GameObject:
   - component: {fileID: 1008590835}
   - component: {fileID: 1008590838}
   - component: {fileID: 1008590839}
+  - component: {fileID: 1008590840}
   m_Layer: 5
   m_Name: Button
   m_TagString: Untagged
@@ -516,13 +517,14 @@ MonoBehaviour:
     callback:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 289474787}
-          m_TargetAssemblyTypeName: MainMenuManager, Assembly-CSharp
-          m_MethodName: OnOverSound
-          m_Mode: 1
+        - m_Target: {fileID: 1008590840}
+          m_TargetAssemblyTypeName: JSAMSoundHandler, Assembly-CSharp
+          m_MethodName: PlayJSAMSound
+          m_Mode: 2
           m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_ObjectArgument: {fileID: 11400000, guid: 7c700a1c999707140ad6babddb348889,
+              type: 2}
+            m_ObjectArgumentAssemblyTypeName: JSAM.SoundFileObject, com.Brogrammist.JSAM
             m_IntArgument: 0
             m_FloatArgument: 0
             m_StringArgument: 
@@ -541,6 +543,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   customCursor: {fileID: 2800000, guid: c4da926bc47d61741907b8666ddf1df6, type: 3}
+--- !u!114 &1008590840
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1008590833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 969b256b93883954fb4525705a46583f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::JSAMSoundHandler
 --- !u!1 &1684298748
 GameObject:
   m_ObjectHideFlags: 0

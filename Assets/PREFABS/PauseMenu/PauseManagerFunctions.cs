@@ -5,8 +5,11 @@ using UnityEngine.InputSystem;
 
 public class PauseManagerFunctions : MonoBehaviour
 {
-    [Header("Input")]
-    [SerializeField] private InputActionReference m_PauseAction;
+    [SerializeField] private InputActionAsset m_InputActionsAsset;  
+
+    private InputAction m_PauseAction;
+  
+
     [Header("Canvas")]
     [SerializeField] private Canvas m_PauseCanvas;
 
@@ -26,6 +29,17 @@ public class PauseManagerFunctions : MonoBehaviour
         { 
             m_PauseCanvas = GetComponent<Canvas>();
         }
+
+        // Find the "Pause" action in the InputActionAsset
+        if (m_InputActionsAsset != null)
+        {
+            m_PauseAction = m_InputActionsAsset.FindAction("Pause");
+            
+            if (m_PauseAction == null)
+            {
+                Debug.LogWarning("No action named 'Pause' found in InputActionAsset");
+            }
+        }
     }
 
     private void OnEnable()
@@ -37,8 +51,8 @@ public class PauseManagerFunctions : MonoBehaviour
 
         if (m_PauseAction != null)
         {
-            m_PauseAction.action.performed += OnPausePerformed;
-            m_PauseAction.action.Enable();
+            m_PauseAction.performed += OnPausePerformed;
+            m_PauseAction.Enable();
         }
     }
 
@@ -49,8 +63,8 @@ public class PauseManagerFunctions : MonoBehaviour
 
         if (m_PauseAction != null)
         {
-            m_PauseAction.action.performed -= OnPausePerformed;
-            m_PauseAction.action.Disable();
+            m_PauseAction.performed -= OnPausePerformed;
+            m_PauseAction.Disable();
         }
     }
 

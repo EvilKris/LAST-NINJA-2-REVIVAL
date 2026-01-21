@@ -90,7 +90,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         if (_movementComponent != null)
         {
             // Use healthSpeedModifier so we don't overwrite CombatHandler's speedMultiplier
-            _movementComponent.healthSpeedModifier = movementSpeed*3.5f; //careful - adjust multiplier as needed
+            _movementComponent.healthSpeedModifier = movementSpeed; //careful - adjust multiplier as needed
         }
     }
 

@@ -5,7 +5,9 @@
         lighthitland,
         whoosh,
         lastninjamenu,
-        buttonclick
+        buttonclick,
+        menuopenclose,
+        buttonpress
     }
     public enum MyCombatAudioLibraryMusic {
         Level1TheWastelands

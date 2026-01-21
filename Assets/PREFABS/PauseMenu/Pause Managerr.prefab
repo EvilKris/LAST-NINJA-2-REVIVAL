@@ -11,13 +11,14 @@ GameObject:
   - component: {fileID: 7271118574794045701}
   - component: {fileID: 4953325024409312907}
   - component: {fileID: 9222955457501837878}
+  - component: {fileID: 2739246009955846831}
   m_Layer: 0
   m_Name: Pause Managerr
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &7271118574794045701
 RectTransform:
   m_ObjectHideFlags: 0
@@ -50,7 +51,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e0354ac381899ff48a7b9ff4789a5dcd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  m_PauseAction: {fileID: 0}
+  m_InputActionsAsset: {fileID: -944628639613478452, guid: c209775b87fd93645a544139ece43568,
+    type: 3}
   m_PauseCanvas: {fileID: 5053254014865162804}
   startEvent:
     m_PersistentCalls:
@@ -69,10 +71,36 @@ MonoBehaviour:
         m_CallState: 2
   m_OnPause:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2739246009955846831}
+        m_TargetAssemblyTypeName: JSAMSoundHandler, Assembly-CSharp
+        m_MethodName: PlayJSAMSound
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 11400000, guid: 2ed5a06ea2465cb47a1801bb66bce227,
+            type: 2}
+          m_ObjectArgumentAssemblyTypeName: JSAM.SoundFileObject, com.Brogrammist.JSAM
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_OnResume:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2739246009955846831}
+        m_TargetAssemblyTypeName: JSAMSoundHandler, Assembly-CSharp
+        m_MethodName: PlayJSAMSound
+        m_Mode: 2
+        m_Arguments:
+          m_ObjectArgument: {fileID: 11400000, guid: 2ed5a06ea2465cb47a1801bb66bce227,
+            type: 2}
+          m_ObjectArgumentAssemblyTypeName: JSAM.SoundFileObject, com.Brogrammist.JSAM
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &9222955457501837878
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -85,8 +113,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aae546004d4aed041b56ce83e74789d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Notes
-  Note: "Must use: New Input System \nPause Action - must set up Pause Button and
-    Bindings in Input Action Asset and drag in"
+  Note: "Must use: New Input System \nPause Action - must set up Pause Button nameed
+    \"Pause\" and Bindings in Input Action Asset and drag in the input action asset.\nMake
+    your own Handler for playing sound based on the system you have "
+--- !u!114 &2739246009955846831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 117196}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 969b256b93883954fb4525705a46583f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
 --- !u!1 &1064338872132787189
 GameObject:
   m_ObjectHideFlags: 0
@@ -240,6 +281,8 @@ GameObject:
   - component: {fileID: 2334894748807751448}
   - component: {fileID: 175106670272609819}
   - component: {fileID: 2750489492909896932}
+  - component: {fileID: 3054266589015081987}
+  - component: {fileID: 3047898893687816725}
   m_Layer: 5
   m_Name: QuitButton
   m_TagString: Untagged
@@ -288,7 +331,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.96835697, b: 0.24056602, a: 0.92941177}
+  m_Color: {r: 1, g: 0.23921567, b: 0.5423893, a: 0.92941177}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -361,6 +404,83 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &3054266589015081987
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1605568595520363607}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7d10c130728b8c4a82ca5afecbe55cf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ComprehensiveUIButton
+  onPointerEnter:
+    sfx: {fileID: 11400000, guid: e6ac0ca55c133c04585a8ba5c874503d, type: 2}
+    onEvent:
+      m_PersistentCalls:
+        m_Calls: []
+  onPointerExit:
+    sfx: {fileID: 0}
+    onEvent:
+      m_PersistentCalls:
+        m_Calls: []
+  onPointerDown:
+    sfx: {fileID: 0}
+    onEvent:
+      m_PersistentCalls:
+        m_Calls: []
+  onPointerUp:
+    sfx: {fileID: 0}
+    onEvent:
+      m_PersistentCalls:
+        m_Calls: []
+  onPointerClick:
+    sfx: {fileID: 11400000, guid: 2ed5a06ea2465cb47a1801bb66bce227, type: 2}
+    onEvent:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 4953325024409312907}
+          m_TargetAssemblyTypeName: PauseManagerFunctions, Assembly-CSharp
+          m_MethodName: QuitGame
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  onSelect:
+    sfx: {fileID: 0}
+    onEvent:
+      m_PersistentCalls:
+        m_Calls: []
+  onDeselect:
+    sfx: {fileID: 0}
+    onEvent:
+      m_PersistentCalls:
+        m_Calls: []
+  onSubmit:
+    sfx: {fileID: 0}
+    onEvent:
+      m_PersistentCalls:
+        m_Calls: []
+  respectInteractableState: 1
+--- !u!114 &3047898893687816725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1605568595520363607}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 969b256b93883954fb4525705a46583f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::JSAMSoundHandler
 --- !u!1 &4299941927501563369
 GameObject:
   m_ObjectHideFlags: 0
@@ -812,6 +932,7 @@ GameObject:
   - component: {fileID: 6105506294947845915}
   - component: {fileID: 6004342746387684088}
   - component: {fileID: 5835498267139436554}
+  - component: {fileID: 3915178828626892235}
   m_Layer: 5
   m_Name: Txt
   m_TagString: Untagged
@@ -868,8 +989,9 @@ MonoBehaviour:
       m_Calls: []
   m_text: QUIT?
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: a20b54ca77e3a204aa9fa4a845d10027, type: 2}
+  m_sharedMaterial: {fileID: 399300794048654607, guid: a20b54ca77e3a204aa9fa4a845d10027,
+    type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -901,7 +1023,7 @@ MonoBehaviour:
   m_fontSizeMax: 72
   m_fontStyle: 0
   m_HorizontalAlignment: 2
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -938,6 +1060,157 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &3915178828626892235
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5209801583213959200}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 938fce054c42f40a3969e27a88d9bdd8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Coffee.UIEffect::Coffee.UIEffects.UIEffect
+  m_ToneFilter: 0
+  m_ToneIntensity: 1
+  m_ColorFilter: 0
+  m_ColorIntensity: 1
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_ColorGlow: 0
+  m_SamplingFilter: 0
+  m_SamplingIntensity: 0.5
+  m_SamplingWidth: 1
+  m_SamplingScale: 1
+  m_TransitionFilter: 0
+  m_TransitionRate: 0.257
+  m_TransitionReverse: 0
+  m_TransitionTex: {fileID: 0}
+  m_TransitionTexScale: {x: 1, y: 1}
+  m_TransitionTexOffset: {x: 0, y: 0}
+  m_TransitionTexSpeed: {x: 0, y: 0}
+  m_TransitionRotation: 0
+  m_TransitionKeepAspectRatio: 1
+  m_TransitionWidth: 0.2
+  m_TransitionSoftness: 0.2
+  m_TransitionRange:
+    m_Min: 0
+    m_Max: 1
+  m_TransitionColorFilter: 6
+  m_TransitionColor: {r: 0, g: 0.5, b: 1, a: 1}
+  m_TransitionColorGlow: 0
+  m_TransitionPatternReverse: 0
+  m_TransitionAutoPlaySpeed: 0
+  m_TransitionGradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 0, g: 0, b: 0, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 65535
+    ctime2: 0
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 2
+  m_TargetMode: 0
+  m_TargetColor: {r: 1, g: 1, b: 1, a: 1}
+  m_TargetRange: 0.1
+  m_TargetSoftness: 0.5
+  m_BlendType: 1
+  m_SrcBlendMode: 1
+  m_DstBlendMode: 10
+  m_ShadowMode: 1
+  m_ShadowDistance: {x: 1, y: -1}
+  m_ShadowIteration: 2
+  m_ShadowFade: 0.9
+  m_ShadowMirrorScale: 0.5
+  m_ShadowBlurIntensity: 1
+  m_ShadowColorFilter: 4
+  m_ShadowColor: {r: 0, g: 0, b: 0, a: 1}
+  m_ShadowColorGlow: 0
+  m_GradationMode: 0
+  m_GradationIntensity: 0.471
+  m_GradationColorFilter: 1
+  m_GradationColor1: {r: 1, g: 1, b: 1, a: 1}
+  m_GradationColor2: {r: 0.009433985, g: 0.0015574973, b: 0.0015574973, a: 1}
+  m_GradationColor3: {r: 1, g: 1, b: 1, a: 1}
+  m_GradationColor4: {r: 1, g: 1, b: 1, a: 1}
+  m_GradationGradient:
+    serializedVersion: 2
+    key0: {r: 1, g: 1, b: 1, a: 1}
+    key1: {r: 1, g: 1, b: 1, a: 1}
+    key2: {r: 0, g: 0, b: 0, a: 0}
+    key3: {r: 0, g: 0, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
+    key5: {r: 0, g: 0, b: 0, a: 0}
+    key6: {r: 0, g: 0, b: 0, a: 0}
+    key7: {r: 0, g: 0, b: 0, a: 0}
+    ctime0: 0
+    ctime1: 65535
+    ctime2: 0
+    ctime3: 0
+    ctime4: 0
+    ctime5: 0
+    ctime6: 0
+    ctime7: 0
+    atime0: 0
+    atime1: 65535
+    atime2: 0
+    atime3: 0
+    atime4: 0
+    atime5: 0
+    atime6: 0
+    atime7: 0
+    m_Mode: 0
+    m_ColorSpace: -1
+    m_NumColorKeys: 2
+    m_NumAlphaKeys: 2
+  m_GradationOffset: -0.59
+  m_GradationScale: 0.13604727
+  m_GradationRotation: 0
+  m_GradationWrapMode: 0
+  m_GradationReverse: 0
+  m_AllowToModifyMeshShape: 1
+  m_EdgeMode: 0
+  m_EdgeWidth: 0.5
+  m_EdgeColorFilter: 0
+  m_EdgeColor: {r: 0.6037736, g: 0.27625492, b: 0.27625492, a: 1}
+  m_EdgeColorGlow: 0
+  m_EdgeShinyRate: 0.5
+  m_EdgeShinyWidth: 0.5
+  m_EdgeShinyAutoPlaySpeed: 1
+  m_PatternArea: 1
+  m_DetailFilter: 0
+  m_DetailIntensity: 1
+  m_DetailThreshold:
+    m_Min: 0
+    m_Max: 1
+  m_DetailColor: {r: 1, g: 1, b: 1, a: 1}
+  m_DetailTex: {fileID: 0}
+  m_DetailTexScale: {x: 1, y: 1}
+  m_DetailTexOffset: {x: 0, y: 0}
+  m_DetailTexSpeed: {x: 0, y: 0}
+  m_CustomRoot: {fileID: 0}
+  m_Flip: 0
 --- !u!1 &5991369478626583982
 GameObject:
   m_ObjectHideFlags: 0
@@ -971,7 +1244,7 @@ RectTransform:
   m_Father: {fileID: 3423589818143136628}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -1046,7 +1319,7 @@ RectTransform:
   m_Father: {fileID: 5267282091297289266}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
