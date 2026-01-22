@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System;
+using JSAM;
 
 /// <summary>
 /// Component that manages an entity's health, damage, and death.
@@ -26,19 +27,16 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     [Tooltip("If true, this entity cannot take damage (temporary invincibility, cutscenes, etc.).")]
     public bool isInvulnerable = false;
 
-    [Header("Speed Modifiers")]
-    [Tooltip("Controls movement and rotation speed. 1.0 = normal, 0.5 = half speed, 2.0 = double speed.")]
-    [Range(0.1f, 3f)]
-    public float movementSpeed = 1f;
+    [Header("Audio")]
+    [Tooltip("ScriptableObject containing sound effects for different hit reaction types.")]
+    public CharacterAudioSO characterAudioSO;
 
-    [Tooltip("Controls attack animation speed (punches, kicks, etc.). 1.0 = normal, 0.5 = half speed, 2.0 = double speed.")]
-    [Range(0.1f, 3f)]
-    public float attackSpeed = 1f;
+    
 
     [Header("Internal References")]
     private Animator _animator;
     private MovementComponent _movementComponent;
-    private CombatHandler _combatHandler;
+   
 
     /// <summary>
     /// Returns true if the entity has 0 or less health.
@@ -68,8 +66,8 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     {
         currentHealth = maxHealth;
         _animator = GetComponent<Animator>();
-        _movementComponent = GetComponent<MovementComponent>();
-        _combatHandler = GetComponent<CombatHandler>();
+        
+        
     }
 
     /// <summary>
@@ -78,20 +76,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     /// </summary>
     private void Update()
     {
-        if (_animator != null)
-        {
-            // If currently executing a combat move, use attackSpeed
-            // Otherwise use movementSpeed for locomotion animations
-            bool isAttacking = _combatHandler != null && _combatHandler.IsAttacking;
-            
-            _animator.speed = isAttacking ? attackSpeed : movementSpeed;
-        }
-
-        if (_movementComponent != null)
-        {
-            // Use healthSpeedModifier so we don't overwrite CombatHandler's speedMultiplier
-            _movementComponent.healthSpeedModifier = movementSpeed; //careful - adjust multiplier as needed
-        }
+        
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -117,6 +102,22 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         
         // Notify listeners of health change
         OnHealthChanged?.Invoke(currentHealth);
+
+        // Play hit reaction sound if available
+        if (characterAudioSO != null && type != HitReactionType.None)
+        {
+            SoundFileObject hitSound = characterAudioSO.GetSoundForReaction(type);
+            if (hitSound != null)
+            {
+                AudioManager.PlaySound(hitSound, transform.position);
+            }
+
+            SoundFileObject painVocal = characterAudioSO.GetRandomPainVocal(type);
+            if (painVocal != null)
+            {
+                AudioManager.PlaySound(painVocal, transform.position);
+            }
+        }
 
         // Check if damage was fatal
         if (IsDead)

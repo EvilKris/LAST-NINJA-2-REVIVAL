@@ -3,21 +3,41 @@
 [RequireComponent(typeof(Rigidbody))]
 public class MovementComponent : MonoBehaviour
 {
-    [Header("Movement Settings")]
+
+    [Header("Speed Modifiers")]
+    [Tooltip("Controls movement and rotation speed. 1.0 = normal, 0.5 = half speed, 2.0 = double speed.")]
+    [Range(1f, 10f)]
     public float movementSpeed = 5f;
+    [Range(0.1f, 2f)]
+    [Tooltip("Modifies the speed of movement animations (walking, running). 1.0 = normal, 0.5 = half speed, 2.0 = double speed.")]
+    public float movementAnimSpeedModifier = 1;
+    [Tooltip("Controls attack animation speed (punches, kicks, etc.). 1.0 = normal, 0.5 = half speed, 2.0 = double speed.")]
+    [Range(0.1f, 3f)]
+    public float attackSpeed = 1f;
+
+
+    [Header("Movement Settings")]
+
     public float rotationSpeed = 12f;
 
     private Rigidbody _rb;
     private Animator _animator;
 
-    [HideInInspector] public float speedMultiplier = 1.0f; // Controlled by CombatHandler
-    [HideInInspector] public float healthSpeedModifier = 1.0f; // Controlled by HealthComponent
+    //[HideInInspector] public float speedMultiplier = 1.0f; // Controlled by CombatHandler
+   // [HideInInspector] public float healthSpeedModifier = 1.0f; // Controlled by HealthComponent
     [HideInInspector] public bool canRotate = true; // Controlled by CombatHandler during attacks
 
-    // Animator Parameter Names from image_6c3b66.png
-    readonly string anim_isRunning = "isRunningBool";
-    readonly string anim_xAxis = "Input_XFloat";
-    readonly string anim_yAxis = "Input_YFloat";
+    // Animator Parameter Hashes (cached for performance)
+    private int _hashIsRunning;
+    private int _hashXAxis;
+    private int _hashYAxis;
+    private CombatHandler _combatHandler;
+
+    // Cached animator values to avoid redundant SetFloat/SetBool calls
+    private bool _lastIsRunning;
+    private float _lastXAxis;
+    private float _lastYAxis;
+
 
     private void Awake()
     {
@@ -25,29 +45,38 @@ public class MovementComponent : MonoBehaviour
         _animator = GetComponent<Animator>();
 
         // Constrain rotation so the Ninja doesn't tip over
-       // _rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        // _rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
         _rb.constraints = RigidbodyConstraints.FreezeRotation;
+
+        _combatHandler = GetComponent<CombatHandler>();
+
+        // Cache animator parameter hashes for better performance
+        _hashIsRunning = Animator.StringToHash("isRunningBool");
+        _hashXAxis = Animator.StringToHash("Input_XFloat");
+        _hashYAxis = Animator.StringToHash("Input_YFloat");
     }
 
     // --- MODE 1: FREESTYLE (Gauntlet Style) ---
     // Used when exploring or moving without a specific target.
     public void ProcessMovement(Vector3 moveDir)
     {
-        float magnitude = moveDir.magnitude;
-        bool isMoving = magnitude > 0.01f;
+        float sqrMagnitude = moveDir.sqrMagnitude;
+        bool isMoving = sqrMagnitude > 0.0001f; // sqrMagnitude of 0.01 is ~0.0001
 
         UpdateAnimatorBooleans(isMoving);
 
-        if (speedMultiplier <= 0.01f) { StopVelocity(); return; }
+        //if (speedMultiplier <= 0.01f) { StopVelocity(); return; }
 
         if (isMoving)
         {
-            _rb.linearVelocity = moveDir * (movementSpeed * speedMultiplier * healthSpeedModifier);
+            _rb.linearVelocity = moveDir * movementSpeed;
+            //_rb.linearVelocity = moveDir * (movementSpeed * speedMultiplier) * healthSpeedModifier);
             RotateTowardsDirection(moveDir);
 
             // Freestyle uses Y-axis for speed, X is ignored
-            _animator.SetFloat(anim_yAxis, magnitude);
-            _animator.SetFloat(anim_xAxis, 0f);
+            float magnitude = Mathf.Sqrt(sqrMagnitude);
+            SetAnimatorFloat(_hashYAxis, magnitude);
+            SetAnimatorFloat(_hashXAxis, 0f);
         }
         else
         {
@@ -59,13 +88,14 @@ public class MovementComponent : MonoBehaviour
     // Used by CombatActorBrain or Player Lock-On.
     public void ProcessMovement(Vector3 moveDir, Vector3 lookAtPos)
     {
-        bool isMoving = moveDir.sqrMagnitude > 0.01f;
+        bool isMoving = moveDir.sqrMagnitude > 0.0001f;
         UpdateAnimatorBooleans(isMoving);
 
-        if (speedMultiplier <= 0.01f) { StopVelocity(); return; }
+        //  if (speedMultiplier <= 0.01f) { StopVelocity(); return; }
 
         // 1. Move the Physics Body
-        _rb.linearVelocity = moveDir * (movementSpeed * speedMultiplier * healthSpeedModifier);
+        _rb.linearVelocity = moveDir * movementSpeed;
+        // _rb.linearVelocity = moveDir * (movementSpeed * speedMultiplier * healthSpeedModifier);
 
         // 2. Always face the Target
         Vector3 dirToTarget = (lookAtPos - transform.position);
@@ -76,10 +106,10 @@ public class MovementComponent : MonoBehaviour
         // This maps world movement to your 2D Blend Tree nodes (Forward, Back, Left, Right)
         Vector3 localDir = transform.InverseTransformDirection(moveDir);
 
-        _animator.SetFloat(anim_xAxis, localDir.x);
-        _animator.SetFloat(anim_yAxis, localDir.z);
+        SetAnimatorFloat(_hashXAxis, localDir.x);
+        SetAnimatorFloat(_hashYAxis, localDir.z);
     }
-
+    
     public void RotateTowardsDirection(Vector3 dir)
     {
         if (!canRotate) return; // Respect rotation lock from combat system
@@ -91,13 +121,42 @@ public class MovementComponent : MonoBehaviour
 
     private void UpdateAnimatorBooleans(bool isMoving)
     {
-        _animator.SetBool(anim_isRunning, isMoving);
+        if (_lastIsRunning != isMoving)
+        {
+            _animator.SetBool(_hashIsRunning, isMoving);
+            _lastIsRunning = isMoving;
+        }
+    }
+
+    private void SetAnimatorFloat(int hash, float value)
+    {
+        // Only update if value changed significantly (prevents micro-updates)
+        float current = hash == _hashXAxis ? _lastXAxis : _lastYAxis;
+        if (Mathf.Abs(current - value) > 0.001f)
+        {
+            _animator.SetFloat(hash, value);
+            if (hash == _hashXAxis)
+                _lastXAxis = value;
+            else
+                _lastYAxis = value;
+        }
     }
 
     private void StopVelocity()
     {
         _rb.linearVelocity = Vector3.zero;
-        _animator.SetFloat(anim_xAxis, 0f);
-        _animator.SetFloat(anim_yAxis, 0f);
+        SetAnimatorFloat(_hashXAxis, 0f);
+        SetAnimatorFloat(_hashYAxis, 0f);
+    }
+
+
+    private void Update()
+    {
+        // If currently executing a combat move, use attackSpeed
+        // Otherwise use movementSpeed for locomotion animations
+        bool isAttacking = _combatHandler != null && _combatHandler.IsAttacking;
+        _animator.speed = isAttacking ? attackSpeed : movementSpeed * movementAnimSpeedModifier;
+
+       // healthSpeedModifier = movementSpeed; //careful - adjust multiplier as needed
     }
 }

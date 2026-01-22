@@ -52,7 +52,8 @@ public class CombatActorBrain : MonoBehaviour
     private void FixedUpdate()
     {
         // Don't process AI if dead or movement is locked (e.g., during attack animations)
-        if ((_health != null && _health.IsDead) || _mover.speedMultiplier <= 0.01f) 
+        // if ((_health != null && _health.IsDead) || _mover.speedMultiplier <= 0.01f) 
+        if ((_health != null && _health.IsDead))
             return;
 
         // Validate current target or find a new one

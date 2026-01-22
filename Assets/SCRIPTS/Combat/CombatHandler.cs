@@ -116,7 +116,7 @@ public class CombatHandler : MonoBehaviour
             UpdateAudioEvents(currentTime);
 
             // --- 6. MOVEMENT AUTO-RESET ---
-            if (currentTime >= 0.95f) _movement.speedMultiplier = 1.0f;
+            //if (currentTime >= 0.95f) _movement.speedMultiplier = 1.0f;
         }
         else
         {
@@ -133,7 +133,7 @@ public class CombatHandler : MonoBehaviour
         _hitboxActive = false;
         _canAcceptComboInput = false;
         _canRotateDuringAttack = false;
-        _movement.speedMultiplier = 1.0f;
+       // _movement.speedMultiplier = 1.0f;
         _movement.canRotate = true; // Re-enable rotation when not attacking
     }
 
@@ -152,7 +152,7 @@ public class CombatHandler : MonoBehaviour
         ClearHitCache();
         ResetAudioEvents();
 
-        _movement.speedMultiplier = move.isHeavy ? 0.5f : 0f;
+       // _movement.speedMultiplier = move.isHeavy ? 0.5f : 0f;
         _movement.canRotate = move.rotationAllowanceEnd > 0f; // Set initial rotation state
 
         _overrideController[CLIP_SLOT_KEY] = move.animationClip;
