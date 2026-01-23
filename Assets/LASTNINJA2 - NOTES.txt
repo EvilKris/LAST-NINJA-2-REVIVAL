@@ -1,39 +1,102 @@
-If you want to join the project Discord me at EvilKris#1915
+﻿If you want to join the project Discord me at EvilKris#1915
 
 
 LAST NINJA II
 =============
 
-This is a very very veeery early concept piece made in just a day. 15.09.2022
+Series Overview — Core Story & Characters
+👤 Protagonist: Armakuni
 
-Obvious question - why start with LN II and not I? 
-No particular reason, I'm just a bit more attached to 1 - feel free to use to engine to do the first game. 
+Armakuni is the main character of all three games — a ninja and the sole survivor of his clan after it was destroyed by the evil Shogun Kunitoki.
 
+Across the trilogy, he travels through vastly different worlds and eras to confront Kunitoki and stop his schemes.
 
-TO-DO:
+👹 Antagonist: Kunitoki
 
-UNITY- 
--main model could use 'butching' up. Looks a tad feminine. 
--need a cooler run animation that's more similar to the game
--need some rigid body script to the rigid body
--obviously need to start adding in fighting moves. 
--etc 
+Kunitoki is the recurring villain in the series — an ambitious and malevolent Shogun who envies the ninjas’ power.
 
-Probably best to msg me with suggestions for what you want to do at this stage. Nothing is fixed in stone, even the control scheme. 
+Each game culminates in a confrontation with him, but he always survives or returns to challenge Armakuni again.
 
+🥷 The Last Ninja (1987) — Origins & Revenge
+📜 Setting & Premise
 
-MODELLING-
-At the moment everything is mainly using one texture map (color-atlas) although some of the walls are using tiles. If you do add textures keep them super low res (128x128 max) 
--more rooms need to be modelled. I'm not sure if we'll join them all up in the end or have them work like the games where you 'portal' the next ones, but modellers, for the time being just use the same strategy in the Blender file, leave Back-face culling on the walls facing the camera, and overlay each room. Use the Astro guy character for perspective.  Ensure to model the rooms as close as possible to the game. 
+The story begins in feudal Japan: Armakuni’s ninja clan has been slaughtered by Shogun Kunitoki. Every decade, the clan gathers on the island of Lin Fen to renew their sacred ninja teachings from the mystical Koga scrolls. Kunitoki ambushes them there to steal the secrets.
 
--we need all the weapons from the game modelled. 
+🗡️ Armakuni’s Quest
 
-Do not simply add random characters, open up the the Models/Last Ninja Characters blend from Unity (as long as Blender is your default modelling studio) and simply pick one of the models on there and modify it. About the only one I want to keep in is the man_ninja and man_joker. 
-The rest you can play with to make some cool samurai characters.  
+One ninja — Armakuni — was away guarding another shrine and thus survives. Realising the massacre, he vows revenge on Kunitoki and to retrieve the stolen scrolls.
 
-UI-
+The gameplay follows his journey across Lin Fen’s dangerous landscapes — deserts, gardens, dungeons — leading toward Kunitoki’s palace.
 
-The health bars will need to be cut out. 
-Someone will have to code a mask routine to reduce the health bars to increment/decrement in the same spiral fashion they did in the game. On Awake they should increment from 0% to 100% approx 1/s. Good luck! 
+🎮 Themes
 
-We will also need some holders for the Weapons Held parts of the screen and the Inventory, and some Text boxes over the blue areas for Time used and Messages
+Revenge and honour
+
+Restoration of ninja legacy
+
+Mystical martial tradition
+
+🥷 Last Ninja 2: Back With a Vengeance (1988) — Time-Displaced Battle
+🕰️ Plot Continuation
+
+After the first game’s events, Armakuni begins training a new ninja order with the recovered Koga scrolls.
+
+🌆 Time Travel Twist
+
+During training, he is mysteriously pulled through time to modern-day New York City.
+
+Kunitoki has also established a new empire of influence in Manhattan through mystical powers.
+
+⚔️ Modern Conflict
+
+Armakuni, now in an unfamiliar era, must battle through urban environments — parks, streets, sewers, towers — using both ancient skill and found weapons like nunchaku and metal pipes.
+
+His goal remains the same: defeat Kunitoki once and for all and end his tyranny.
+
+🧠 Narrative Tone Shift
+
+This game blends ninja revenge with a culture-clash adventure — a classical warrior confronting modernity.
+
+🥷 Last Ninja 3 (1991) — The Final Confrontation
+🌄 Return to Ancient Setting
+
+In the third and final game, Armakuni returns to a mystical setting after his New York exploits.
+
+The confrontation with Kunitoki reaches its climax in a Buddhist temple in Tibet, known as the “Palace of Mysteries.”
+
+🌀 Element-Based Levels
+
+The game’s structure is divided into five elemental levels: Earth, Wind, Water, Fire, and Limbo/Void (with some versions using different names or exclusives).
+
+Each element represents a unique environment and set of challenges that Armakuni must overcome to reach Kunitoki.
+
+⚔️ Climactic Battle
+
+The final confrontation takes place within these temple chambers, where Armakuni must defeat Kunitoki and end his influence for good.
+
+Throughout these trials, the themes of honour, mastery, and mystical prowess resonate strongly.
+
+🧠 Series Timeline & Themes
+Game	Setting	Core Objective	Antagonist
+The Last Ninja	Lin Fen Island, Feudal Japan	Avenge clan, retrieve scrolls	Kunitoki
+Last Ninja 2	Modern-day New York City	Defeat Kunitoki, return peace	Kunitoki
+Last Ninja 3	Tibetan Temple (mystical)	Final showdown with Kunitoki	Kunitoki
+🔍 Core Narrative Elements Across the Trilogy
+
+Armakuni’s journey: From survivor in feudal Japan → time-displaced warrior → triumphant master.
+
+Kunitoki’s persistence: Though defeated repeatedly, he always returns — reinforcing the “evil never dies” motif.
+
+Change of worlds: Each game dramatically shifts the backdrop — from traditional to modern to mystical — expanding both gameplay and thematic scope.
+
+Balance of mysticism and action: Traditions, cursed scrolls, and spiritual settings underpin all three narratives.
+
+🧾 Final Summary
+
+The Last Ninja trilogy charts a remarkable evolution in both story and setting:
+
+Begins with honour and revenge in ancient Japan.
+
+Transitions to a time-warped battle in a world unfamiliar to a traditional ninja.
+
+Closes with a spiritual reckoning in an elemental temple — a final test of skill and virtue.

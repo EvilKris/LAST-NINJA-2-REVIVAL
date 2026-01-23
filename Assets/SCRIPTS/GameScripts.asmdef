@@ -1,0 +1,23 @@
+{
+    "name": "GameScripts",
+    "rootNamespace": "",
+    "references": [
+        "Unity.InputSystem",
+        "com.Brogrammist.JSAM",
+        "Unity.Cinemachine",
+        "Unity.TextMeshPro",
+        "InputSystem",
+        "DOTweenModules"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [
+        "DOTween.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

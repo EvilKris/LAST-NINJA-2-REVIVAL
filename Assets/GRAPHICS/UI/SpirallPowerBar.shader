@@ -5,7 +5,7 @@ Shader "UI/SquareSpiralSlider"
         [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
         _FilledColor ("Filled Color", Color) = (0,1,0,1)
         _EmptyColor ("Empty Color", Color) = (0.3,0.3,0.3,1)
-        _FillAmount ("Fill Amount", Range(0, 1)) = 0.5
+        _FillAmount ("Fill Amount", Range(0, 1)) = 1
         _SpiralScale ("Spiral Scale", Float) = 8.0
         _LineWidth ("Line Width", Range(0, 1)) = 0.4
         

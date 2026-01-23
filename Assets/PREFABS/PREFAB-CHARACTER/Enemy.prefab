@@ -320,7 +320,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 95135024985a86544b213b25ea73fa62,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 400
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 95135024985a86544b213b25ea73fa62,
         type: 3}
@@ -330,7 +330,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 95135024985a86544b213b25ea73fa62,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 630.66
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 95135024985a86544b213b25ea73fa62,
         type: 3}
@@ -976,9 +976,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a3cc4ee97020c441a63227116d1969d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MovementComponent
-  movementSpeed: 5
+  movementSpeed: 1
+  movementAnimSpeedModifier: 1
+  attackSpeed: 1
   rotationSpeed: 60
-  speedMultiplier: 1
   canRotate: 1
 --- !u!114 &3074308257427588519
 MonoBehaviour:
@@ -1010,8 +1011,7 @@ MonoBehaviour:
   faction: 2
   lockOnPoint: {fileID: 0}
   isInvulnerable: 0
-  movementSpeed: 1
-  attackSpeed: 1
+  characterAudioSO: {fileID: 11400000, guid: 3a7fdf66a8af2ec4fae3651f64a6ef25, type: 2}
 --- !u!114 &4341398009056410849
 MonoBehaviour:
   m_ObjectHideFlags: 0

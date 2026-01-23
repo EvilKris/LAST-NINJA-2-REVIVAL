@@ -55,9 +55,9 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     public event Action OnDeath;
     
     /// <summary>
-    /// Fired whenever health changes, passing the new current health value.
+    /// Fired whenever health changes, passing current health, max health, and faction.
     /// </summary>
-    public event Action<float> OnHealthChanged;
+    public event Action<float, float, Faction> OnHealthChanged;
 
     /// <summary>
     /// Initialize health to maximum value.
@@ -93,15 +93,11 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     {
         if (IsDead || isInvulnerable) return;
 
-        currentHealth -= damage;
-
-        
-        // Apply damage and clamp to 0
+        // FIXED: Only subtract damage once
         currentHealth -= damage;
         currentHealth = Mathf.Max(currentHealth, 0);
-        
-        // Notify listeners of health change
-        OnHealthChanged?.Invoke(currentHealth);
+
+        OnHealthChanged?.Invoke(currentHealth, maxHealth, faction);
 
         // Play hit reaction sound if available
         if (characterAudioSO != null && type != HitReactionType.None)
@@ -122,8 +118,8 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         // Check if damage was fatal
         if (IsDead)
         {
-            OnDeath?.Invoke();
-            Debug.Log($"{gameObject.name} has died. (Shibō - 死亡)");
+            HandleDeath(); // Trigger the sequence
+            return; // Exit early so we don't play a hit reaction on a corpse
         }
         else
         {
@@ -131,27 +127,62 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
             OnHit?.Invoke();
         }
 
+
+        // Trigger hit reaction only if alive
         if (_animator != null)
         {
-            // Randomize the "side" for high hits
-            if (type == HitReactionType.Light_High)
-            {
-                _animator.SetFloat("f_Random", UnityEngine.Random.value);
-                _animator.SetInteger("i_HitType", 0);
-            }
-            else if (type == HitReactionType.Light_Low)
-            {
-                _animator.SetInteger("i_HitType", 1);
-            }
-            else if (type == HitReactionType.Heavy_Back)
-            {
-                _animator.SetInteger("i_HitType", 2);
-            }
+            SetHitAnimatorParameters(type);
+            _animator.SetTrigger("t_GetHit");
+        }
+    }
 
-            _animator.SetTrigger("t_GetHit"); // Fire the Any State transition
+    private void HandleDeath()
+    {
+        OnDeath?.Invoke();
+        Debug.Log($"{gameObject.name} has died. (Shibō - 死亡)");
+
+        if (_animator != null)
+        {
+            _animator.SetBool("isDead", true); // Move to Death State
         }
 
+        // Disable components so the "corpse" doesn't slide around or block hits
+        // if (TryGetComponent<Collider>(out var col)) col.enabled = false;
+        foreach (var collider in GetComponents<Collider>())
+        {
+            collider.enabled = false;
+        }
 
+        // Start the removal timer
+        StartCoroutine(DeathCleanupSequence());
+    }
+
+    private System.Collections.IEnumerator DeathCleanupSequence()
+    {
+        // Wait for the animation to play out (adjust 3.0f to match your clip length)
+        yield return new WaitForSeconds(3.0f);
+
+        // Optional: Add a simple fade-out or puff of smoke here
+
+        Destroy(gameObject); // Remove from scene
+    }
+
+    private void SetHitAnimatorParameters(HitReactionType type)
+    {
+        // Organized your animator logic into a helper method
+        if (type == HitReactionType.Light_High)
+        {
+            _animator.SetFloat("f_Random", UnityEngine.Random.value);
+            _animator.SetInteger("i_HitType", 0);
+        }
+        else if (type == HitReactionType.Light_Low)
+        {
+            _animator.SetInteger("i_HitType", 1);
+        }
+        else if (type == HitReactionType.Heavy_Back)
+        {
+            _animator.SetInteger("i_HitType", 2);
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════

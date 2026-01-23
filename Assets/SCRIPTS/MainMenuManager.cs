@@ -44,7 +44,7 @@ public class MainMenuManager : MonoBehaviour
     {
         JSAM.AudioManager.PlaySound(clickSound);
 
-        MasterSingleton.Instance.UIManager.UICamShake(uiCanvasRect, 2f, 30f, 5);
+        MasterSingleton.Instance.UIManager.UICamShake(uiCanvasRect, 2f, 10f, 25);
 
         mainMenuCanvasGroup.DOFade(0f, fadeOutDuration)
             .SetEase(fadeOutCurve)

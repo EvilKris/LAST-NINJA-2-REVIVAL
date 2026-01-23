@@ -9,10 +9,10 @@ using JSAM;
 public class CharacterAudioSO : ScriptableObject
 {
     [Header("Impact Reaction Sound Effects")]
-    [Tooltip("Sound played for light hits to the head/chest area")]
-    public SoundFileObject lightHighImpactSFX;
-    [Tooltip("Sound played for light hits to the stomach/leg area")]
-    public SoundFileObject lightLowImpactSFX;
+    [Tooltip("Sound played for light hits")]
+    public SoundFileObject lightImpactSFX;
+    [Tooltip("Sound played for medium hits")]
+    public SoundFileObject medImpactSFX;
     [Tooltip("Sound played for heavy hits that stagger the character backward")]
     public SoundFileObject heavyStaggerImpactSFX;
     [Tooltip("Sound played when the character is knocked down to the ground")]
@@ -20,15 +20,17 @@ public class CharacterAudioSO : ScriptableObject
     [Tooltip("Sound played when the character is launched into the air")]
     public SoundFileObject launchImpactSFX;
 
-    [Header("Pain Vocals/Grunts Sound Effects")]
+    [Header("Pain Vocals/Grunts Sound Effects/Death")]
     [Tooltip("Sound played for light pain vocals/grunts - played randomly not every instance")]
     public SoundFileObject lightPainVocalSFX;
     [Tooltip("Sound played for heavy pain vocals/grunts - always played")]
     public SoundFileObject heavyPainVocalSFX;
+    [Tooltip("Sound played for death")]
+    public SoundFileObject deathVocalSFX;
 
     [Header("Talking")]
     [Tooltip("Sound played for character talking/dialogue")]    
-    public SoundFileObject talkingSFX;  
+    public SoundFileObject vocalSFX;  
 
 
     /// <summary>
@@ -42,9 +44,9 @@ public class CharacterAudioSO : ScriptableObject
         switch (reactionType)
         {
             case HitReactionType.Light_High:
-                return lightHighImpactSFX;
+                return lightImpactSFX;
             case HitReactionType.Light_Low:
-                return lightLowImpactSFX;
+                return lightImpactSFX;
             case HitReactionType.Heavy_Back:
                 return heavyStaggerImpactSFX;
             case HitReactionType.Knockdown:

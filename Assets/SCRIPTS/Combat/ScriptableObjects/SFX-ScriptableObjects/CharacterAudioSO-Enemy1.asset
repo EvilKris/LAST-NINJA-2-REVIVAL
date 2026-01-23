@@ -12,8 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9870ac1df90397542b5e6d6819917f0d, type: 3}
   m_Name: CharacterAudioSO-Enemy1
   m_EditorClassIdentifier: Assembly-CSharp::CharacterAudioSO
-  lightHighSound: {fileID: 0}
-  lightLowSound: {fileID: 0}
-  heavyBackSound: {fileID: 0}
-  knockdownSound: {fileID: 0}
-  launchSound: {fileID: 0}
+  lightImpactSFX: {fileID: 11400000, guid: dc879221f89ac994ab49e8d4750ce6b2, type: 2}
+  medImpactSFX: {fileID: 0}
+  heavyStaggerImpactSFX: {fileID: 0}
+  knockdownImpactSFX: {fileID: 0}
+  launchImpactSFX: {fileID: 0}
+  lightPainVocalSFX: {fileID: 11400000, guid: 00fd5b2fc9e0f024fbc914b771bbf7a5, type: 2}
+  heavyPainVocalSFX: {fileID: 11400000, guid: 155101a4ffdcd934ea33694d95450812, type: 2}
+  deathVocalSFX: {fileID: 11400000, guid: 93d98c2b2bc89974d9ab96a39ae526dd, type: 2}
+  vocalSFX: {fileID: 11400000, guid: 3da7344fb14547a44ab924f9993f05a6, type: 2}
