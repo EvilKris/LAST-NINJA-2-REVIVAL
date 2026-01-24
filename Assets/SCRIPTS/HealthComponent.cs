@@ -143,15 +143,16 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
 
         if (_animator != null)
         {
-            _animator.SetBool("isDead", true); // Move to Death State
+            _animator.SetTrigger("isDead"); // Move to Death State
         }
 
         // Disable components so the "corpse" doesn't slide around or block hits
         // if (TryGetComponent<Collider>(out var col)) col.enabled = false;
+        /*
         foreach (var collider in GetComponents<Collider>())
         {
             collider.enabled = false;
-        }
+        }*/
 
         // Start the removal timer
         StartCoroutine(DeathCleanupSequence());

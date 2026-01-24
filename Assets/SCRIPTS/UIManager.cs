@@ -11,6 +11,25 @@ public class UIManager : MonoBehaviour
     [SerializeField]private Image playerHealthUI;
     [SerializeField]private Image enemyHealthUI;
 
+    private Material playerHealthMaterial;
+    private Material enemyHealthMaterial;
+
+    private void Awake()
+    {
+        // Create material instances to avoid shared material issues
+        if (playerHealthUI != null && playerHealthUI.material != null)
+        {
+            playerHealthMaterial = new Material(playerHealthUI.material);
+            playerHealthUI.material = playerHealthMaterial;
+        }
+
+        if (enemyHealthUI != null && enemyHealthUI.material != null)
+        {
+            enemyHealthMaterial = new Material(enemyHealthUI.material);
+            enemyHealthUI.material = enemyHealthMaterial;
+        }
+    }
+
     private void Start()
     {
         ActivateInGameOverlay();
@@ -39,19 +58,29 @@ public class UIManager : MonoBehaviour
     {
         float normalizedHealth = maxHealth > 0 ? currentHealth / maxHealth : 0;
 
-        if (faction == Faction.Player && playerHealthUI != null)
+        if (faction == Faction.Player && playerHealthMaterial != null)
         {
-            playerHealthUI.material.SetFloat("_FillAmount", normalizedHealth);
+            playerHealthMaterial.SetFloat("_FillAmount", normalizedHealth);
         }
-        else if (faction == Faction.Enemy && enemyHealthUI != null)
+        else if (faction == Faction.Enemy && enemyHealthMaterial != null)
         {
             //Debug.Log($"Updating enemy health UI: {normalizedHealth}");
-            enemyHealthUI.material.SetFloat("_FillAmount", normalizedHealth);
+            enemyHealthMaterial.SetFloat("_FillAmount", normalizedHealth);
         }
     }
 
     private void OnDestroy()
     {
+        // Clean up material instances
+        if (playerHealthMaterial != null)
+        {
+            Destroy(playerHealthMaterial);
+        }
+        if (enemyHealthMaterial != null)
+        {
+            Destroy(enemyHealthMaterial);
+        }
+
         HealthComponent[] allHealthComponents = Object.FindObjectsByType<HealthComponent>(FindObjectsSortMode.None);
         foreach (HealthComponent health in allHealthComponents)
         {
