@@ -146,6 +146,10 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
             _animator.SetTrigger("isDead"); // Move to Death State
         }
 
+        // Swap materials to phantom/ghost material 
+        PrefabBankManager _bank = MasterSingleton.Instance.PrefabBankManager;
+        _bank.SwapOutAllMaterials(gameObject, _bank.PhantomMaterial,false);
+
         // Disable components so the "corpse" doesn't slide around or block hits
         // if (TryGetComponent<Collider>(out var col)) col.enabled = false;
         /*
