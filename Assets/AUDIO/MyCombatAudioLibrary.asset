@@ -15,7 +15,7 @@ MonoBehaviour:
   soundCategories:
   - 
   musicCategories:
-  - 
+  - LastNinja-Music
   Sounds:
   - {fileID: 11400000, guid: e6ac0ca55c133c04585a8ba5c874503d, type: 2}
   - {fileID: 11400000, guid: 65537251b5504b740b0550f8dc581c0c, type: 2}
@@ -33,6 +33,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3da7344fb14547a44ab924f9993f05a6, type: 2}
   Music:
   - {fileID: 11400000, guid: 08661f7bde1f75e42bdad31f5747c928, type: 2}
+  - {fileID: 11400000, guid: dec5a987c10e1564c81c259e7259b54f, type: 2}
   useCustomNames: 0
   generatedName: MyCombatAudioLibrary
   musicEnum: MyCombatAudioLibraryMusic
@@ -62,7 +63,8 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 3da7344fb14547a44ab924f9993f05a6, type: 2}
     foldout: 1
   musicCategoriesToList:
-  - name: 
+  - name: LastNinja-Music
     files:
     - {fileID: 11400000, guid: 08661f7bde1f75e42bdad31f5747c928, type: 2}
+    - {fileID: 11400000, guid: dec5a987c10e1564c81c259e7259b54f, type: 2}
     foldout: 1

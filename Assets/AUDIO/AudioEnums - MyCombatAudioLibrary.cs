@@ -15,5 +15,6 @@
         enemy1vocals
     }
     public enum MyCombatAudioLibraryMusic {
-        Level1TheWastelands
+        Level1TheWastelands,
+        Level1TheWastelandsLoader
     }

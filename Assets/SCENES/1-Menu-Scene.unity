@@ -150,7 +150,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   clickSound: {fileID: 11400000, guid: 96bd448d1db693f48a2c9afda40500ae, type: 2}
   overSound: {fileID: 11400000, guid: 2ed5a06ea2465cb47a1801bb66bce227, type: 2}
-  myMusic: {fileID: 11400000, guid: 08661f7bde1f75e42bdad31f5747c928, type: 2}
+  myMusic: {fileID: 11400000, guid: dec5a987c10e1564c81c259e7259b54f, type: 2}
+  musicFadeOutDuration: 1
   mainMenuCanvasGroup: {fileID: 565682588}
   fadeOutDuration: 1
   fadeOutCurve:
@@ -878,9 +879,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   colors:
-  - {r: 0.5754717, g: 0.5754717, b: 0.5754717, a: 1}
-  - {r: 0.38679248, g: 0.38679248, b: 0.38679248, a: 1}
-  - {r: 0.122641504, g: 0.122641504, b: 0.122641504, a: 1}
+  - {r: 1, g: 1, b: 1, a: 1}
+  - {r: 0.6320754, g: 0.6320754, b: 0.6320754, a: 1}
+  - {r: 0.2735849, g: 0.2735849, b: 0.2735849, a: 1}
   transitionDuration: 0.5
   enableBlink: 0
   blinkInterval: 1
@@ -965,12 +966,12 @@ MonoBehaviour:
   m_DstBlendMode: 10
   m_ShadowMode: 2
   m_ShadowDistance: {x: 1, y: -1}
-  m_ShadowIteration: 1
+  m_ShadowIteration: 5
   m_ShadowFade: 0.156
   m_ShadowMirrorScale: 0.5
   m_ShadowBlurIntensity: 1
-  m_ShadowColorFilter: 2
-  m_ShadowColor: {r: 0.09674028, g: 0.103773594, b: 0.031817377, a: 1}
+  m_ShadowColorFilter: 1
+  m_ShadowColor: {r: 0, g: 0, b: 0, a: 1}
   m_ShadowColorGlow: 0
   m_GradationMode: 0
   m_GradationIntensity: 1
