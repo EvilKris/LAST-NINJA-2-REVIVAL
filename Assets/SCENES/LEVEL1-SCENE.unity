@@ -1461,8 +1461,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.02093149, y: -0.9746223, z: 0.19749214, w: -0.103296764}
-  m_LocalPosition: {x: 398.40918, y: 3.892848, z: 635.9165}
+  m_LocalRotation: {x: 0.14746274, y: 0.81403494, z: -0.23531167, w: 0.51012766}
+  m_LocalPosition: {x: 392.72873, y: 5.335536, z: 630.5979}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -15761,6 +15761,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ninja-Rigged-InGame
       objectReference: {fileID: 0}
+    - target: {fileID: 80848986472197700, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 744478314211603710, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -15811,6 +15816,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4021816621611794343, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5478634035105202523, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
         type: 3}
       propertyPath: m_ActionEvents.Array.data[0].m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -15821,6 +15831,16 @@ PrefabInstance:
       propertyPath: m_ActionEvents.Array.data[1].m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
       objectReference: {fileID: 1454206019}
+    - target: {fileID: 7721976591884777899, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
+      propertyPath: movementSpeed
+      value: 5.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7721976591884777899, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
+      propertyPath: movementAnimSpeedModifier
+      value: 0.22
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
