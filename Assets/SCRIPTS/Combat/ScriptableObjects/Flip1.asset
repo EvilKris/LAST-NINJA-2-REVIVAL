@@ -1478,7 +1478,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  motionScale: 1.5
+  motionScale: 1.8
   damage: 0
   isHeavy: 0
   reactionToTrigger: 1

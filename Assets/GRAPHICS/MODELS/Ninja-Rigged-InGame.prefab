@@ -618,9 +618,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1a3cc4ee97020c441a63227116d1969d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MovementComponent
-  movementSpeed: 5
-  movementAnimSpeedModifier: 0.3
+  movementSpeed: 5.8
+  movementAnimSpeedModifier: 0.22
   attackSpeed: 2.2
+  acrobaticSpeed: 1.5
   rotationSpeed: 60
   canRotate: 1
 --- !u!114 &4361029597219818444

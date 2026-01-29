@@ -1,32 +1,7 @@
 ﻿using UnityEngine;
 using JSAM;
 
-public enum HitboxType
-{
-    Fist,
-    Foot,
-    Katana,
-    Nunchaku,
-    Staff,
-    Shuriken,
-    Utility,
-    None
-}
-
 [System.Serializable]
-
-
-public enum HitReactionType
-{
-    None,
-    Light_High,  // Head/Chest snap
-    Light_Low,   // Stomach/Leg flinch
-    Heavy_Back,  // Stagger backward
-    Knockdown,   // Fall to ground
-    Launch       // Air combo starter
-}
-[System.Serializable]
-
 public struct AnimationAudioEvent
 {
     [Range(0f, 1f)] public float triggerTime;
@@ -141,6 +116,10 @@ public class CombatMove : ScriptableObject
         float clipDuration = AnimationDuration;
         float fromTime = Mathf.Clamp01(fromNormalized) * clipDuration;
         float toTime = Mathf.Clamp01(toNormalized) * clipDuration;
+
+        // Add epsilon to prevent sampling the exact same point
+        if (Mathf.Abs(toTime - fromTime) < 0.001f)
+            return 0f;
 
         // Sample the curve at absolute times
         float fromDistance = motionCurve.Evaluate(fromTime);

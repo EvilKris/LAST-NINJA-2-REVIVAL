@@ -74,7 +74,7 @@ Material:
     - _OcclusionStrength: 1
     - _Parallax: 0.02
     - _ScrollAngle: 90
-    - _ScrollSpeed: 0.2
+    - _ScrollSpeed: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -87,10 +87,10 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _Color1: {r: 0.41255784, g: 0.55565697, b: 0.6886792, a: 1}
-    - _Color2: {r: 0.3066038, g: 0.6374399, b: 1, a: 1}
-    - _Color3: {r: 0.5372549, g: 0.827451, b: 0.99215686, a: 1}
-    - _Color4: {r: 0.53733534, g: 0.8274801, b: 0.990566, a: 1}
+    - _Color1: {r: 0.5849056, g: 0.47787583, b: 0.16278034, a: 1}
+    - _Color2: {r: 0.5424528, g: 0.69079953, b: 1, a: 1}
+    - _Color3: {r: 0.098878615, g: 0.103773594, b: 0.09153614, a: 1}
+    - _Color4: {r: 0.6462264, g: 1, b: 0.6914519, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

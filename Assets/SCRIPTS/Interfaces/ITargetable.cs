@@ -1,19 +1,6 @@
 using UnityEngine;
 
 /// <summary>
-/// Defines the faction/team alignment for game entities.
-/// Used for target selection, AI behavior, and combat interactions.
-/// </summary>
-public enum Faction
-{
-    Player,      // Player-controlled character (only one per game)
-    Neutral,     // Non-hostile NPCs, civilians
-    Enemy,       // Hostile enemies
-    Companion,   // Friendly AI allies
-    Environment  // Destructible objects, traps
-}
-
-/// <summary>
 /// Interface for entities that can be targeted by the player's lock-on system or AI.
 /// Implement this on any GameObject that should be selectable as a combat target
 /// (enemies, breakable objects, NPCs, etc.).

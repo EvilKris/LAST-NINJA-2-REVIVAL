@@ -14,7 +14,9 @@ public class MovementComponent : MonoBehaviour
     [Tooltip("Controls attack animation speed (punches, kicks, etc.). 1.0 = normal, 0.5 = half speed, 2.0 = double speed.")]
     [Range(0.1f, 3f)]
     public float attackSpeed = 1f;
-
+    [Tooltip("Controls acrobatic animation speed (flips, climb, etc.). 1.0 = normal, 0.5 = half speed, 2.0 = double speed.")]
+    [Range(1.5f, 10f)]
+    public float acrobaticSpeed = 5f;   
 
     [Header("Movement Settings")]
 
@@ -153,10 +155,16 @@ public class MovementComponent : MonoBehaviour
     private void Update()
     {
         // If currently executing a combat move, use attackSpeed
+        // If executing an acrobatic move, use acrobaticSpeed
         // Otherwise use movementSpeed for locomotion animations
         bool isAttacking = _combatHandler != null && _combatHandler.IsAttacking;
-        _animator.speed = isAttacking ? attackSpeed : movementSpeed * movementAnimSpeedModifier;
-
-       // healthSpeedModifier = movementSpeed; //careful - adjust multiplier as needed
+        bool isAcrobatic = _combatHandler != null && _combatHandler.IsAcrobatic;
+        
+        if (isAcrobatic)
+            _animator.speed = acrobaticSpeed;
+        else if (isAttacking)
+            _animator.speed = attackSpeed;
+        else
+            _animator.speed = movementSpeed * movementAnimSpeedModifier;
     }
 }

@@ -23,6 +23,7 @@ public class CombatHandler : MonoBehaviour
     private CombatHitbox[] _allHitboxes;
     private bool _hitboxActive;
     private bool _canAcceptComboInput; // New flag for window-based combos
+    private bool _isAcrobaticMove; // Tracks if current move is acrobatic
 
     [Header("Input Timing")]
     private float _attackHoldTimer;
@@ -43,6 +44,7 @@ public class CombatHandler : MonoBehaviour
 
     public bool CanRotateDuringAttack => _canRotateDuringAttack;
     public bool IsAttacking => _activeMove != null;
+    public bool IsAcrobatic => _isAcrobaticMove;
 
     private void Awake()
     {
@@ -53,7 +55,45 @@ public class CombatHandler : MonoBehaviour
         _overrideController = new AnimatorOverrideController(_animator.runtimeAnimatorController);
         _animator.runtimeAnimatorController = _overrideController;
 
+        _animator.updateMode = AnimatorUpdateMode.Fixed;
+
         _allHitboxes = GetComponentsInChildren<CombatHitbox>();
+    }
+
+    private void FixedUpdate()
+    {
+        if (_activeMove == null) return;
+
+        var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+
+        if (stateInfo.IsName("ReplaceableAttack"))
+        {
+            float currentTime = stateInfo.normalizedTime;
+
+            if (currentTime >= 1.0f)
+            {
+                ResetCombatState();
+                return;
+            }
+
+            // Calculate motion delta - this ensures frame-rate independent movement
+            if (currentTime > _lastNormalizedTime && _lastNormalizedTime >= 0)
+            {
+                float deltaDistance = _activeMove.EvaluateMotionDelta(_lastNormalizedTime, currentTime);
+
+                if (deltaDistance > 0)
+                {
+                    Vector3 movement = transform.forward * deltaDistance;
+                    transform.position += movement;
+                }
+            }
+
+            _lastNormalizedTime = currentTime;
+        }
+        else
+        {
+            ResetCombatState();
+        }
     }
 
     private void Update()
@@ -64,40 +104,14 @@ public class CombatHandler : MonoBehaviour
 
         if (stateInfo.IsName("ReplaceableAttack"))
         {
-            // Use the absolute normalized time (0 to 1)
-            // We avoid % 1f here to prevent the 'Double-Jump' on loops
             float currentTime = stateInfo.normalizedTime;
 
-            // If we've passed 1.0, the move is over. 
-            if (currentTime >= 1.0f)
-            {
-                ResetCombatState();
-                return;
-            }
-
-            // This ensures we only move if the animator has actually progressed
-            if (currentTime > _lastNormalizedTime && _lastNormalizedTime >= 0)
-            {
-                // We calculate exactly how much of the CURVE we covered since last frame
-                float deltaDistance = _activeMove.EvaluateMotionDelta(_lastNormalizedTime, currentTime);
-
-                if (deltaDistance > 0)
-                {
-                    // Move along the current facing direction
-                    transform.position += transform.forward * deltaDistance;
-                }
-            }
-
-            _lastNormalizedTime = currentTime;
-
-
-            // --- 2. HITBOX WINDOW ---
+            // --- HITBOX WINDOW ---
             bool shouldBeOpen = _activeMove.IsInHitWindow(currentTime);
             if (shouldBeOpen && !_hitboxActive)
             {
                 OpenHitbox((int)_activeMove.hitboxType);
                 _hitboxActive = true;
-                //PlayAttackSFX(currentTime); // Optional: Trigger sound on hit start
             }
             else if (!shouldBeOpen && _hitboxActive)
             {
@@ -105,22 +119,15 @@ public class CombatHandler : MonoBehaviour
                 _hitboxActive = false;
             }
 
-            // --- 3. COMBO WINDOW ---
+            // --- COMBO WINDOW ---
             _canAcceptComboInput = _activeMove.IsInComboWindow(currentTime);
 
-            // --- 4. ROTATION ALLOWANCE ---
+            // --- ROTATION ALLOWANCE ---
             _canRotateDuringAttack = _activeMove.CanRotate(currentTime);
             _movement.canRotate = _canRotateDuringAttack;
 
-            // --- 5. AUDIO EVENTS ---
+            // --- AUDIO EVENTS ---
             UpdateAudioEvents(currentTime);
-
-            // --- 6. MOVEMENT AUTO-RESET ---
-            //if (currentTime >= 0.95f) _movement.speedMultiplier = 1.0f;
-        }
-        else
-        {
-            ResetCombatState();
         }
     }
 
@@ -133,6 +140,7 @@ public class CombatHandler : MonoBehaviour
         _hitboxActive = false;
         _canAcceptComboInput = false;
         _canRotateDuringAttack = false;
+        _isAcrobaticMove = false;
        // _movement.speedMultiplier = 1.0f;
         _movement.canRotate = true; // Re-enable rotation when not attacking
     }
@@ -145,15 +153,14 @@ public class CombatHandler : MonoBehaviour
         _hitboxActive = false;
         _canAcceptComboInput = false;
 
-        // Fix: Initialize to a small negative value so the first frame (0) 
+        // Initialize to a small negative value so the first frame (0) 
         // is always greater than _lastNormalizedTime
         _lastNormalizedTime = -0.01f;
 
         ClearHitCache();
         ResetAudioEvents();
 
-       // _movement.speedMultiplier = move.isHeavy ? 0.5f : 0f;
-        _movement.canRotate = move.rotationAllowanceEnd > 0f; // Set initial rotation state
+        _movement.canRotate = move.rotationAllowanceEnd > 0f;
 
         _overrideController[CLIP_SLOT_KEY] = move.animationClip;
         // Force the animator to update its state immediately
@@ -172,6 +179,7 @@ public class CombatHandler : MonoBehaviour
         if (flipMove == null) return;
 
         // Trigger the move logic
+        _isAcrobaticMove = true;
         PlayMove(flipMove);
 
         // Optional: Since it's a flip, we might want to ignore collisions 
