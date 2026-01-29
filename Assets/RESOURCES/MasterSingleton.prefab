@@ -148,6 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 511f401cfcd7c8c4bbd51bb1a0ea35b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  musicToggle: 1
 --- !u!1 &3148289131340771517
 GameObject:
   m_ObjectHideFlags: 0
@@ -177,8 +178,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3148289131340771517}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.256301, y: -0.59383994, z: 0.20737815, w: 0.7339334}
-  m_LocalPosition: {x: 406.16165, y: 3.7350872, z: 631.69116}
+  m_LocalRotation: {x: 0.14746274, y: 0.81403494, z: -0.23531167, w: 0.51012766}
+  m_LocalPosition: {x: 392.72873, y: 5.335536, z: 630.5979}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -605,12 +606,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 117196, guid: 8e822925c8923ae4ab98d2bad8795232, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 538279317434716758, guid: 8e822925c8923ae4ab98d2bad8795232,
         type: 3}
       propertyPath: m_AnchorMax.y
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1277860026561451606, guid: 8e822925c8923ae4ab98d2bad8795232,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2618010296109743867, guid: 8e822925c8923ae4ab98d2bad8795232,
         type: 3}

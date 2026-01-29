@@ -34,6 +34,7 @@ public class MainMenuManager : MonoBehaviour
     private void Start()
     {
         JSAM.AudioManager.PlayMusic(myMusic, true);
+        MasterSingleton.Instance.GameDataManager.IsPauseAllowed = false;
     }
 
     private void OnDisable()
@@ -70,7 +71,7 @@ public class MainMenuManager : MonoBehaviour
     public void StartGame()
     {
         JSAM.AudioManager.PlaySound(clickSound);
-
+       
         MasterSingleton.Instance.UIManager.UICamShake(uiCanvasRect, 2f, 10f, 25);
 
         JSAM.AudioManager.StopMusic(myMusic, null, false);
@@ -88,7 +89,8 @@ public class MainMenuManager : MonoBehaviour
                 {
                     uiCanvasRect.DOKill();
                 }
-                
+
+                MasterSingleton.Instance.GameDataManager.IsPauseAllowed = true; //may have to move this to when the actual scene begins rather than when the load starts
                 int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
                 SceneManager.LoadScene(nextSceneIndex);
             });

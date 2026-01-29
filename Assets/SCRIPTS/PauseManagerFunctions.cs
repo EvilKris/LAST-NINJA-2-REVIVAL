@@ -81,7 +81,7 @@ public class PauseManagerFunctions : MonoBehaviour
         else
             Pause();
 
-        // 
+        // MasterSingleton.Instance.gameData.GamePaused = m_IsPaused;
     }
 
     public void Pause()
