@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     private PlayerControls _controls; // Auto-generated Input Actions class
     private MovementComponent _movement;
     private HealthComponent _health;
+    private InventoryManager _inventoryManager;
 
     // Attack hold mechanic (hold for medium attack, tap for light)
     private float _attackHoldTimer;
@@ -20,6 +21,7 @@ public class PlayerController : MonoBehaviour
 
     // Camera and world interaction
     private Camera _mainCamera;
+    private Transform _cameraTransform;
     private int _floorLayerMask;
 
     // Cached input values from Input System events
@@ -30,6 +32,10 @@ public class PlayerController : MonoBehaviour
     private ITargetable _currentTarget; // Our current focus
     [SerializeField] private float lockBreakDistance = 1.0f;
     [SerializeField] private float searchRadius = 3.5f;
+    
+    // Cached squared distances for performance
+    private float _lockBreakDistanceSqr;
+    private float _moveThresholdSqr = 0.0001f;
 
     /// <summary>
     /// Initialize component references and create Input System instance.
@@ -40,9 +46,13 @@ public class PlayerController : MonoBehaviour
         _health = GetComponent<HealthComponent>();
         _combat = GetComponent<CombatHandler>();
         _mainCamera = Camera.main;
+        _cameraTransform = _mainCamera.transform;
         _floorLayerMask = LayerMask.GetMask("Floor");
 
         _controls = new PlayerControls();
+        
+        // Cache squared distance to avoid sqrt operations in FixedUpdate
+        _lockBreakDistanceSqr = lockBreakDistance * lockBreakDistance;
     }
 
     /// <summary>
@@ -53,6 +63,12 @@ public class PlayerController : MonoBehaviour
         // Enable both the Player and UI action maps
         _controls.Player.Enable();
         _controls.UI.Enable();
+
+        // Cache InventoryManager reference
+        if (!TryGetInventoryManager(out _inventoryManager))
+        {
+            Debug.LogWarning("PlayerController: InventoryManager not found. Inventory switching will not work.");
+        }
 
         // Movement input caching
         _controls.Player.Move.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
@@ -67,10 +83,12 @@ public class PlayerController : MonoBehaviour
         _controls.Player.KIButton.started += OnKIInput;
         _controls.Player.Acrobatics.started += OnAcrobatics;
 
-        // Inventory Switching - Accessing via MasterSingleton
-        // This coordinates with your _controls.UI.SwitchWeapons and SwitchItems inputs
-        _controls.UI.SwitchWeapons.started += ctx => MasterSingleton.Instance.InventoryManager.CycleWeapon();
-        _controls.UI.SwitchItems.started += ctx => MasterSingleton.Instance.InventoryManager.CycleItem();
+        // Inventory Switching - Using cached reference
+        if (_inventoryManager != null)
+        {
+            _controls.UI.SwitchWeapons.started += ctx => _inventoryManager.CycleWeapon();
+            _controls.UI.SwitchItems.started += ctx => _inventoryManager.CycleItem();
+        }
     }
 
     private void OnDisable()
@@ -89,24 +107,29 @@ public class PlayerController : MonoBehaviour
     {
         if (_health != null && _health.IsDead) return;
 
-        bool isMoving = _moveInput.sqrMagnitude > 0.01f;
+        float moveSqrMagnitude = _moveInput.sqrMagnitude;
+        bool isMoving = moveSqrMagnitude > _moveThresholdSqr;
 
-        // Update camera yaw only when transitioning state
-        if (_wasMovingLastFrame && !isMoving)
+        // Update camera yaw only when movement state changes
+        if (isMoving != _wasMovingLastFrame)
+        {
             _cachedCameraYaw = GetCurrentCameraYaw();
-        else if (!_wasMovingLastFrame && isMoving)
-            _cachedCameraYaw = GetCurrentCameraYaw();
-
-        _wasMovingLastFrame = isMoving;
+            _wasMovingLastFrame = isMoving;
+        }
 
         // Convert input to camera-relative direction
         Vector3 moveDir = GetCameraRelativeDirection(_moveInput);
 
-        // Lock-On Logic: Distance Check
+        // Cache position for multiple distance checks
+        Vector3 currentPosition = transform.position;
+
+        // Lock-On Logic: Distance Check (using squared distance to avoid sqrt)
         if (_currentTarget != null)
         {
-            float dist = Vector3.Distance(transform.position, _currentTarget.GetLockOnPoint().position);
-            if (dist > lockBreakDistance || !_currentTarget.IsValidTarget())
+            Vector3 targetPos = _currentTarget.GetLockOnPoint().position;
+            float distSqr = (currentPosition - targetPos).sqrMagnitude;
+            
+            if (distSqr > _lockBreakDistanceSqr || !_currentTarget.IsValidTarget())
             {
                 _currentTarget = null;
             }
@@ -162,7 +185,7 @@ public class PlayerController : MonoBehaviour
         {
             return CameraZoneManager.Instance.GetCurrentCamera().transform.eulerAngles.y;
         }
-        return _mainCamera.transform.eulerAngles.y;
+        return _cameraTransform.eulerAngles.y;
     }
 
     private Vector3 GetCameraRelativeDirection(Vector2 input)
@@ -171,6 +194,12 @@ public class PlayerController : MonoBehaviour
         Vector3 camForward = yRotation * Vector3.forward;
         Vector3 camRight = yRotation * Vector3.right;
         return (camForward * input.y + camRight * input.x).normalized;
+    }
+
+    private bool TryGetInventoryManager(out InventoryManager manager)
+    {
+        manager = MasterSingleton.Instance?.InventoryManager;
+        return manager != null;
     }
 
     // --- Combat Callbacks ---
@@ -203,7 +232,7 @@ public class PlayerController : MonoBehaviour
     private void OnAcrobatics(InputAction.CallbackContext context)
     {
         if (!context.started) return;
-        if (_moveInput.sqrMagnitude > 0.01f)
+        if (_moveInput.sqrMagnitude > _moveThresholdSqr)
         {
             Vector3 dir = GetCameraRelativeDirection(_moveInput);
             _movement.RotateTowardsDirection(dir);

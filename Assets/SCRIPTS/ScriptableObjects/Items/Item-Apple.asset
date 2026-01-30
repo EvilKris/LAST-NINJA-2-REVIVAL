@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: GameScripts::ItemData
   itemName: Apple
   category: 1
-  icon: {fileID: 21300000, guid: 3afb81447f401bf4b91a57f8cc739745, type: 3}
+  icon: {fileID: 21300000, guid: f83b2a0f528fb3640bdbab2e0701994d, type: 3}
   weaponPrefab: {fileID: 0}
   moveset: []
   description: "Apple\n "

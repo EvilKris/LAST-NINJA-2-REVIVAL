@@ -377,7 +377,7 @@ Transform:
   m_GameObject: {fileID: 185921170}
   serializedVersion: 2
   m_LocalRotation: {x: -0.26875284, y: 0.5902251, z: -0.21745317, w: -0.72946584}
-  m_LocalPosition: {x: 406.04578, y: 3.892708, z: 631.77014}
+  m_LocalPosition: {x: 406.12018, y: 3.892708, z: 632.1187}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1493,8 +1493,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.02093149, y: -0.9746223, z: 0.19749214, w: -0.103296764}
-  m_LocalPosition: {x: 398.40918, y: 3.892848, z: 635.9165}
+  m_LocalRotation: {x: 0.14746274, y: 0.81403494, z: -0.23531167, w: 0.51012766}
+  m_LocalPosition: {x: 392.72873, y: 5.335536, z: 630.5979}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3504,6 +3504,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   thisLevelMusic: {fileID: 11400000, guid: 08661f7bde1f75e42bdad31f5747c928, type: 2}
+  playMusic: 1
 --- !u!114 &2132692034
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15890,6 +15891,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Ninja-Rigged-InGame
       objectReference: {fileID: 0}
+    - target: {fileID: 80848986472197700, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 744478314211603710, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -15939,6 +15945,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4021816621611794343, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5478634035105202523, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
         type: 3}
