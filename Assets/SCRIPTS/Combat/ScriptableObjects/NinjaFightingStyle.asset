@@ -19,4 +19,6 @@ MonoBehaviour:
   heavyAttack: {fileID: 11400000, guid: 8239a880578eab749a79dbd1032c43d4, type: 2}
   specialAttack: {fileID: 0}
   acrobaticFlip: {fileID: 11400000, guid: fe750173cf74f7d43a0f3f95bf8f7ac3, type: 2}
+  chargedAttacks:
+  - {fileID: 11400000, guid: f892730f3edbe7841ac6bed7b890f5fb, type: 2}
   styleAnimator: {fileID: 0}

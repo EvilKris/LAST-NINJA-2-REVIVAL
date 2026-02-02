@@ -4,12 +4,15 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
-    [SerializeField]private GameObject inGameUIOverlay; //the main in-game UI overlay
+    [SerializeField] private GameObject gameUIOverlay; //the main game UI overlay   
+    [SerializeField] private GameObject oldUIOverlay; //the main in-game UI overlay
 
     [Tooltip("The health overlay UI element")]
-    [SerializeField]private GameObject healthOverlay;
-    [SerializeField]private Image playerHealthUI;
-    [SerializeField]private Image enemyHealthUI;
+    [SerializeField] private GameObject healthOverlay;
+    [SerializeField] private Image playerHealthUI;
+    [SerializeField] private Image enemyHealthUI;
+    public UIChargeDisplay chargeMeter; //the charge meter UI element  
+    [SerializeField] private GameObject chargeMeterRadialSliderPrefab; //the charge meter UI element  
 
     private Material playerHealthMaterial;
     private Material enemyHealthMaterial;
@@ -32,17 +35,63 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        ActivateInGameOverlay();
+        //ActivateInGameOverlay();
         SubscribeToAllHealthComponents();
+    }
+
+    /*
+    public void SetupChargeMeter(HealthComponent healthComponent)
+    {
+        if (healthComponent == null)
+        {
+            Debug.LogWarning("HealthComponent is null, cannot setup charge meter.");
+            return;
+        }
+
+        if (healthComponent.faction != Faction.Player)
+        {
+            return;
+        }
+
+        if (chargeMeter == null)
+        {
+            Debug.LogWarning("Charge meter is not assigned in UIManager.");
+            return;
+        }
+
+        if (chargeMeterRadialSliderPrefab == null)
+        {
+            Debug.LogWarning("Charge meter radial slider prefab is not assigned in UIManager.");
+            return;
+        }
+
+        // Clear existing charge meter children
+        foreach (Transform child in chargeMeter.transform)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // Create charge meter instances based on charges
+        for (int i = 0; i < healthComponent.charges; i++)
+        {
+            GameObject chargeSlider = Instantiate(chargeMeterRadialSliderPrefab, chargeMeter.transform);
+            chargeSlider.name = $"ChargeSlider_{i}";
+        }
+    }*/
+
+    public void ToggleInGameOverlay(bool v)
+    {   
+        if (gameUIOverlay != null)
+            gameUIOverlay.SetActive(v);
     }
 
     private void ActivateInGameOverlay()
     {
-     //   if(inGameUIOverlay != null)
-     //inGameUIOverlay.SetActive(true);
-        
-        if(healthOverlay != null)
-            healthOverlay.SetActive(true);  
+        //   if(inGameUIOverlay != null)
+        //inGameUIOverlay.SetActive(true);
+
+        if (healthOverlay != null)
+            healthOverlay.SetActive(true);
     }
 
     private void SubscribeToAllHealthComponents()

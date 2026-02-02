@@ -15,8 +15,8 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     public float maxHealth = 100f;
     
     [Tooltip("Current health points. Automatically set to maxHealth on Awake.")]
-    [SerializeField] private float currentHealth;
-
+    [SerializeField] private float currentHealth;    
+   
     [Header("Faction & Targeting")]
     [Tooltip("Team/faction alignment. Used for friend-or-foe identification.")]
     public Faction faction = Faction.Enemy;

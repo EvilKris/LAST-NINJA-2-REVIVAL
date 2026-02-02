@@ -198,7 +198,7 @@ public class PlayerController : MonoBehaviour
 
     private bool TryGetInventoryManager(out InventoryManager manager)
     {
-        manager = MasterSingleton.Instance?.InventoryManager;
+        manager = MasterSingleton.Instance != null ? MasterSingleton.Instance.InventoryManager : null;
         return manager != null;
     }
 
@@ -207,10 +207,46 @@ public class PlayerController : MonoBehaviour
     private void OnLightAttackStarted(InputAction.CallbackContext _)
     {
         TryLockOn();
+        _combat.StartCharging(); // Handler takes care of the clock
+    }
+    /*private void OnLightAttackStarted(InputAction.CallbackContext _)
+    {
+        TryLockOn();
         _isHoldingAttack = true;
+        _attackHoldTimer = 0f;
+    }*/
+
+
+    private void OnLightAttackCanceled(InputAction.CallbackContext _)
+    {
+        _combat.ReleaseCharge(); // Handler decides which move to play
+    }
+    /*
+    private void OnLightAttackCanceled(InputAction.CallbackContext _)
+    {
+        _isHoldingAttack = false;
+
+        // Calculate how many seconds were held
+        int chargeTier = Mathf.FloorToInt(_attackHoldTimer);
+
+        // Check the move list for the cap
+        int maxPossible = _combat.GetMaxSupportedCharges();
+
+        if (chargeTier <= 0)
+        {
+            _combat.ExecuteLightAttack();
+        }
+        else
+        {
+            // Even if they hold for 5s, if maxPossible is 2, pass 2.
+            int finalTier = Mathf.Min(chargeTier, maxPossible);
+            _combat.ExecuteChargedAttack(finalTier);
+        }
+
         _attackHoldTimer = 0f;
     }
 
+    
     private void OnLightAttackCanceled(InputAction.CallbackContext _)
     {
         _isHoldingAttack = false;
@@ -218,7 +254,7 @@ public class PlayerController : MonoBehaviour
             _combat.ExecuteMediumAttack();
         else
             _combat.ExecuteLightAttack();
-    }
+    }*/
 
     private void OnHeavyAttackStarted(InputAction.CallbackContext _)
     {

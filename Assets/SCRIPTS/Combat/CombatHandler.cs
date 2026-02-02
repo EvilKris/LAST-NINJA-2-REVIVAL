@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(HealthComponent))]
 public class CombatHandler : MonoBehaviour
 {
     [Header("Components")]
@@ -8,6 +10,11 @@ public class CombatHandler : MonoBehaviour
     private AnimatorOverrideController _overrideController;
     private HealthComponent _health;
     private MovementComponent _movement;
+
+
+    [Tooltip("Number of charges the entity has (for consecutively stronger special moves)")]
+    public int ChargeCount = 1; // Number of charges the entity has
+
 
     [Header("Data")]
     public FightingStyle currentStyle;
@@ -17,30 +24,41 @@ public class CombatHandler : MonoBehaviour
     private float _lastAttackTime;
     private const float COMBO_RESET_TIME = 1.2f;
 
+    [Header("Charge System (Spike Out Style)")]
+    private float _currentChargeTimer;
+    private bool _isCharging;
+    private int _cachedMaxCharges = -1;
+    private int _cachedCurrentTier = -1;
+    private float _cachedChargeProgress = -1f;
+
+    // Events for UI updates
+    public event Action<int> OnMaxChargesChanged;
+    public event Action<int, float> OnChargeStateChanged;
+
+    // Properties for UI and Logic access
+    public int MaxCharges => currentStyle != null && currentStyle.chargedAttacks != null ? currentStyle.chargedAttacks.Count : 0;
+    public int CurrentTier => Mathf.FloorToInt(_currentChargeTimer);
+    public float ChargeProgress => _currentChargeTimer % 1.0f; // For smooth UI bar filling
+
     [Header("Internal State")]
     private CombatMove _activeMove;
     private HashSet<Transform> _hitCache = new();
     private CombatHitbox[] _allHitboxes;
     private bool _hitboxActive;
-    private bool _canAcceptComboInput; // New flag for window-based combos
-    private bool _isAcrobaticMove; // Tracks if current move is acrobatic
-
-    [Header("Input Timing")]
-    private float _attackHoldTimer;
-    private bool _isHoldingAttack;
-    private bool _isBlocking;
+    private bool _canAcceptComboInput;
+    private bool _isAcrobaticMove;
 
     [Header("KI Settings")]
     private float _kiBars = 3f;
-    private const float KI_PARRY_WINDOW = 0.2f; // Tight timing window for Parry
+    private const float KI_PARRY_WINDOW = 0.2f;
     private float _lastBlockStartTime;
+    private bool _isBlocking;
 
     private const string CLIP_SLOT_KEY = "Replaceable_Motion_Base";
 
-
     [Header("Motion State")]
-    private float _lastNormalizedTime; // Tracks progress to calculate delta movement
-    private bool _canRotateDuringAttack; // Tracks if rotation is allowed during current attack
+    private float _lastNormalizedTime;
+    private bool _canRotateDuringAttack;
 
     public bool CanRotateDuringAttack => _canRotateDuringAttack;
     public bool IsAttacking => _activeMove != null;
@@ -56,57 +74,43 @@ public class CombatHandler : MonoBehaviour
         _animator.runtimeAnimatorController = _overrideController;
 
         _animator.updateMode = AnimatorUpdateMode.Fixed;
-
         _allHitboxes = GetComponentsInChildren<CombatHitbox>();
     }
 
-    private void FixedUpdate()
+    private void Start()
     {
-        if (_activeMove == null) return;
-
-        var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-
-        if (stateInfo.IsName("ReplaceableAttack"))
+        //put in Start to ensure other components are initialized first
+        if (gameObject.CompareTag("Player"))
         {
-            float currentTime = stateInfo.normalizedTime;
+            // Find the specific UI instance tagged as 'PlayerUI' or through your Manager
+            UIChargeDisplay playerUI = MasterSingleton.Instance.UIManager.chargeMeter;
 
-            if (currentTime >= 1.0f)
-            {
-                ResetCombatState();
-                return;
-            }
 
-            // Calculate motion delta - this ensures frame-rate independent movement
-            if (currentTime > _lastNormalizedTime && _lastNormalizedTime >= 0)
-            {
-                float deltaDistance = _activeMove.EvaluateMotionDelta(_lastNormalizedTime, currentTime);
-
-                if (deltaDistance > 0)
-                {
-                    Vector3 movement = transform.forward * deltaDistance;
-                    transform.position += movement;
-                }
-            }
-
-            _lastNormalizedTime = currentTime;
+            //GameObject.FindObjectOfType<UIChargeDisplay>();
+            playerUI.SetTarget(this);
         }
-        else
-        {
-            ResetCombatState();
-        }
+    }
+
+    private void InvokeCharges()
+    {
+        // Initialize charge state and notify listeners
+        int maxCharges = MaxCharges;
+        _cachedMaxCharges = maxCharges;
+        OnMaxChargesChanged?.Invoke(maxCharges);
     }
 
     private void Update()
     {
+        HandleChargeLogic();
+
         if (_activeMove == null) return;
 
         var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-
         if (stateInfo.IsName("ReplaceableAttack"))
         {
             float currentTime = stateInfo.normalizedTime;
 
-            // --- HITBOX WINDOW ---
+            // Hitbox Management
             bool shouldBeOpen = _activeMove.IsInHitWindow(currentTime);
             if (shouldBeOpen && !_hitboxActive)
             {
@@ -119,105 +123,123 @@ public class CombatHandler : MonoBehaviour
                 _hitboxActive = false;
             }
 
-            // --- COMBO WINDOW ---
             _canAcceptComboInput = _activeMove.IsInComboWindow(currentTime);
-
-            // --- ROTATION ALLOWANCE ---
             _canRotateDuringAttack = _activeMove.CanRotate(currentTime);
             _movement.canRotate = _canRotateDuringAttack;
 
-            // --- AUDIO EVENTS ---
             UpdateAudioEvents(currentTime);
         }
     }
 
-    private void ResetCombatState()
+    private void FixedUpdate()
     {
-        if (_activeMove != null && _hitboxActive)
-            CloseHitbox((int)_activeMove.hitboxType);
+        if (_activeMove == null) return;
 
-        _activeMove = null;
-        _hitboxActive = false;
-        _canAcceptComboInput = false;
-        _canRotateDuringAttack = false;
-        _isAcrobaticMove = false;
-       // _movement.speedMultiplier = 1.0f;
-        _movement.canRotate = true; // Re-enable rotation when not attacking
-    }
-
-    private void PlayMove(CombatMove move)
-    {
-        if (move.animationClip == null) return;
-
-        _activeMove = move;
-        _hitboxActive = false;
-        _canAcceptComboInput = false;
-
-        // Initialize to a small negative value so the first frame (0) 
-        // is always greater than _lastNormalizedTime
-        _lastNormalizedTime = -0.01f;
-
-        ClearHitCache();
-        ResetAudioEvents();
-
-        _movement.canRotate = move.rotationAllowanceEnd > 0f;
-
-        _overrideController[CLIP_SLOT_KEY] = move.animationClip;
-        // Force the animator to update its state immediately
-        _animator.Play("ReplaceableAttack", 0, 0f);
-        _animator.Update(0f);
-    }
-
-    public void ExecuteAcrobatics()
-    {
-        if (_health != null && _health.IsDead) return;
-
-        // Safety: Only flip if we aren't already mid-attack
-        if (_activeMove != null) return;
-
-        CombatMove flipMove = currentStyle.acrobaticFlip;
-        if (flipMove == null) return;
-
-        // Trigger the move logic
-        _isAcrobaticMove = true;
-        PlayMove(flipMove);
-
-        // Optional: Since it's a flip, we might want to ignore collisions 
-        // or grant "I-Frames" (Invincibility) here.
-        Debug.Log("Ninja Flip Triggered!");
-    }
-
-    private void UpdateAudioEvents(float normalizedTime)
-    {
-        if (_activeMove.audioEvents == null) return;
-
-        for (int i = 0; i < _activeMove.audioEvents.Length; i++)
+        var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+        if (stateInfo.IsName("ReplaceableAttack"))
         {
-            var ev = _activeMove.audioEvents[i];
-            if (!ev.hasPlayed && normalizedTime >= ev.triggerTime)
+            float currentTime = stateInfo.normalizedTime;
+
+            if (currentTime >= 1.0f)
             {
-                // Using your JSAM integration
-                JSAM.AudioManager.PlaySound(ev.sound);
-                _activeMove.audioEvents[i].hasPlayed = true;
+                ResetCombatState();
+                return;
+            }
+
+            if (currentTime > _lastNormalizedTime && _lastNormalizedTime >= 0)
+            {
+                float deltaDistance = _activeMove.EvaluateMotionDelta(_lastNormalizedTime, currentTime);
+                if (deltaDistance > 0)
+                {
+                    transform.position += transform.forward * deltaDistance;
+                }
+            }
+            _lastNormalizedTime = currentTime;
+        }
+        else
+        {
+            ResetCombatState();
+        }
+    }
+
+    // --- Charge Logic Implementation ---
+
+    private void HandleChargeLogic()
+    {
+        // Check if max charges changed (e.g., weapon switch)
+        int maxCharges = MaxCharges;
+        if (maxCharges != _cachedMaxCharges)
+        {
+            _cachedMaxCharges = maxCharges;
+            OnMaxChargesChanged?.Invoke(maxCharges);
+        }
+
+        if (_isCharging)
+        {
+            // Increment timer but clamp at Max Charges defined by the Move List
+            _currentChargeTimer = Mathf.Min(_currentChargeTimer + Time.deltaTime, MaxCharges);
+
+            // Only invoke event if charge state actually changed
+            int currentTier = CurrentTier;
+            float chargeProgress = ChargeProgress;
+            if (currentTier != _cachedCurrentTier || Mathf.Abs(chargeProgress - _cachedChargeProgress) > 0.01f)
+            {
+                _cachedCurrentTier = currentTier;
+                _cachedChargeProgress = chargeProgress;
+                OnChargeStateChanged?.Invoke(currentTier, chargeProgress);
             }
         }
     }
-    private void ResetAudioEvents()
+
+    public void StartCharging()
     {
-        if (_activeMove.audioEvents == null) return;
-        for (int i = 0; i < _activeMove.audioEvents.Length; i++)
+        if (_health.IsDead) return;
+        _isCharging = true;
+        _currentChargeTimer = 0f;
+        _cachedCurrentTier = 0;
+        _cachedChargeProgress = 0f;
+        OnChargeStateChanged?.Invoke(0, 0f);
+    }
+
+    public void ReleaseCharge()
+    {
+        if (!_isCharging) return;
+        _isCharging = false;
+
+        int tier = CurrentTier;
+
+        if (tier <= 0)
+            ExecuteLightAttack();
+        else
+            ExecuteChargedAttack(tier);
+
+        _currentChargeTimer = 0f;
+        _cachedCurrentTier = 0;
+        _cachedChargeProgress = 0f;
+        OnChargeStateChanged?.Invoke(0, 0f);
+    }
+
+    public void ExecuteChargedAttack(int chargeTier)
+    {
+        if (_health.IsDead) return;
+        if (_activeMove != null && !_canAcceptComboInput) return;
+
+        // Spike Out Logic: Tier 1 = List Index 0
+        int moveIndex = chargeTier - 1;
+
+        if (currentStyle.chargedAttacks != null && currentStyle.chargedAttacks.Count > 0)
         {
-            _activeMove.audioEvents[i].hasPlayed = false;
+            // Safety clamp to ensure we don't go out of bounds
+            int finalIndex = Mathf.Clamp(moveIndex, 0, currentStyle.chargedAttacks.Count - 1);
+            PlayMove(currentStyle.chargedAttacks[finalIndex]);
         }
     }
 
-
+    // --- Basic Attacks & Combos ---
 
     public void ExecuteLightAttack()
     {
-        if (_health != null && _health.IsDead) return;
-
-        // COMBO LOGIC: If already attacking, check the window!
+        if (_health.IsDead) return;
         if (_activeMove != null && !_canAcceptComboInput) return;
 
         if (Time.time - _lastAttackTime > COMBO_RESET_TIME) _comboIndex = 0;
@@ -231,50 +253,60 @@ public class CombatHandler : MonoBehaviour
 
     public void ExecuteHeavyAttack()
     {
-        if (_health != null && _health.IsDead) return;
-
-        // Same combo check for heavy
+        if (_health.IsDead) return;
         if (_activeMove != null && !_canAcceptComboInput) return;
 
         _comboIndex = 0;
         PlayMove(currentStyle.heavyAttack);
     }
 
-
-    public void HandleAttackInput(bool isPressed)
+    public void ExecuteAcrobatics()
     {
-        if (isPressed)
-        {
-            _isHoldingAttack = true;
-            _attackHoldTimer = 0f;
-        }
-        else // Released
-        {
-            if (!_isHoldingAttack) return;
+        if (_health.IsDead || _activeMove != null) return;
 
-            if (_attackHoldTimer >= 1.0f) ExecuteMediumAttack();
-            else ExecuteLightAttack();
+        CombatMove flipMove = currentStyle.acrobaticFlip;
+        if (flipMove == null) return;
 
-            _isHoldingAttack = false;
-        }
+        _isAcrobaticMove = true;
+        PlayMove(flipMove);
     }
 
+    // --- Core Combat Engine ---
 
-    public void ExecuteMediumAttack()
+    private void PlayMove(CombatMove move)
     {
-        if (_activeMove != null && !_canAcceptComboInput) return;
-        PlayMove(currentStyle.mediumAttack); // Assuming mediumAttack added to FightingStyle
+        if (move.animationClip == null) return;
+
+        _activeMove = move;
+        _hitboxActive = false;
+        _canAcceptComboInput = false;
+        _lastNormalizedTime = -0.01f;
+
+        ClearHitCache();
+        ResetAudioEvents();
+
+        _movement.canRotate = move.rotationAllowanceEnd > 0f;
+        _overrideController[CLIP_SLOT_KEY] = move.animationClip;
+
+        _animator.Play("ReplaceableAttack", 0, 0f);
+        _animator.Update(0f);
     }
 
-    public void SetBlocking(bool blocking)
+    private void ResetCombatState()
     {
-        _isBlocking = blocking;
-        _animator.SetBool("IsBlocking", _isBlocking);
-        //_movement.speedMultiplier = _isBlocking ? 0.2f : 1.0f;
+        if (_activeMove != null && _hitboxActive)
+            CloseHitbox((int)_activeMove.hitboxType);
+
+        _activeMove = null;
+        _hitboxActive = false;
+        _canAcceptComboInput = false;
+        _canRotateDuringAttack = false;
+        _isAcrobaticMove = false;
+        _movement.canRotate = true;
     }
 
+    // --- Hitbox & Audio Helpers ---
 
-    // --- HITBOX MANAGEMENT ---
     public void OpenHitbox(int id)
     {
         HitboxType type = (HitboxType)id;
@@ -297,55 +329,62 @@ public class CombatHandler : MonoBehaviour
         }
     }
 
+    private void UpdateAudioEvents(float normalizedTime)
+    {
+        if (_activeMove.audioEvents == null) return;
+        for (int i = 0; i < _activeMove.audioEvents.Length; i++)
+        {
+            var ev = _activeMove.audioEvents[i];
+            if (!ev.hasPlayed && normalizedTime >= ev.triggerTime)
+            {
+                JSAM.AudioManager.PlaySound(ev.sound);
+                _activeMove.audioEvents[i].hasPlayed = true;
+            }
+        }
+    }
+
+    private void ResetAudioEvents()
+    {
+        if (_activeMove?.audioEvents == null) return;
+        for (int i = 0; i < _activeMove.audioEvents.Length; i++)
+        {
+            _activeMove.audioEvents[i].hasPlayed = false;
+        }
+    }
+
+    // --- Defensive & KI Logic ---
+
+    public void SetBlocking(bool blocking)
+    {
+        _isBlocking = blocking;
+        if (blocking) _lastBlockStartTime = Time.time;
+        _animator.SetBool("IsBlocking", _isBlocking);
+    }
+
     public void HandleKIInput()
     {
-        if (_kiBars < 1f) return; // Need at least 1 bar
+        if (_kiBars < 1f) return;
 
-        // CONTEXT 1: KI During Block -> KI Parry
-        if (_isBlocking)
-        {
-            ExecuteKIParry();
-        }
-        // CONTEXT 2: KI While Neutral -> Power-Up Mode
-        else if (_activeMove == null)
-        {
-            ExecuteKIPowerUp();
-        }
-        // CONTEXT 3: KI Magic (Context-sensitive/Late game)
-        else
-        {
-            // Handle Magic logic here later...
-        }
+        if (_isBlocking) ExecuteKIParry();
+        else if (_activeMove == null) ExecuteKIPowerUp();
     }
 
     private void ExecuteKIParry()
     {
-        // Check if the player blocked RECENTLY (Skill test)
-        float timeSinceBlock = Time.time - _lastBlockStartTime;
-
-        if (timeSinceBlock <= KI_PARRY_WINDOW)
+        if (Time.time - _lastBlockStartTime <= KI_PARRY_WINDOW)
         {
-            Debug.Log("KI PARRY ATTEMPT!");
             _kiBars -= 1f;
-            _animator.Play("KI_Parry_Pose"); // Trigger parry animation
-                                             // Logic to detect incoming hit and convert to Grab goes here
-        }
-        else
-        {
-            Debug.Log("Parry Failed: Blocked too early.");
-            _kiBars -= 1f; // Fails cleanly, bar spent
+            _animator.Play("KI_Parry_Pose");
         }
     }
 
     private void ExecuteKIPowerUp()
     {
-        Debug.Log("KI POWER UP!");
         _kiBars -= 1f;
-        // Activate aura/buff logic
-        // (e.g., Start a Coroutine that sets a 'isPowerUp' flag for 1.5s)
+        Debug.Log("KI Power Up (Ki no chikara - 気の力)");
     }
 
     public void ClearHitCache() => _hitCache.Clear();
-    public bool HasHitTarget(Transform target) => _hitCache.Contains(target);
     public void RegisterHit(Transform target) => _hitCache.Add(target);
+    public bool HasHitTarget(Transform target) => _hitCache.Contains(target);
 }

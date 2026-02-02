@@ -13,6 +13,16 @@ ShaderVariantCollection:
       variants:
       - keywords: COLOR_FILTER
         passType: 0
+      - keywords: COLOR_FILTER EDGE_PLAIN
+        passType: 0
+      - keywords: EDGE_PLAIN
+        passType: 0
+      - keywords: EDGE_PLAIN TONE_NEGATIVE
+        passType: 0
+      - keywords: EDGE_PLAIN TONE_POSTERIZE
+        passType: 0
+      - keywords: EDGE_PLAIN TONE_SEPIA
+        passType: 0
       - keywords: EDGE_SHINY
         passType: 0
       - keywords: TONE_GRAYSCALE

@@ -8,6 +8,51 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: -7248463082869113679, guid: 31176e73e20fec44ab1ac317078e46a2,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 465
+      objectReference: {fileID: 0}
+    - target: {fileID: -7248463082869113679, guid: 31176e73e20fec44ab1ac317078e46a2,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 3.31
+      objectReference: {fileID: 0}
+    - target: {fileID: -7248463082869113679, guid: 31176e73e20fec44ab1ac317078e46a2,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 575
+      objectReference: {fileID: 0}
+    - target: {fileID: -7248463082869113679, guid: 31176e73e20fec44ab1ac317078e46a2,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.9238798
+      objectReference: {fileID: 0}
+    - target: {fileID: -7248463082869113679, guid: 31176e73e20fec44ab1ac317078e46a2,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7248463082869113679, guid: 31176e73e20fec44ab1ac317078e46a2,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0.38268274
+      objectReference: {fileID: 0}
+    - target: {fileID: -7248463082869113679, guid: 31176e73e20fec44ab1ac317078e46a2,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: -7248463082869113679, guid: 31176e73e20fec44ab1ac317078e46a2,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -45
+      objectReference: {fileID: 0}
+    - target: {fileID: -7248463082869113679, guid: 31176e73e20fec44ab1ac317078e46a2,
+        type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: -4474805066104965199, guid: 31176e73e20fec44ab1ac317078e46a2,
         type: 3}
       propertyPath: m_StaticEditorFlags
