@@ -1,10 +1,16 @@
+using JSAM;
 using UnityEngine;
 
 public class PrefabBankManager : MonoBehaviour
 {
-    [Tooltip("Material used for phantom/ghost effects")]
+    [Tooltip("Material used for phantom Demon Soul-type vfx")]
     public Material PhantomMaterial;
 
+    [Header("GhostTrail")]
+    [Tooltip("Material used for Drive Strike ghost trail vfx")]
+    public Material GhostTrailsMat;
+    [Tooltip("Sound played when a Tier One Drive Strike hits")]
+    public SoundFileObject Tier_One_Drive_Strike;
 
 
     #region Useful Universal Functions

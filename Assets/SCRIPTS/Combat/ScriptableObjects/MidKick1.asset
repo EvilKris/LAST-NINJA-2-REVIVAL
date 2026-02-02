@@ -1939,6 +1939,6 @@ MonoBehaviour:
   hitStart: 0.43
   hitEnd: 0.528
   canCombo: 1
-  comboStart: 1
+  comboStart: 0.602
   comboEnd: 1
   rotationAllowanceEnd: 0

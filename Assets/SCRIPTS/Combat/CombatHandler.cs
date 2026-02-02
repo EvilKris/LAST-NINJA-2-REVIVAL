@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -227,12 +228,33 @@ public class CombatHandler : MonoBehaviour
         // Spike Out Logic: Tier 1 = List Index 0
         int moveIndex = chargeTier - 1;
 
+        StartCoroutine(SpecialMoveWithAfterimage());
+
         if (currentStyle.chargedAttacks != null && currentStyle.chargedAttacks.Count > 0)
         {
             // Safety clamp to ensure we don't go out of bounds
             int finalIndex = Mathf.Clamp(moveIndex, 0, currentStyle.chargedAttacks.Count - 1);
             PlayMove(currentStyle.chargedAttacks[finalIndex]);
         }
+    }
+
+    public float specialMoveDuration = 1f;
+
+    IEnumerator SpecialMoveWithAfterimage()
+    {
+        // Add afterimage effect
+        AfterimageEffect effect = gameObject.AddComponent<AfterimageEffect>();
+
+        // Do your special move animation/logic here
+        Debug.Log("Special move activated!");
+
+        // Wait for move to finish
+        yield return new WaitForSeconds(specialMoveDuration);
+
+        // Remove afterimage effect
+        Destroy(effect);
+
+        Debug.Log("Special move finished!");
     }
 
     // --- Basic Attacks & Combos ---

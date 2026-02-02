@@ -11,7 +11,8 @@ GameObject:
   - component: {fileID: 7472223699654216164}
   - component: {fileID: 3887051499027908471}
   - component: {fileID: 4465517137709926663}
-  - component: {fileID: 7352353343968578914}
+  - component: {fileID: 2278000950886481519}
+  - component: {fileID: 8621894818431996138}
   m_Layer: 0
   m_Name: fg
   m_TagString: Untagged
@@ -71,12 +72,12 @@ MonoBehaviour:
   m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
-  m_FillAmount: 0.906
+  m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &7352353343968578914
+--- !u!114 &2278000950886481519
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -90,13 +91,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Coffee.UIEffect::Coffee.UIEffects.UIEffect
   m_ToneFilter: 0
   m_ToneIntensity: 1
-  m_ColorFilter: 0
+  m_ColorFilter: 2
   m_ColorIntensity: 1
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_ColorGlow: 0
-  m_SamplingFilter: 0
-  m_SamplingIntensity: 0.5
-  m_SamplingWidth: 1
+  m_Color: {r: 2.670157, g: 0, b: 0.08567692, a: 1}
+  m_ColorGlow: 1
+  m_SamplingFilter: 1
+  m_SamplingIntensity: 1
+  m_SamplingWidth: 3.94
   m_SamplingScale: 1
   m_TransitionFilter: 0
   m_TransitionRate: 0.5
@@ -151,9 +152,9 @@ MonoBehaviour:
   m_TargetColor: {r: 1, g: 1, b: 1, a: 1}
   m_TargetRange: 0.1
   m_TargetSoftness: 0.5
-  m_BlendType: 1
-  m_SrcBlendMode: 1
-  m_DstBlendMode: 10
+  m_BlendType: 4
+  m_SrcBlendMode: 4
+  m_DstBlendMode: 1
   m_ShadowMode: 0
   m_ShadowDistance: {x: 1, y: -1}
   m_ShadowIteration: 1
@@ -165,15 +166,15 @@ MonoBehaviour:
   m_ShadowColorGlow: 0
   m_GradationMode: 0
   m_GradationIntensity: 1
-  m_GradationColorFilter: 1
+  m_GradationColorFilter: 0
   m_GradationColor1: {r: 1, g: 1, b: 1, a: 1}
   m_GradationColor2: {r: 1, g: 1, b: 1, a: 1}
   m_GradationColor3: {r: 1, g: 1, b: 1, a: 1}
   m_GradationColor4: {r: 1, g: 1, b: 1, a: 1}
   m_GradationGradient:
     serializedVersion: 2
-    key0: {r: 1, g: 1, b: 1, a: 1}
-    key1: {r: 1, g: 1, b: 1, a: 1}
+    key0: {r: 1.9245284, g: 1.1538705, b: 0.29957283, a: 1}
+    key1: {r: 0.1978755, g: 0, b: 1, a: 1}
     key2: {r: 0, g: 0, b: 0, a: 0}
     key3: {r: 0, g: 0, b: 0, a: 0}
     key4: {r: 0, g: 0, b: 0, a: 0}
@@ -197,23 +198,23 @@ MonoBehaviour:
     atime6: 0
     atime7: 0
     m_Mode: 0
-    m_ColorSpace: -1
+    m_ColorSpace: 0
     m_NumColorKeys: 2
     m_NumAlphaKeys: 2
-  m_GradationOffset: 0
-  m_GradationScale: 1
+  m_GradationOffset: 0.22
+  m_GradationScale: 0.3099046
   m_GradationRotation: 0
   m_GradationWrapMode: 0
   m_GradationReverse: 0
   m_AllowToModifyMeshShape: 1
-  m_EdgeMode: 2
+  m_EdgeMode: 0
   m_EdgeWidth: 0.5
   m_EdgeColorFilter: 4
-  m_EdgeColor: {r: 10.579866, g: 0, b: 2.4869711, a: 1}
+  m_EdgeColor: {r: 1, g: 1, b: 1, a: 1}
   m_EdgeColorGlow: 0
-  m_EdgeShinyRate: 0.272
-  m_EdgeShinyWidth: 1
-  m_EdgeShinyAutoPlaySpeed: -0.23
+  m_EdgeShinyRate: 0.5
+  m_EdgeShinyWidth: 0.5
+  m_EdgeShinyAutoPlaySpeed: 1
   m_PatternArea: 1
   m_DetailFilter: 0
   m_DetailIntensity: 1
@@ -227,6 +228,22 @@ MonoBehaviour:
   m_DetailTexSpeed: {x: 0, y: 0}
   m_CustomRoot: {fileID: 0}
   m_Flip: 0
+--- !u!114 &8621894818431996138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1027940800404799703}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50d1c1ba84a43734da8f816fc7f5f8d1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  radialImage: {fileID: 0}
+  flashColor1: {r: 1, g: 1, b: 1, a: 1}
+  flashColor2: {r: 0.3962264, g: 0.03551085, b: 0.10311784, a: 1}
+  flashSpeed: 10
 --- !u!1 &4481046361526936861
 GameObject:
   m_ObjectHideFlags: 0

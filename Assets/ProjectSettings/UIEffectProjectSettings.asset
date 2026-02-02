@@ -15,6 +15,34 @@ ShaderVariantCollection:
         passType: 0
       - keywords: COLOR_FILTER EDGE_PLAIN
         passType: 0
+      - keywords: COLOR_FILTER GRADATION_COLOR2 SAMPLING_BLUR_FAST
+        passType: 0
+      - keywords: COLOR_FILTER GRADATION_GRADIENT SAMPLING_BLUR_FAST
+        passType: 0
+      - keywords: COLOR_FILTER SAMPLING_BLUR_DETAIL
+        passType: 0
+      - keywords: COLOR_FILTER SAMPLING_BLUR_FAST
+        passType: 0
+      - keywords: COLOR_FILTER SAMPLING_BLUR_FAST TARGET_HUE
+        passType: 0
+      - keywords: COLOR_FILTER SAMPLING_BLUR_FAST TONE_GRAYSCALE
+        passType: 0
+      - keywords: COLOR_FILTER SAMPLING_BLUR_FAST TONE_NEGATIVE
+        passType: 0
+      - keywords: COLOR_FILTER SAMPLING_BLUR_FAST TONE_RETRO
+        passType: 0
+      - keywords: COLOR_FILTER SAMPLING_BLUR_FAST TONE_SEPIA
+        passType: 0
+      - keywords: COLOR_FILTER SAMPLING_EDGE_ALPHA
+        passType: 0
+      - keywords: COLOR_FILTER SAMPLING_EDGE_LUMINANCE
+        passType: 0
+      - keywords: COLOR_FILTER SAMPLING_PIXELATION
+        passType: 0
+      - keywords: COLOR_FILTER SAMPLING_RGB_SHIFT
+        passType: 0
+      - keywords: DETAIL_MULTIPLY
+        passType: 0
       - keywords: EDGE_PLAIN
         passType: 0
       - keywords: EDGE_PLAIN TONE_NEGATIVE
@@ -24,6 +52,14 @@ ShaderVariantCollection:
       - keywords: EDGE_PLAIN TONE_SEPIA
         passType: 0
       - keywords: EDGE_SHINY
+        passType: 0
+      - keywords: GRADATION_GRADIENT
+        passType: 0
+      - keywords: SAMPLING_BLUR_DETAIL
+        passType: 0
+      - keywords: SAMPLING_BLUR_FAST
+        passType: 0
+      - keywords: SAMPLING_BLUR_MEDIUM
         passType: 0
       - keywords: TONE_GRAYSCALE
         passType: 0

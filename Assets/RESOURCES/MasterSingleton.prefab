@@ -91,6 +91,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   PhantomMaterial: {fileID: 2100000, guid: 76ecaadddd04b3f4f8a75e200d261360, type: 2}
+  GhostTrailsMat: {fileID: 2100000, guid: d7920a276ae40c64ca863ace36ed1fd9, type: 2}
+  Tier_One_Drive_Strike: {fileID: 11400000, guid: f9a36207019a5404ead3cfd257d1382f,
+    type: 2}
 --- !u!114 &3571197963282959883
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -179,8 +182,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3148289131340771517}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0.14746274, y: 0.81403494, z: -0.23531167, w: 0.51012766}
+  m_LocalPosition: {x: 392.72873, y: 5.335536, z: 630.5979}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1017,6 +1020,12 @@ PrefabInstance:
       propertyPath: m_Name
       value: UIManager(Canvas)-1
       objectReference: {fileID: 0}
+    - target: {fileID: 6619983002506858549, guid: a0d4e843eec283c40b276beef7018f96,
+        type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 76e207e49b7202648b72466c539565a2,
+        type: 3}
     - target: {fileID: 6944596054852584818, guid: a0d4e843eec283c40b276beef7018f96,
         type: 3}
       propertyPath: m_AnchorMax.y
@@ -1097,6 +1106,12 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 9138831510777833418, guid: a0d4e843eec283c40b276beef7018f96,
+        type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 9dbad4f88dc3e3d499d4ab9077f95241,
+        type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

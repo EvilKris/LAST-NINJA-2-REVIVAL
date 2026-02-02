@@ -12,7 +12,8 @@
         enemy1lightimpact,
         enemy1lightpain,
         enemy1medpain,
-        enemy1vocals
+        enemy1vocals,
+        tieronedrivestrike
     }
     public enum MyCombatAudioLibraryMusic {
         Level1TheWastelands,
