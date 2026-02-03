@@ -12,9 +12,16 @@ public class FightingStyle : ScriptableObject
     [Header("Acrobatics")]
     public CombatMove acrobaticFlip;
 
-    [Header("Charge Moves")]
+    [Header("Charge Moves - More Powerful Attacks with Charge")]
     [Tooltip("Tier 1 is index 0, Tier 2 is index 1, etc.")]
     public List<CombatMove> chargedAttacks; // This defines your Max Charges!
+
+    [Header("Clinch Config - Close Range Grappling Attacks + Throws")] 
+    public bool supportsClinching; // The toggle for your logic
+    [Tooltip("Don't bother with these two if no Clinching")]
+    public CombatMove clinchKnee;  // Light attack in clinch
+    public CombatMove clinchThrow; // Heavy attack/finish
+
 
     [Header("Ignore except for unique weapons")]
     [Tooltip("IGNORE unless req for completely unique weapons! (bow/arrow etc) Defines the fighting style's unique animations. ")]

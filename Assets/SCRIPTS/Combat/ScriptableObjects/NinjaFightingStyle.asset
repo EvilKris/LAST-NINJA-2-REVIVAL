@@ -21,4 +21,7 @@ MonoBehaviour:
   acrobaticFlip: {fileID: 11400000, guid: fe750173cf74f7d43a0f3f95bf8f7ac3, type: 2}
   chargedAttacks:
   - {fileID: 11400000, guid: f892730f3edbe7841ac6bed7b890f5fb, type: 2}
+  supportsClinching: 1
+  clinchKnee: {fileID: 0}
+  clinchThrow: {fileID: 0}
   styleAnimator: {fileID: 0}

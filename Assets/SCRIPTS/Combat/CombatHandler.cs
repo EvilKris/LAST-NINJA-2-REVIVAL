@@ -32,6 +32,10 @@ public class CombatHandler : MonoBehaviour
     private int _cachedCurrentTier = -1;
     private float _cachedChargeProgress = -1f;
 
+    // Inside CombatHandler.cs
+    private ClinchHandler _clinchModule;
+
+
     // Events for UI updates
     public event Action<int> OnMaxChargesChanged;
     public event Action<int, float> OnChargeStateChanged;
@@ -90,15 +94,45 @@ public class CombatHandler : MonoBehaviour
             //GameObject.FindObjectOfType<UIChargeDisplay>();
             playerUI.SetTarget(this);
         }
+
+        InitializeStyleModules(); // Initialize style-specific modules (will need to be called again if style changes) 
     }
 
+
+    private void InitializeStyleModules()
+    {
+
+
+        #region Clinch Module Setup 
+        // Check if the current style supports clinching
+        if (currentStyle != null && currentStyle.supportsClinching)
+        {
+            // Add the component if it's missing
+            if (!TryGetComponent<ClinchHandler>(out _clinchModule))
+            {
+                _clinchModule = gameObject.AddComponent<ClinchHandler>();
+            }
+            _clinchModule.Initialize(this); // Link back to handler
+        }
+        else
+        {
+            // Remove it if the new style doesn't support it
+            if (TryGetComponent<ClinchHandler>(out var oldModule))
+            {
+                Destroy(oldModule);
+            }
+        }
+        #endregion  
+    }
+
+    /*
     private void InvokeCharges()
     {
         // Initialize charge state and notify listeners
         int maxCharges = MaxCharges;
         _cachedMaxCharges = maxCharges;
         OnMaxChargesChanged?.Invoke(maxCharges);
-    }
+    }*/
 
     private void Update()
     {
@@ -406,7 +440,18 @@ public class CombatHandler : MonoBehaviour
         Debug.Log("KI Power Up (Ki no chikara - 気の力)");
     }
 
+    //Clinch Attacks (if applicable)  
+    public void ExecuteCustomMove(CombatMove move)
+    {
+        if (_health.IsDead) return;
+        PlayMove(move);
+    }
+
+
+
     public void ClearHitCache() => _hitCache.Clear();
     public void RegisterHit(Transform target) => _hitCache.Add(target);
     public bool HasHitTarget(Transform target) => _hitCache.Contains(target);
+
+  
 }
