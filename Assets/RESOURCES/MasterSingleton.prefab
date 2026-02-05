@@ -94,6 +94,8 @@ MonoBehaviour:
   GhostTrailsMat: {fileID: 2100000, guid: d7920a276ae40c64ca863ace36ed1fd9, type: 2}
   Tier_One_Drive_Strike: {fileID: 11400000, guid: f9a36207019a5404ead3cfd257d1382f,
     type: 2}
+  Charge_Drive_Strike_Tier_Complete: {fileID: 11400000, guid: 31acd13e4d8b1fa43aa1a87bbb8c414d,
+    type: 2}
 --- !u!114 &3571197963282959883
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -169,7 +171,7 @@ GameObject:
   - component: {fileID: 3501961418089664837}
   m_Layer: 0
   m_Name: MainCamera
-  m_TagString: Untagged
+  m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -182,8 +184,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3148289131340771517}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.14746274, y: 0.81403494, z: -0.23531167, w: 0.51012766}
-  m_LocalPosition: {x: 392.72873, y: 5.335536, z: 630.5979}
+  m_LocalRotation: {x: -0.19066116, y: -0.47813952, z: 0.10717142, w: -0.85061467}
+  m_LocalPosition: {x: 406.2304, y: 6.734098, z: 592.30206}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -198,7 +200,7 @@ Camera:
   m_GameObject: {fileID: 3148289131340771517}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 2
+  m_ClearFlags: 1
   m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -292,6 +294,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7a0d95d197c79a48bc0dff89499b65f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MasterCameraAndAudioManager
+  destroyOthers: 1
 --- !u!114 &3501961418089664837
 MonoBehaviour:
   m_ObjectHideFlags: 0

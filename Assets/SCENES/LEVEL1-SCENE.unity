@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1.2
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.4211463, g: 0.45147333, b: 0.5283019, a: 1}
-  m_SkyboxMaterial: {fileID: 2100000, guid: 8dd2f17b6e3f8174390967bc55ead836, type: 2}
+  m_SkyboxMaterial: {fileID: 2100000, guid: e11f5b66aad75483b8cd16ee18a0c917, type: 2}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -1290,7 +1290,7 @@ ReflectionProbe:
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IntensityMultiplier: 1
+  m_IntensityMultiplier: 0.1
   m_BlendDistance: 1
   m_HDR: 1
   m_BoxProjection: 0
@@ -1858,8 +1858,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.14746274, y: 0.81403494, z: -0.23531167, w: 0.51012766}
-  m_LocalPosition: {x: 392.72873, y: 5.335536, z: 630.5979}
+  m_LocalRotation: {x: -0.19066116, y: -0.47813952, z: 0.10717142, w: -0.85061467}
+  m_LocalPosition: {x: 406.2304, y: 6.734098, z: 592.30206}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4091,7 +4091,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   thisLevelMusic: {fileID: 11400000, guid: 08661f7bde1f75e42bdad31f5747c928, type: 2}
-  playMusic: 1
+  playMusic: 0
 --- !u!114 &2132692034
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -16617,7 +16617,7 @@ PrefabInstance:
     - target: {fileID: 4361029597219818444, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
         type: 3}
       propertyPath: ChargeCount
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 5478634035105202523, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
         type: 3}

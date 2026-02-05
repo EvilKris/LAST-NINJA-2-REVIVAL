@@ -9,6 +9,9 @@ using UnityEngine.SceneManagement;
 /// </summary>
 public class MasterCameraAndAudioManager : MonoBehaviour
 {
+    [Tooltip("If true, destroys GameObjects with duplicate CinemachineBrain components and AudioListeners. If false, only disables them.")]
+    [SerializeField] private bool destroyOthers = false;
+
     /// <summary>
     /// Called automatically after scene load to ensure the master components are prioritized.
     /// </summary>
@@ -66,8 +69,8 @@ public class MasterCameraAndAudioManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Finds and disables all CinemachineBrain components except the one on this GameObject.
-    /// Also disables the GameObjects containing those brains to prevent duplicate cameras.
+    /// Finds and disables or destroys all CinemachineBrain components except the one on this GameObject.
+    /// Also disables or destroys the GameObjects containing those brains to prevent duplicate cameras.
     /// </summary>
     private void DisableOtherCinemachineBrains()
     {
@@ -75,23 +78,32 @@ public class MasterCameraAndAudioManager : MonoBehaviour
         CinemachineBrain[] brains = FindObjectsByType<CinemachineBrain>(FindObjectsSortMode.None);
         CinemachineBrain thisBrain = GetComponent<CinemachineBrain>();
 
-        // Disable all other brains and their GameObjects except the master brain
+        // Disable or destroy all other brains and their GameObjects except the master brain
         foreach (CinemachineBrain brain in brains)
         {
             // Skip the master brain itself
             if (brain == thisBrain) continue;
             
-            // Disable the entire GameObject (disables both the brain and any camera components)
-            if (brain.gameObject.activeSelf)
+            if (destroyOthers)
             {
-                brain.gameObject.SetActive(false);
-                Debug.Log($"[MasterCameraAndAudioManager] Disabled GameObject with CinemachineBrain: {brain.gameObject.name}");
+                // Destroy the entire GameObject
+                Debug.Log($"[MasterCameraAndAudioManager] Destroyed GameObject with CinemachineBrain: {brain.gameObject.name}");
+                Destroy(brain.gameObject);
+            }
+            else
+            {
+                // Disable the entire GameObject (disables both the brain and any camera components)
+                if (brain.gameObject.activeSelf)
+                {
+                    brain.gameObject.SetActive(false);
+                    Debug.Log($"[MasterCameraAndAudioManager] Disabled GameObject with CinemachineBrain: {brain.gameObject.name}");
+                }
             }
         }
     }
 
     /// <summary>
-    /// Finds and disables all AudioListener components except the one on this GameObject.
+    /// Finds and disables or destroys all AudioListener components except the one on this GameObject.
     /// Unity requires exactly one active AudioListener to prevent audio warnings.
     /// </summary>
     private void DisableOtherAudioListeners()
@@ -107,17 +119,26 @@ public class MasterCameraAndAudioManager : MonoBehaviour
             return;
         }
 
-        // Disable all other listeners except the master listener
+        // Disable or destroy all other listeners except the master listener
         foreach (AudioListener listener in listeners)
         {
             // Skip the master listener itself
             if (listener == thisListener) continue;
             
-            // Disable the listener component
-            if (listener.enabled)
+            if (destroyOthers)
             {
-                listener.enabled = false;
-                Debug.Log($"[MasterCameraAndAudioManager] Disabled AudioListener on {listener.gameObject.name}");
+                // Destroy the entire GameObject containing the listener
+                Debug.Log($"[MasterCameraAndAudioManager] Destroyed GameObject with AudioListener: {listener.gameObject.name}");
+                Destroy(listener.gameObject);
+            }
+            else
+            {
+                // Disable the listener component
+                if (listener.enabled)
+                {
+                    listener.enabled = false;
+                    Debug.Log($"[MasterCameraAndAudioManager] Disabled AudioListener on {listener.gameObject.name}");
+                }
             }
         }
     }

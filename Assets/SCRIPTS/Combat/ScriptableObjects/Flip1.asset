@@ -1484,7 +1484,7 @@ MonoBehaviour:
   reactionToTrigger: 1
   hitboxType: 1
   audioEvents:
-  - triggerTime: 0.337
+  - triggerTime: 0
     sound: {fileID: 11400000, guid: e6ac0ca55c133c04585a8ba5c874503d, type: 2}
   hitStart: 1
   hitEnd: 1

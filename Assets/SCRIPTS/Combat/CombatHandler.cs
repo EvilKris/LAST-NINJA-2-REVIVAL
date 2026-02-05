@@ -13,7 +13,7 @@ public class CombatHandler : MonoBehaviour
     private MovementComponent _movement;
 
 
-    [Tooltip("Number of charges the entity has (for consecutively stronger special moves)")]
+    [Tooltip("Number of charges the entity has (for consecutively stronger special moves) - a move must also be added in the Fighting Style config")]
     public int ChargeCount = 1; // Number of charges the entity has
 
 
@@ -31,6 +31,7 @@ public class CombatHandler : MonoBehaviour
     private int _cachedMaxCharges = -1;
     private int _cachedCurrentTier = -1;
     private float _cachedChargeProgress = -1f;
+    private int _lastPlayedTierSfx = -1;
 
     // Inside CombatHandler.cs
     private ClinchHandler _clinchModule;
@@ -223,6 +224,13 @@ public class CombatHandler : MonoBehaviour
                 _cachedChargeProgress = chargeProgress;
                 OnChargeStateChanged?.Invoke(currentTier, chargeProgress);
             }
+
+            // Play sound effect once when a new tier is reached
+            if (currentTier > 0 && currentTier != _lastPlayedTierSfx)
+            {
+                _lastPlayedTierSfx = currentTier;
+                JSAM.AudioManager.PlaySound(MasterSingleton.Instance.PrefabBankManager.Charge_Drive_Strike_Tier_Complete);
+            }
         }
     }
 
@@ -233,6 +241,7 @@ public class CombatHandler : MonoBehaviour
         _currentChargeTimer = 0f;
         _cachedCurrentTier = 0;
         _cachedChargeProgress = 0f;
+        _lastPlayedTierSfx = -1;
         OnChargeStateChanged?.Invoke(0, 0f);
     }
 
@@ -251,6 +260,7 @@ public class CombatHandler : MonoBehaviour
         _currentChargeTimer = 0f;
         _cachedCurrentTier = 0;
         _cachedChargeProgress = 0f;
+        _lastPlayedTierSfx = -1;
         OnChargeStateChanged?.Invoke(0, 0f);
     }
 
