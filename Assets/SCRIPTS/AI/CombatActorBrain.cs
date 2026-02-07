@@ -7,7 +7,8 @@ public enum ActorCombatState
 { 
     Idle,     // Not engaged, standing still or patrolling
     Chasing,  // Moving directly towards target at full speed
-    Stalking  // Circling/weaving around target in close range (Dark Souls-style)
+    Stalking,  // Circling/weaving around target in close range (Dark Souls-style)
+    InClinch
 }
 
 /// <summary>
@@ -35,6 +36,7 @@ public class CombatActorBrain : MonoBehaviour
     // Component references
     private MovementComponent _mover;
     private HealthComponent _health;
+    private Animator _animator;
 
     /// <summary>
     /// Cache component references.
@@ -43,6 +45,7 @@ public class CombatActorBrain : MonoBehaviour
     {
         _mover = GetComponent<MovementComponent>();
         _health = GetComponent<HealthComponent>();
+        _animator = GetComponent<Animator>();
     }
 
     /// <summary>
@@ -55,6 +58,24 @@ public class CombatActorBrain : MonoBehaviour
         // if ((_health != null && _health.IsDead) || _mover.speedMultiplier <= 0.01f) 
         if ((_health != null && _health.IsDead))
             return;
+
+        // Check if being grabbed in a clinch
+        if (_animator != null && _animator.GetBool("b_IsBeingGrabbed"))
+        {
+            // Transition to InClinch state and skip AI processing
+            if (currentState != ActorCombatState.InClinch)
+            {
+                currentState = ActorCombatState.InClinch;
+            }
+            
+            // Don't process movement - ClinchHandler controls this
+            return;
+        }
+        else if (currentState == ActorCombatState.InClinch)
+        {
+            // Released from clinch - return to idle state
+            currentState = ActorCombatState.Idle;
+        }
 
         // Validate current target or find a new one
         if (currentTarget == null || !IsTargetValid(currentTarget))
@@ -88,6 +109,9 @@ public class CombatActorBrain : MonoBehaviour
             case ActorCombatState.Stalking:
                 HandleStalk(distance);
                 break;
+
+            case ActorCombatState.InClinch:
+            break;
         }
     }
 

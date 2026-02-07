@@ -352,6 +352,11 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: d2fab7941ce7c2648917962e7e6e1d48, type: 2}
+    - target: {fileID: 5866666021909216657, guid: 6bf9d7e9389c6f84ead045eaafcd77ca,
+        type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -483,6 +488,7 @@ MonoBehaviour:
   acrobaticSpeed: 2.2
   rotationSpeed: 60
   canRotate: 1
+  currentMoveDir: {x: 0, y: 0, z: 0}
 --- !u!114 &1375097959745992342
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -495,7 +501,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccdb7cca6d493d34490b83df6a7bcd04, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CombatHandler
+  ChargeCount: 1
   currentStyle: {fileID: 11400000, guid: f0d2b02056d92274ca48f8a72c895230, type: 2}
+  specialMoveDuration: 1
 --- !u!114 &8699775234062316184
 MonoBehaviour:
   m_ObjectHideFlags: 0

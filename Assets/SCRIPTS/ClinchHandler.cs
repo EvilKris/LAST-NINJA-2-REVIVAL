@@ -11,7 +11,7 @@ public class ClinchHandler : MonoBehaviour
     private Transform _grabbedEnemy;
     private bool _isClinching;
     private float _clinchTimer;
-    private const float MAX_CLINCH_DURATION = 3.0f;
+    private const float MAX_CLINCH_DURATION = 20f;
 
     public bool IsClinching => _isClinching;
 
@@ -49,46 +49,62 @@ public class ClinchHandler : MonoBehaviour
         _grabbedEnemy = target;
         _clinchTimer = 0f;
 
-        // 1. Disable standard rotation and slow down
+        // 1. Logic Overrides
         _movement.canRotate = false;
-        // _movement.speedMultiplier = 0.4f; // Optional: Apply speed penalty here
+
+        // Set Player Animator Parameters
+        _animator.SetBool("b_IsClinching", true);
+        _animator.SetTrigger("t_ClinchStateStarted"); // Match your transition trigger
 
         // 2. Alignment: Smoothly snap Ninja to the front of the Enemy
         Vector3 targetPos = target.position + (target.forward * 0.8f);
         Quaternion targetRot = Quaternion.LookRotation(-target.forward);
+
+        // Grab the Enemy's Animator to sync them
+        if (target.TryGetComponent<Animator>(out var enemyAnim))
+        {
+            enemyAnim.SetBool("b_IsBeingGrabbed", true);
+            enemyAnim.SetTrigger("t_ClinchStateStarted");
+        }
 
         float elapsed = 0;
         float duration = 0.15f;
 
         while (elapsed < duration)
         {
-            transform.position = Vector3.Lerp(transform.position, targetPos, elapsed / duration);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, elapsed / duration);
+            transform.SetPositionAndRotation(Vector3.Lerp(transform.position, targetPos, elapsed / duration), Quaternion.Slerp(transform.rotation, targetRot, elapsed / duration));
 
-            // Keep enemy facing the player during the struggle
+            // Face the enemy and make them face you
             target.rotation = Quaternion.Slerp(target.rotation, Quaternion.LookRotation(-transform.forward), elapsed / duration);
 
             elapsed += Time.deltaTime;
             yield return null;
         }
 
-        // 3. Parenting/Constraint: Ensure enemy stays with player
+        // 3. Parenting: Physically link them for the walk cycle
         _grabbedEnemy.SetParent(transform);
 
-        // 4. Play struggle animation
-        _animator.Play("Clinch_Idle");
-        Debug.Log("Clinch Start! (Tsukami-kaishi - 掴み開始)");
+        Debug.Log("Clinch Synced! (Kurinchi dōki - クリンチ同期)");
     }
 
     private void UpdateClinchMovement()
     {
-        // Use your blend tree parameters for strafing while grabbing
-        // Assuming InputX/Z are handled by your MovementComponent
-        float x = Input.GetAxis("Horizontal");
-        float z = Input.GetAxis("Vertical");
+        // localDir.x is side-to-side, localDir.z is forward-back
+        Vector3 localDir = transform.InverseTransformDirection(_movement.currentMoveDir);
 
-        _animator.SetFloat("ClinchInputX", x);
-        _animator.SetFloat("ClinchInputZ", z);
+        // Update Player Animator
+        _animator.SetFloat("Input_XFloat", localDir.x);
+        _animator.SetFloat("Input_YFloat", localDir.z);
+
+        // Update Enemy Animator to match leg movement
+        if (_grabbedEnemy != null)
+        {
+            if (_grabbedEnemy.TryGetComponent<Animator>(out var enemyAnim))
+            {
+                enemyAnim.SetFloat("Input_XFloat", localDir.x);
+                enemyAnim.SetFloat("Input_YFloat", localDir.z);
+            }
+        }
     }
 
     public void ExecuteClinchLight()
@@ -113,16 +129,26 @@ public class ClinchHandler : MonoBehaviour
     {
         if (!_isClinching) return;
 
+        // 1. Clean up Enemy State before unparenting
         if (_grabbedEnemy != null)
         {
+            if (_grabbedEnemy.TryGetComponent<Animator>(out var enemyAnim))
+            {
+                enemyAnim.SetBool("b_IsBeingGrabbed", false);
+                // Optionally trigger a 'released' or 'pushed' state here
+            }
+
             _grabbedEnemy.SetParent(null);
             _grabbedEnemy = null;
         }
 
+        // 2. Clean up Player State
         _isClinching = false;
-        _movement.canRotate = true;
-        // _movement.speedMultiplier = 1.0f;
+        _animator.SetBool("b_IsClinching", false);
 
-        _animator.Play("Idle"); // Or your transition out
+        _movement.canRotate = true;
+        // _movement.speedMultiplier = 1.0f; // Restore full speed
+
+        _animator.Play("Idle"); // Return to neutral
     }
 }

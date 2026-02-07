@@ -29,6 +29,9 @@ public class MovementComponent : MonoBehaviour
    // [HideInInspector] public float healthSpeedModifier = 1.0f; // Controlled by HealthComponent
     [HideInInspector] public bool canRotate = true; // Controlled by CombatHandler during attacks
 
+    // Current movement direction (exposed for other systems like ClinchHandler)
+    [HideInInspector] public Vector3 currentMoveDir;
+
     // Animator Parameter Hashes (cached for performance)
     private int _hashIsRunning;
     private int _hashXAxis;
@@ -39,6 +42,18 @@ public class MovementComponent : MonoBehaviour
     private bool _lastIsRunning;
     private float _lastXAxis;
     private float _lastYAxis;
+
+    // ClinchHandler reference (cached) 
+    private ClinchHandler _clinchCache;
+    private ClinchHandler Clinch
+    {
+        get
+        {
+            // If we don't have it cached, try to find it
+            if (_clinchCache == null) _clinchCache = GetComponent<ClinchHandler>();
+            return _clinchCache;
+        }
+    }
 
 
     private void Awake()
@@ -62,6 +77,18 @@ public class MovementComponent : MonoBehaviour
     // Used when exploring or moving without a specific target.
     public void ProcessMovement(Vector3 moveDir)
     {
+        currentMoveDir = moveDir;
+
+        #region Clinch Check    
+        // Use the Lazy Getter. If the style doesn't support clinching, 
+        // Clinch will be null and this check is skipped.
+        if (Clinch != null && Clinch.IsClinching)
+        {
+            _rb.linearVelocity = moveDir * (movementSpeed * 0.1f);
+            return;
+        }
+        #endregion
+
         float sqrMagnitude = moveDir.sqrMagnitude;
         bool isMoving = sqrMagnitude > 0.0001f; // sqrMagnitude of 0.01 is ~0.0001
 
@@ -90,6 +117,7 @@ public class MovementComponent : MonoBehaviour
     // Used by CombatActorBrain or Player Lock-On.
     public void ProcessMovement(Vector3 moveDir, Vector3 lookAtPos)
     {
+        currentMoveDir = moveDir;
         bool isMoving = moveDir.sqrMagnitude > 0.0001f;
         UpdateAnimatorBooleans(isMoving);
 
@@ -113,7 +141,8 @@ public class MovementComponent : MonoBehaviour
     }
     
     public void RotateTowardsDirection(Vector3 dir)
-    {
+    {  
+
         if (!canRotate) return; // Respect rotation lock from combat system
         if (dir.sqrMagnitude < 0.01f) return;
 
