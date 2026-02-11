@@ -260,7 +260,20 @@ public class PlayerController : MonoBehaviour
     {
         TryLockOn();
         _isHoldingAttack = false;
-        _combat.ExecuteHeavyAttack();
+
+        // 1. Check if we are currently in a clinch
+        ClinchHandler clinch = GetComponent<ClinchHandler>();
+        if (clinch != null && clinch.IsClinching)
+        {
+            // 2. If clinching, Heavy Attack performs the Wheel Throw
+            clinch.ExecuteWheelThrow();
+            Debug.Log("Wheel Throw Triggered! (Sode-tsurikomi-goshi - 袖釣込腰)");
+        }
+        else
+        {
+            // 3. Otherwise, do the normal heavy attack
+            _combat.ExecuteHeavyAttack();
+        }
     }
 
     private void OnBlockInput(InputAction.CallbackContext context) => _combat.SetBlocking(context.started);

@@ -79,12 +79,27 @@ public class MovementComponent : MonoBehaviour
     {
         currentMoveDir = moveDir;
 
-        #region Clinch Check    
+        #region Clinch Check - Being Grabbed
+        // If being grabbed by another entity, make Rigidbody kinematic to allow parenting
+        if (_animator != null && _animator.GetBool("b_IsBeingGrabbed"))
+        {
+            if (!_rb.isKinematic)
+                _rb.isKinematic = true;
+            return;
+        }
+        else if (_rb.isKinematic)
+        {
+            // Restore physics when released
+            _rb.isKinematic = false;
+        }
+        #endregion
+
+        #region Clinch Check - Grabbing Others
         // Use the Lazy Getter. If the style doesn't support clinching, 
         // Clinch will be null and this check is skipped.
         if (Clinch != null && Clinch.IsClinching)
         {
-            _rb.linearVelocity = moveDir * (movementSpeed * 0.1f);
+            _rb.linearVelocity = moveDir * (movementSpeed * 0.3f);
             return;
         }
         #endregion
@@ -118,6 +133,20 @@ public class MovementComponent : MonoBehaviour
     public void ProcessMovement(Vector3 moveDir, Vector3 lookAtPos)
     {
         currentMoveDir = moveDir;
+        
+        // If being grabbed by another entity, make Rigidbody kinematic to allow parenting
+        if (_animator != null && _animator.GetBool("b_IsBeingGrabbed"))
+        {
+            if (!_rb.isKinematic)
+                _rb.isKinematic = true;
+            return;
+        }
+        else if (_rb.isKinematic)
+        {
+            // Restore physics when released
+            _rb.isKinematic = false;
+        }
+        
         bool isMoving = moveDir.sqrMagnitude > 0.0001f;
         UpdateAnimatorBooleans(isMoving);
 

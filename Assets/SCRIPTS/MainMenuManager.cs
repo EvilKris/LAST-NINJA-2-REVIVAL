@@ -52,8 +52,8 @@ public class MainMenuManager : MonoBehaviour
         // Hide in-game UI elements (HUD, health bars, etc.)
         uiManager.ToggleInGameOverlay(false);
 
-        // Start playing the main menu background music on loop
-        JSAM.AudioManager.PlayMusic(myMusic, true);
+        // Start playing the main menu background music on loop after a delay
+        DOVirtual.DelayedCall(2f, () => JSAM.AudioManager.PlayMusic(myMusic, true));
         
         // Disable pause menu functionality while in main menu
         gameDataManager.IsPauseAllowed = false;
