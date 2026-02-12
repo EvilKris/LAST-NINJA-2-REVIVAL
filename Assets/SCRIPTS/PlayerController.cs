@@ -8,50 +8,104 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(PlayerInput))]
 public class PlayerController : MonoBehaviour
 {
-    // Component references
+    // ========================================
+    // COMPONENT REFERENCES
+    // ========================================
+    /// <summary>Handles all combat-related actions (attacks, blocking, abilities).</summary>
     private CombatHandler _combat;
-    private PlayerControls _controls; // Auto-generated Input Actions class
+    
+    /// <summary>Auto-generated Input Actions class from Unity's new Input System.</summary>
+    private PlayerControls _controls;
+    
+    /// <summary>Manages player movement, rotation, and physics.</summary>
     private MovementComponent _movement;
+    
+    /// <summary>Tracks player health and death state.</summary>
     private HealthComponent _health;
+    
+    /// <summary>Manages weapon and item inventory, accessed via MasterSingleton.</summary>
     private InventoryManager _inventoryManager;
 
-    // Attack hold mechanic (hold for medium attack, tap for light)
+    // ========================================
+    // ATTACK HOLD MECHANIC
+    // ========================================
+    /// <summary>Tracks how long the attack button has been held (for charge attacks).</summary>
     private float _attackHoldTimer;
+    
+    /// <summary>Whether the player is currently holding the attack button.</summary>
     private bool _isHoldingAttack;
 
-    // Camera and world interaction
+    // ========================================
+    // CAMERA AND WORLD INTERACTION
+    // ========================================
+    /// <summary>Reference to the main camera for input direction calculations.</summary>
     private Camera _mainCamera;
+    
+    /// <summary>Cached transform of the main camera.</summary>
     private Transform _cameraTransform;
+    
+    /// <summary>Layer mask for the floor layer (used for raycasting).</summary>
     private int _floorLayerMask;
 
-    // Cached input values from Input System events
+    // ========================================
+    // INPUT CACHING
+    // ========================================
+    /// <summary>Cached movement input from Input System (WASD/Left Stick).</summary>
     private Vector2 _moveInput;
-    private float _cachedCameraYaw; // Camera rotation locked while moving
-    private bool _wasMovingLastFrame; // Track movement state changes
+    
+    /// <summary>Cached camera Y-axis rotation, updated only when movement state changes for performance.</summary>
+    private float _cachedCameraYaw;
+    
+    /// <summary>Tracks whether the player was moving in the previous frame to detect state changes.</summary>
+    private bool _wasMovingLastFrame;
 
-    private ITargetable _currentTarget; // Our current focus
+    // ========================================
+    // TARGET LOCK SYSTEM
+    // ========================================
+    /// <summary>The current target the player is locked onto (null if none).</summary>
+    private ITargetable _currentTarget;
+    
+    /// <summary>Distance at which the target lock will automatically break.</summary>
     [SerializeField] private float lockBreakDistance = 1.0f;
+    
+    /// <summary>Radius in which to search for enemies when attempting to lock on.</summary>
     [SerializeField] private float searchRadius = 3.5f;
     
-    // Cached squared distances for performance
+    // ========================================
+    // PERFORMANCE OPTIMIZATION
+    // ========================================
+    /// <summary>Squared lock break distance (cached to avoid sqrt operations in FixedUpdate).</summary>
     private float _lockBreakDistanceSqr;
+    
+    /// <summary>Minimum squared magnitude for movement input to register (prevents stick drift).</summary>
     private float _moveThresholdSqr = 0.0001f;
 
+    // ========================================
+    // UNITY LIFECYCLE METHODS
+    // ========================================
+    
     /// <summary>
     /// Initialize component references and create Input System instance.
+    /// Called once when the script instance is being loaded.
     /// </summary>
     private void Awake()
     {
+        // Get required components attached to this GameObject
         _movement = GetComponent<MovementComponent>();
         _health = GetComponent<HealthComponent>();
         _combat = GetComponent<CombatHandler>();
+        
+        // Cache camera references for input direction calculations
         _mainCamera = Camera.main;
         _cameraTransform = _mainCamera.transform;
+        
+        // Set up layer mask for floor detection
         _floorLayerMask = LayerMask.GetMask("Floor");
 
+        // Create new instance of the Input Actions class
         _controls = new PlayerControls();
         
-        // Cache squared distance to avoid sqrt operations in FixedUpdate
+        // Cache squared distance to avoid expensive sqrt operations in FixedUpdate
         _lockBreakDistanceSqr = lockBreakDistance * lockBreakDistance;
     }
 
@@ -161,14 +215,21 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private static readonly Collider[] _overlapResults = new Collider[16];
+
     private void TryLockOn()
     {
         if (_currentTarget != null) return;
 
-        Collider[] enemies = Physics.OverlapSphere(transform.position, searchRadius);
-        foreach (var col in enemies)
+        // Don't lock on during clinch - player is already locked to grabbed enemy
+        ClinchHandler clinch = GetComponent<ClinchHandler>();
+        if (clinch != null && clinch.IsClinching) return;
+
+        int count = Physics.OverlapSphereNonAlloc(transform.position, searchRadius, _overlapResults);
+        for (int i = 0; i < count; i++)
         {
-            if (col.TryGetComponent<ITargetable>(out var target))
+            var col = _overlapResults[i];
+            if (col != null && col.TryGetComponent<ITargetable>(out var target))
             {
                 if (target.GetFaction() == Faction.Enemy && target.IsValidTarget())
                 {
@@ -209,52 +270,11 @@ public class PlayerController : MonoBehaviour
         TryLockOn();
         _combat.StartCharging(); // Handler takes care of the clock
     }
-    /*private void OnLightAttackStarted(InputAction.CallbackContext _)
-    {
-        TryLockOn();
-        _isHoldingAttack = true;
-        _attackHoldTimer = 0f;
-    }*/
-
 
     private void OnLightAttackCanceled(InputAction.CallbackContext _)
     {
         _combat.ReleaseCharge(); // Handler decides which move to play
     }
-    /*
-    private void OnLightAttackCanceled(InputAction.CallbackContext _)
-    {
-        _isHoldingAttack = false;
-
-        // Calculate how many seconds were held
-        int chargeTier = Mathf.FloorToInt(_attackHoldTimer);
-
-        // Check the move list for the cap
-        int maxPossible = _combat.GetMaxSupportedCharges();
-
-        if (chargeTier <= 0)
-        {
-            _combat.ExecuteLightAttack();
-        }
-        else
-        {
-            // Even if they hold for 5s, if maxPossible is 2, pass 2.
-            int finalTier = Mathf.Min(chargeTier, maxPossible);
-            _combat.ExecuteChargedAttack(finalTier);
-        }
-
-        _attackHoldTimer = 0f;
-    }
-
-    
-    private void OnLightAttackCanceled(InputAction.CallbackContext _)
-    {
-        _isHoldingAttack = false;
-        if (_attackHoldTimer >= 1.0f)
-            _combat.ExecuteMediumAttack();
-        else
-            _combat.ExecuteLightAttack();
-    }*/
 
     private void OnHeavyAttackStarted(InputAction.CallbackContext _)
     {
@@ -266,7 +286,9 @@ public class PlayerController : MonoBehaviour
         if (clinch != null && clinch.IsClinching)
         {
             // 2. If clinching, Heavy Attack performs the Wheel Throw
-            clinch.ExecuteWheelThrow();
+            // Get throw direction from current movement input
+            Vector3 throwDir = GetCameraRelativeDirection(_moveInput);
+            clinch.ExecuteWheelThrow(throwDir);
             Debug.Log("Wheel Throw Triggered! (Sode-tsurikomi-goshi - 袖釣込腰)");
         }
         else

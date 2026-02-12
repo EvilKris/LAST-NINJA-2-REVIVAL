@@ -53,6 +53,7 @@ public class CombatHandler : MonoBehaviour
     private bool _hitboxActive;
     private bool _canAcceptComboInput;
     private bool _isAcrobaticMove;
+    private bool _isClinchAttack; // Tracks if currently executing a clinch attack
 
     [Header("KI Settings")]
     private float _kiBars = 3f;
@@ -69,6 +70,8 @@ public class CombatHandler : MonoBehaviour
     public bool CanRotateDuringAttack => _canRotateDuringAttack;
     public bool IsAttacking => _activeMove != null;
     public bool IsAcrobatic => _isAcrobaticMove;
+    public bool IsClinchAttack => _isClinchAttack;
+    public bool IsCharging => _isCharging;
 
     private void Awake()
     {
@@ -248,6 +251,20 @@ public class CombatHandler : MonoBehaviour
     public void ReleaseCharge()
     {
         if (!_isCharging) return;
+        
+        // Check if we're in a clinch - if so, reset charge and cancel the release
+        if (_clinchModule != null && _clinchModule.IsClinching)
+        {
+            // Reset charging state - charge is lost if released during clinch
+            _isCharging = false;
+            _currentChargeTimer = 0f;
+            _cachedCurrentTier = 0;
+            _cachedChargeProgress = 0f;
+            _lastPlayedTierSfx = -1;
+            OnChargeStateChanged?.Invoke(0, 0f);
+            return;
+        }
+        
         _isCharging = false;
 
         int tier = CurrentTier;
@@ -368,6 +385,7 @@ public class CombatHandler : MonoBehaviour
         _canAcceptComboInput = false;
         _canRotateDuringAttack = false;
         _isAcrobaticMove = false;
+        _isClinchAttack = false; // Clear clinch attack flag
         _movement.canRotate = true;
     }
 
@@ -454,6 +472,7 @@ public class CombatHandler : MonoBehaviour
     public void ExecuteCustomMove(CombatMove move)
     {
         if (_health.IsDead) return;
+        _isClinchAttack = true; // Mark as clinch attack
         PlayMove(move);
     }
 

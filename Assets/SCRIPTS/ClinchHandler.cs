@@ -315,11 +315,32 @@ public class ClinchHandler : MonoBehaviour
 
 
     #region Throws 
-    public void ExecuteWheelThrow()
+    /// <summary>
+    /// Executes the wheel throw (Sode-tsurikomi-goshi).
+    /// Rotates both player and enemy to face the throw direction before executing.
+    /// </summary>
+    /// <param name="throwDirection">World-space direction to throw towards. If zero, uses current forward direction.</param>
+    public void ExecuteWheelThrow(Vector3 throwDirection)
     {
         if (!_isClinching) return;
 
-               // 1. Trigger the throw on the Ninja
+        // If a throw direction was specified, rotate both characters to face it
+        if (throwDirection.sqrMagnitude > 0.01f)
+        {
+            throwDirection.y = 0; // Ensure horizontal direction only
+            Quaternion throwRotation = Quaternion.LookRotation(throwDirection.normalized);
+            
+            // Rotate player to face throw direction
+            transform.rotation = throwRotation;
+            
+            // Rotate enemy to face opposite direction (they face each other during throw)
+            if (_grabbedEnemy != null)
+            {
+                _grabbedEnemy.rotation = Quaternion.LookRotation(-throwDirection.normalized);
+            }
+        }
+
+        // 1. Trigger the throw on the Ninja
         _animator.SetTrigger("t_WheelThrow");
 
         // 2. Trigger the throw on the Enemy
@@ -329,7 +350,7 @@ public class ClinchHandler : MonoBehaviour
         }
 
         // 3. Switch to Root Motion for the throw's arc
-        _animator.applyRootMotion = true;
+        //_animator.applyRootMotion = true;
 
         // We don't call EndClinch() here yet! 
         // We wait for the Animation Event 'OnThrowRelease' to unparent them.
