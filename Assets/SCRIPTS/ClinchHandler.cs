@@ -28,6 +28,14 @@ public class ClinchHandler : MonoBehaviour
     private bool _isClinching;
     private float _clinchTimer;
     private const float MAX_CLINCH_DURATION = 20f; // Auto-release after 20 seconds
+    
+    // Throw recovery tracking
+    private float _lastThrownTime = -999f; // Time when this entity was last thrown
+    private bool _isBeingThrown; // True during throw sequence
+    
+    // Throw physics settings
+    private const float THROW_ARC_HEIGHT = 2.5f; // Height of the arc trajectory
+    private const float THROW_DISTANCE = 4f; // Horizontal distance enemy is thrown
 
     // Animator parameter hashes (cached for better performance than string lookups)
     private static readonly int HashIsClinching = Animator.StringToHash("b_IsClinching");
@@ -40,6 +48,11 @@ public class ClinchHandler : MonoBehaviour
     /// Returns true if this character is currently in a clinch state.
     /// </summary>
     public bool IsClinching => _isClinching;
+    
+    /// <summary>
+    /// Returns true if this character can be clinched (not recently thrown).
+    /// </summary>
+    public bool CanBeClinched => Time.time - _lastThrownTime >= _combat.ClinchRecovery && !_isBeingThrown;
 
     /// <summary>
     /// Initializes the clinch handler with required component references.
@@ -82,6 +95,15 @@ public class ClinchHandler : MonoBehaviour
     public void AttemptClinch(Transform target)
     {
         if (_isClinching || _combat.IsAttacking) return;
+        
+        // Check if target can be clinched (not in recovery from previous throw)
+        ClinchHandler targetClinch = target.GetComponent<ClinchHandler>();
+        if (targetClinch != null && !targetClinch.CanBeClinched)
+        {
+            Debug.Log($"{target.name} is still recovering from being thrown!");
+            return;
+        }
+        
         StartCoroutine(ClinchSequence(target));
     }
 
@@ -316,8 +338,12 @@ public class ClinchHandler : MonoBehaviour
 
     #region Throws 
     /// <summary>
-    /// Executes the wheel throw (Sode-tsurikomi-goshi).
-    /// Rotates both player and enemy to face the throw direction before executing.
+    /// Executes the wheel throw (Sode-tsurikomi-goshi) - Final Fight style.
+    /// Implements multi-phase throw sequence:
+    /// Phase 1: Unparent and enable root motion on both
+    /// Phase 2 (1s): Disable root motion, freeze enemy animation, launch in arc
+    /// Phase 3 (2s): Return thrower to normal
+    /// Phase 4 (4s): Return thrown enemy to normal with recovery cooldown
     /// </summary>
     /// <param name="throwDirection">World-space direction to throw towards. If zero, uses current forward direction.</param>
     public void ExecuteWheelThrow(Vector3 throwDirection)
@@ -340,20 +366,149 @@ public class ClinchHandler : MonoBehaviour
             }
         }
 
-        // 1. Trigger the throw on the Ninja
-        _animator.SetTrigger("t_WheelThrow");
-
-        // 2. Trigger the throw on the Enemy
-        if (_grabbedEnemy != null && _grabbedEnemy.TryGetComponent<Animator>(out var enemyAnim))
+        StartCoroutine(ExecuteThrowSequence());
+    }
+    
+    /// <summary>
+    /// Final Fight-style throw sequence with arc trajectory and recovery phases.
+    /// </summary>
+    private IEnumerator ExecuteThrowSequence()
+    {
+        if (_grabbedEnemy == null) yield break;
+        
+        // Mark enemy as being thrown
+        ClinchHandler enemyClinch = _grabbedEnemy.GetComponent<ClinchHandler>();
+        if (enemyClinch != null)
         {
-            enemyAnim.SetTrigger("t_WheelThrow");
+            enemyClinch._isBeingThrown = true;
         }
-
-        // 3. Switch to Root Motion for the throw's arc
-        //_animator.applyRootMotion = true;
-
-        // We don't call EndClinch() here yet! 
-        // We wait for the Animation Event 'OnThrowRelease' to unparent them.
+        
+        // === PHASE 1: Unparent and enable root motion ===
+        
+        // Unparent enemy so they can move independently
+        _grabbedEnemy.SetParent(null);
+        
+        // Re-enable physics on enemy (prepare for launch)
+        if (_enemyRigidbody != null)
+        {
+            _enemyRigidbody.isKinematic = false;
+            _enemyRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
+        }
+        
+        // Enable root motion on both characters
+        _animator.applyRootMotion = true;
+        if (_enemyAnimator != null)
+        {
+            _enemyAnimator.applyRootMotion = true;
+        }
+        
+        // Trigger throw animations
+        _animator.SetTrigger("t_WheelThrow");
+        if (_enemyAnimator != null)
+        {
+            _enemyAnimator.SetTrigger("t_WheelThrow");
+        }
+        
+        Debug.Log("Throw Phase 1: Root motion enabled on both characters");
+        
+        // === PHASE 2: After 1 second - Launch enemy in arc ===
+        yield return new WaitForSeconds(1f);
+        
+        // Disable root motion on both
+        _animator.applyRootMotion = false;
+        if (_enemyAnimator != null)
+        {
+            _enemyAnimator.applyRootMotion = false;
+            // Freeze enemy animation at current frame
+            _enemyAnimator.speed = 0f;
+        }
+        
+        // Launch enemy in arc trajectory (opposite to their forward direction)
+        if (_enemyRigidbody != null)
+        {
+            Vector3 throwDir = -_grabbedEnemy.forward; // Opposite to enemy's facing direction
+            throwDir.y = 0;
+            throwDir.Normalize();
+            
+            // Calculate arc trajectory velocity
+            // Horizontal component
+            Vector3 horizontalVelocity = throwDir * THROW_DISTANCE;
+            
+            // Vertical component (calculated to reach arc height)
+            float gravity = Mathf.Abs(Physics.gravity.y);
+            float timeToApex = Mathf.Sqrt(2 * THROW_ARC_HEIGHT / gravity);
+            float verticalVelocity = gravity * timeToApex;
+            
+            // Apply combined velocity
+            Vector3 launchVelocity = horizontalVelocity + Vector3.up * verticalVelocity;
+            _enemyRigidbody.linearVelocity = launchVelocity;
+            
+            // Add slight rotation for visual flair
+            _enemyRigidbody.angularVelocity = _grabbedEnemy.right * 2f;
+        }
+        
+        Debug.Log("Throw Phase 2: Enemy launched in arc trajectory");
+        
+        // === PHASE 3: After 2 seconds total - Return thrower to normal ===
+        yield return new WaitForSeconds(1f);
+        
+        // Return player to idle and end clinch
+        _isClinching = false;
+        _animator.SetBool(HashIsClinching, false);
+        _movement.canRotate = true;
+        _animator.Play("Idle");
+        
+        // Clear player's cached enemy references
+        Transform thrownEnemy = _grabbedEnemy;
+        Animator thrownAnimator = _enemyAnimator;
+        Rigidbody thrownRb = _enemyRigidbody;
+        Collider thrownCollider = _enemyCollider;
+        
+        _grabbedEnemy = null;
+        _enemyAnimator = null;
+        _enemyRigidbody = null;
+        _enemyCollider = null;
+        _enemyMovement = null;
+        
+        Debug.Log("Throw Phase 3: Thrower returned to normal state");
+        
+        // === PHASE 4: After 4 seconds total - Return thrown enemy to normal ===
+        yield return new WaitForSeconds(2f);
+        
+        if (thrownEnemy != null)
+        {
+            // Resume enemy animation
+            if (thrownAnimator != null)
+            {
+                thrownAnimator.speed = _enemyOriginalAnimSpeed;
+                thrownAnimator.SetBool(HashIsBeingGrabbed, false);
+                // Play getup/recovery animation if available
+                // thrownAnimator.Play("GetUp"); // Uncomment if you have this animation
+            }
+            
+            // Stop physics movement
+            if (thrownRb != null)
+            {
+                thrownRb.linearVelocity = Vector3.zero;
+                thrownRb.angularVelocity = Vector3.zero;
+            }
+            
+            // Re-enable collision with player
+            if (_playerCollider != null && thrownCollider != null)
+            {
+                Physics.IgnoreCollision(_playerCollider, thrownCollider, false);
+            }
+            
+            // Start clinch recovery cooldown on thrown enemy
+            if (enemyClinch != null)
+            {
+                enemyClinch._lastThrownTime = Time.time;
+                enemyClinch._isBeingThrown = false;
+                Debug.Log($"{thrownEnemy.name} entering clinch recovery for {_combat.ClinchRecovery} seconds");
+            }
+        }
+        
+        Debug.Log("Throw Phase 4: Thrown enemy returned to normal state with recovery cooldown");
     }
     #endregion
 }

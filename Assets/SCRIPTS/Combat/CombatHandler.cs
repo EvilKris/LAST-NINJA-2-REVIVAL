@@ -20,6 +20,10 @@ public class CombatHandler : MonoBehaviour
     [Header("Data")]
     public FightingStyle currentStyle;
 
+    [Header("Clinch Settings")]
+    [Tooltip("Time in seconds before an entity can be clinched again after being thrown")]
+    public float ClinchRecovery = 3f;
+    
     [Header("Combo Settings")]
     private int _comboIndex = 0;
     private float _lastAttackTime;

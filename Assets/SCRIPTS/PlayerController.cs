@@ -303,6 +303,15 @@ public class PlayerController : MonoBehaviour
     private void OnAcrobatics(InputAction.CallbackContext context)
     {
         if (!context.started) return;
+        
+        // Check if we're in a clinch - if so, break out and return to normal
+        ClinchHandler clinch = GetComponent<ClinchHandler>();
+        if (clinch != null && clinch.IsClinching)
+        {
+            clinch.EndClinch();
+            return;
+        }
+        
         if (_moveInput.sqrMagnitude > _moveThresholdSqr)
         {
             Vector3 dir = GetCameraRelativeDirection(_moveInput);
