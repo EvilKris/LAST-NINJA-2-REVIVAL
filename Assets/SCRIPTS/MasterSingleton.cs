@@ -3,9 +3,9 @@ public class MasterSingleton : Singleton<MasterSingleton>
 {
     public static MasterSingleton Main { get; private set; }
 
-    
-    //Service Locators
 
+    //Service Locators
+    public CameraManager CameraManager { get; private set; }
     public PrefabBankManager PrefabBankManager { get; private set; }
     public UIManager UIManager { get; private set; }
     public AudioController AudioController { get; private set; }
@@ -16,6 +16,7 @@ public class MasterSingleton : Singleton<MasterSingleton>
 
     public override void Awake()
     {
+        CameraManager = GetComponentInChildren<CameraManager>();
         PrefabBankManager = GetComponentInChildren<PrefabBankManager>();
         UIManager = GetComponentInChildren<UIManager>();
         AudioController = GetComponentInChildren<AudioController>();

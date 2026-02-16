@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -27,15 +28,27 @@ public class ClinchHandler : MonoBehaviour
     // Clinch state tracking
     private bool _isClinching;
     private float _clinchTimer;
-    private const float MAX_CLINCH_DURATION = 20f; // Auto-release after 20 seconds
+    private const float MAX_CLINCH_DURATION = 3f; // Auto-release after 3 seconds
     
     // Throw recovery tracking
     private float _lastThrownTime = -999f; // Time when this entity was last thrown
     private bool _isBeingThrown; // True during throw sequence
     
     // Throw physics settings
-    private const float THROW_ARC_HEIGHT = 2.5f; // Height of the arc trajectory
+    private const float THROW_ARC_HEIGHT = 1.5f; // Height of the arc trajectory
     private const float THROW_DISTANCE = 4f; // Horizontal distance enemy is thrown
+
+    // Cached layer masks (avoid string-based lookups)
+    private static int _floorLayerMask = -1;
+    private static int FloorLayerMask
+    {
+        get
+        {
+            if (_floorLayerMask == -1)
+                _floorLayerMask = LayerMask.GetMask("Floor");
+            return _floorLayerMask;
+        }
+    }
 
     // Animator parameter hashes (cached for better performance than string lookups)
     private static readonly int HashIsClinching = Animator.StringToHash("b_IsClinching");
@@ -43,6 +56,8 @@ public class ClinchHandler : MonoBehaviour
     private static readonly int HashIsBeingGrabbed = Animator.StringToHash("b_IsBeingGrabbed");
     private static readonly int HashInputX = Animator.StringToHash("Input_XFloat");
     private static readonly int HashInputY = Animator.StringToHash("Input_YFloat");
+    private static readonly int HashWheelThrow = Animator.StringToHash("t_WheelThrow");
+    private static readonly int HashBreakClinch = Animator.StringToHash("t_BreakClinch");
 
     /// <summary>
     /// Returns true if this character is currently in a clinch state.
@@ -79,7 +94,7 @@ public class ClinchHandler : MonoBehaviour
         _clinchTimer += Time.deltaTime;
         if (_clinchTimer >= MAX_CLINCH_DURATION)
         {
-            EndClinch();
+            BreakClinch();
             return;
         }
 
@@ -97,13 +112,13 @@ public class ClinchHandler : MonoBehaviour
         if (_isClinching || _combat.IsAttacking) return;
         
         // Check if target can be clinched (not in recovery from previous throw)
-        ClinchHandler targetClinch = target.GetComponent<ClinchHandler>();
-        if (targetClinch != null && !targetClinch.CanBeClinched)
+        if (target.TryGetComponent<ClinchHandler>(out var targetClinch) && !targetClinch.CanBeClinched)
         {
             Debug.Log($"{target.name} is still recovering from being thrown!");
             return;
         }
         
+
         StartCoroutine(ClinchSequence(target));
     }
 
@@ -141,6 +156,7 @@ public class ClinchHandler : MonoBehaviour
         // Trigger clinch animations for player
         _animator.SetBool(HashIsClinching, true);
         _animator.SetTrigger(HashClinchStateStarted);
+        ResetMovementParams(); // Ensure movement parameters start at zero for proper blend tree behavior   
 
         // Calculate alignment positions and rotations
         // Player positions in front of enemy, both face each other
@@ -274,6 +290,67 @@ public class ClinchHandler : MonoBehaviour
     }
 
     /// <summary>
+    /// Waits for the specified animator to complete its current animation.
+    /// </summary>
+    /// <param name="animator">The animator to monitor</param>
+    /// <param name="completionThreshold">Normalized time threshold (0-1) to consider animation complete</param>
+    /// <param name="maxWaitTime">Maximum time to wait before timing out</param>
+    /// <returns>True if animation completed, false if timed out</returns>
+    private IEnumerator WaitForAnimationComplete(Animator animator, float completionThreshold = 0.95f, float maxWaitTime = 3f)
+    {
+        if (animator == null) yield break;
+        
+        float waitElapsed = 0f;
+        bool animationFinished = false;
+        
+        while (!animationFinished && waitElapsed < maxWaitTime)
+        {
+            AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+            
+            // Check if animation is nearly complete and not transitioning
+            if (stateInfo.normalizedTime >= completionThreshold && !animator.IsInTransition(0))
+            {
+                animationFinished = true;
+                Debug.Log($"Animation completed at {stateInfo.normalizedTime * 100f}%");
+            }
+            
+            waitElapsed += Time.deltaTime;
+            yield return null;
+        }
+        
+        if (!animationFinished)
+        {
+            Debug.LogWarning("Animation did not complete within timeout period");
+        }
+    }
+
+    /// <summary>
+    /// Breaks the clinch with an animation (used when timer expires).
+    /// Triggers break animation and schedules cleanup after animation completes.
+    /// </summary>
+    public void BreakClinch()
+    {
+        if (!_isClinching) return;
+
+        // Trigger break clinch animation on both characters
+        _animator.SetTrigger(HashBreakClinch);
+        if (_enemyAnimator != null)
+        {
+            _enemyAnimator.SetTrigger(HashBreakClinch);
+        }
+
+        // Start recovery cooldown immediately for both characters
+        _lastThrownTime = Time.time;
+        if (_grabbedEnemy != null && _grabbedEnemy.TryGetComponent<ClinchHandler>(out var enemyClinch))
+        {
+            enemyClinch._lastThrownTime = Time.time;
+        }
+
+        // Wait for break animation to complete before cleanup
+        StartCoroutine(EndClinchDelayed(0.5f));
+    }
+
+    /// <summary>
     /// Ends the clinch state and restores both characters to normal gameplay.
     /// Cleanup process:
     /// 1. Restores enemy animator parameters and speed
@@ -325,9 +402,23 @@ public class ClinchHandler : MonoBehaviour
         // Reset player state
         _isClinching = false;
         _animator.SetBool(HashIsClinching, false);
+        _animator.ResetTrigger(HashWheelThrow); // Reset throw trigger to prevent auto-fire
+        
+        // Reset movement animator parameters to idle
+        _animator.SetFloat(HashInputX, 0f);
+        _animator.SetFloat(HashInputY, 0f);
 
         // Re-enable player rotation control
         _movement.canRotate = true;
+        
+        // Zero out rigidbody velocity to prevent residual movement
+        if (GetComponent<Rigidbody>() != null)
+        {
+            GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
+        }
+
+        // Deactivate target group cameras
+        CameraManager.OnActivateTargetGroupCams?.Invoke(false, null);
 
         // Return player to idle animation
         _animator.Play("Idle");
@@ -340,50 +431,105 @@ public class ClinchHandler : MonoBehaviour
     /// <summary>
     /// Executes the wheel throw (Sode-tsurikomi-goshi) - Final Fight style.
     /// Implements multi-phase throw sequence:
+    /// Phase 0: Spike Out rotation to face throw direction
     /// Phase 1: Unparent and enable root motion on both
-    /// Phase 2 (1s): Disable root motion, freeze enemy animation, launch in arc
-    /// Phase 3 (2s): Return thrower to normal
-    /// Phase 4 (4s): Return thrown enemy to normal with recovery cooldown
+    /// Phase 2: Wait for thrower animation to complete
+    /// Phase 3: Launch enemy in arc (with temporary collision disable)
+    /// Phase 4: Return thrower to normal state
+    /// Phase 5: Wait for enemy to land and restore state
     /// </summary>
     /// <param name="throwDirection">World-space direction to throw towards. If zero, uses current forward direction.</param>
     public void ExecuteWheelThrow(Vector3 throwDirection)
     {
         if (!_isClinching) return;
 
-        // If a throw direction was specified, rotate both characters to face it
-        if (throwDirection.sqrMagnitude > 0.01f)
-        {
-            throwDirection.y = 0; // Ensure horizontal direction only
-            Quaternion throwRotation = Quaternion.LookRotation(throwDirection.normalized);
-            
-            // Rotate player to face throw direction
-            transform.rotation = throwRotation;
-            
-            // Rotate enemy to face opposite direction (they face each other during throw)
-            if (_grabbedEnemy != null)
-            {
-                _grabbedEnemy.rotation = Quaternion.LookRotation(-throwDirection.normalized);
-            }
-        }
+        // End the clinch state immediately to prevent re-entry
+        // The throw sequence will handle its own cleanup
+        _isClinching = false;
+        _animator.SetBool(HashIsClinching, false);
 
-        StartCoroutine(ExecuteThrowSequence());
+        StartCoroutine(ExecuteThrowSequence(throwDirection));
     }
     
     /// <summary>
     /// Final Fight-style throw sequence with arc trajectory and recovery phases.
+    /// Implements Spike Out-style rotation where both characters spin around their center point to face throw direction.
     /// </summary>
-    private IEnumerator ExecuteThrowSequence()
+    private IEnumerator ExecuteThrowSequence(Vector3 throwDirection)
     {
         if (_grabbedEnemy == null) yield break;
         
         // Mark enemy as being thrown
-        ClinchHandler enemyClinch = _grabbedEnemy.GetComponent<ClinchHandler>();
-        if (enemyClinch != null)
+        if (_grabbedEnemy.TryGetComponent<ClinchHandler>(out var enemyClinch))
         {
             enemyClinch._isBeingThrown = true;
         }
         
+        // === PHASE 0: Spike Out-style rotation around center point ===
+        if (throwDirection.sqrMagnitude > 0.01f)
+        {
+            throwDirection.y = 0; // Ensure horizontal direction only
+            throwDirection.Normalize();
+            
+            // Calculate center point between player and enemy
+            Vector3 centerPoint = Vector3.Lerp(transform.position, _grabbedEnemy.position, 0.5f);
+            
+            // Store starting rotations and positions
+            Quaternion playerStartRot = transform.rotation;
+            Quaternion enemyStartRot = _grabbedEnemy.rotation;
+            Vector3 playerStartPos = transform.position;
+            Vector3 enemyStartPos = _grabbedEnemy.position;
+            
+            // Calculate target rotations
+            Quaternion playerTargetRot = Quaternion.LookRotation(throwDirection);
+            Quaternion enemyTargetRot = Quaternion.LookRotation(-throwDirection);
+            
+            // Pre-calculate rotation deltas (avoids repeated quaternion inversions)
+            Quaternion playerRotDelta = playerTargetRot * Quaternion.Inverse(playerStartRot);
+            Quaternion enemyRotDelta = enemyTargetRot * Quaternion.Inverse(enemyStartRot);
+            
+            // Rotate both characters around center point over a short duration
+            float rotationDuration = 0.2f; // Quick spin to face throw direction
+            float elapsed = 0f;
+            
+            while (elapsed < rotationDuration)
+            {
+                float t = elapsed / rotationDuration;
+                
+                // Interpolate rotations
+                Quaternion playerRot = Quaternion.Slerp(playerStartRot, playerTargetRot, t);
+                Quaternion enemyRot = Quaternion.Slerp(enemyStartRot, enemyTargetRot, t);
+                
+                // Calculate offset from center
+                Vector3 playerOffset = playerStartPos - centerPoint;
+                Vector3 enemyOffset = enemyStartPos - centerPoint;
+                
+                // Rotate offsets around center point using pre-calculated deltas
+                Quaternion playerOffsetRot = Quaternion.Slerp(Quaternion.identity, playerRotDelta, t);
+                Quaternion enemyOffsetRot = Quaternion.Slerp(Quaternion.identity, enemyRotDelta, t);
+                
+                Vector3 rotatedPlayerOffset = playerOffsetRot * playerOffset;
+                Vector3 rotatedEnemyOffset = enemyOffsetRot * enemyOffset;
+                
+                // Apply new positions and rotations
+                transform.SetPositionAndRotation(centerPoint + rotatedPlayerOffset, playerRot);
+                _grabbedEnemy.SetPositionAndRotation(centerPoint + rotatedEnemyOffset, enemyRot);
+                
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+            
+            // Ensure final rotations are exact
+            transform.rotation = playerTargetRot;
+            _grabbedEnemy.rotation = enemyTargetRot;
+            
+            Debug.Log("Throw Phase 0: Spike Out-style rotation complete");
+        }
+        
         // === PHASE 1: Unparent and enable root motion ===
+        
+        // Activate target group cameras with both characters
+        CameraManager.OnActivateTargetGroupCams?.Invoke(true, new Transform[] { transform, _grabbedEnemy });
         
         // Unparent enemy so they can move independently
         _grabbedEnemy.SetParent(null);
@@ -395,6 +541,12 @@ public class ClinchHandler : MonoBehaviour
             _enemyRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
         }
         
+        // Release enemy from grabbed state immediately (allows parallel throw animations)
+        if (_enemyAnimator != null)
+        {
+            _enemyAnimator.SetBool(HashIsBeingGrabbed, false);
+        }
+        
         // Enable root motion on both characters
         _animator.applyRootMotion = true;
         if (_enemyAnimator != null)
@@ -402,30 +554,50 @@ public class ClinchHandler : MonoBehaviour
             _enemyAnimator.applyRootMotion = true;
         }
         
-        // Trigger throw animations
-        _animator.SetTrigger("t_WheelThrow");
+        // Trigger throw animations (now run in parallel)
+        _animator.SetTrigger(HashWheelThrow);
         if (_enemyAnimator != null)
         {
-            _enemyAnimator.SetTrigger("t_WheelThrow");
+            _enemyAnimator.SetTrigger(HashWheelThrow);
         }
         
         Debug.Log("Throw Phase 1: Root motion enabled on both characters");
         
-        // === PHASE 2: After 1 second - Launch enemy in arc ===
-        yield return new WaitForSeconds(1f);
+        // === PHASE 2: Wait for throw animation to complete on thrower ===
+        yield return WaitForAnimationComplete(_animator);
         
-        // Disable root motion on both
+        // Disable root motion on thrower
         _animator.applyRootMotion = false;
+        
+        Debug.Log("Throw Phase 2: Thrower animation complete");
+        
+        // === PHASE 3: Launch enemy in arc ===
+        
+        // Disable root motion on enemy and freeze animation
         if (_enemyAnimator != null)
         {
             _enemyAnimator.applyRootMotion = false;
-            // Freeze enemy animation at current frame
             _enemyAnimator.speed = 0f;
         }
         
-        // Launch enemy in arc trajectory (opposite to their forward direction)
-        if (_enemyRigidbody != null)
+        // Temporarily disable floor collision for enemy during launch
+        int enemyOriginalLayer = 0;
+        if (_grabbedEnemy != null)
         {
+            enemyOriginalLayer = _grabbedEnemy.gameObject.layer;
+            _grabbedEnemy.gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+        }
+        
+        // Launch enemy in arc trajectory (opposite to their forward direction)
+        if (_enemyRigidbody != null && _grabbedEnemy != null)
+        {
+            // Ensure rigidbody is non-kinematic before applying forces
+            if (_enemyRigidbody.isKinematic)
+            {
+                Debug.LogWarning("Enemy rigidbody was still kinematic at launch! Forcing non-kinematic.");
+                _enemyRigidbody.isKinematic = false;
+            }
+            
             Vector3 throwDir = -_grabbedEnemy.forward; // Opposite to enemy's facing direction
             throwDir.y = 0;
             throwDir.Normalize();
@@ -445,18 +617,38 @@ public class ClinchHandler : MonoBehaviour
             
             // Add slight rotation for visual flair
             _enemyRigidbody.angularVelocity = _grabbedEnemy.right * 2f;
+            
+            Debug.Log($"Launch velocity applied: {launchVelocity}, RB velocity: {_enemyRigidbody.linearVelocity}");
+        }
+        else
+        {
+            Debug.LogError("Cannot launch enemy - rigidbody or transform is null!");
         }
         
-        Debug.Log("Throw Phase 2: Enemy launched in arc trajectory");
+        // Wait briefly before re-enabling collision (prevent immediate ground collision)
+        yield return new WaitForSeconds(0.3f);
         
-        // === PHASE 3: After 2 seconds total - Return thrower to normal ===
-        yield return new WaitForSeconds(1f);
+        // Restore enemy layer to enable floor collision
+        if (_grabbedEnemy != null)
+        {
+            _grabbedEnemy.gameObject.layer = enemyOriginalLayer;
+        }
         
-        // Return player to idle and end clinch
-        _isClinching = false;
-        _animator.SetBool(HashIsClinching, false);
+        Debug.Log("Throw Phase 3: Enemy launched in arc trajectory");
+        
+        // === PHASE 4: Return thrower to normal ===
+        
+        // Return player to normal state
+        _animator.ResetTrigger(HashWheelThrow); // Clear the trigger
         _movement.canRotate = true;
-        _animator.Play("Idle");
+
+        ResetMovementParams();
+
+        // Zero out rigidbody velocity to prevent residual movement
+        if (_combat.GetComponent<Rigidbody>() != null)
+        {
+            _combat.GetComponent<Rigidbody>().linearVelocity = Vector3.zero;
+        }
         
         // Clear player's cached enemy references
         Transform thrownEnemy = _grabbedEnemy;
@@ -470,10 +662,34 @@ public class ClinchHandler : MonoBehaviour
         _enemyCollider = null;
         _enemyMovement = null;
         
-        Debug.Log("Throw Phase 3: Thrower returned to normal state");
+        Debug.Log("Throw Phase 4: Thrower returned to normal state");
         
-        // === PHASE 4: After 4 seconds total - Return thrown enemy to normal ===
-        yield return new WaitForSeconds(2f);
+        // === PHASE 5: Wait for enemy to hit the floor ===
+        if (thrownEnemy != null && thrownRb != null)
+        {
+            // Wait until enemy hits the floor layer
+            bool hasHitFloor = false;
+            float maxWaitTime = 5f; // Failsafe timeout
+            float waitElapsed = 0f;
+            
+            while (!hasHitFloor && waitElapsed < maxWaitTime)
+            {
+                // Check if enemy is grounded by raycasting down
+                if (Physics.Raycast(thrownEnemy.position, Vector3.down, 0.2f, FloorLayerMask))
+                {
+                    hasHitFloor = true;
+                    Debug.Log($"{thrownEnemy.name} hit the floor!");
+                }
+                
+                waitElapsed += Time.deltaTime;
+                yield return null;
+            }
+            
+            if (!hasHitFloor)
+            {
+                Debug.LogWarning($"{thrownEnemy.name} did not hit floor within timeout period");
+            }
+        }
         
         if (thrownEnemy != null)
         {
@@ -481,7 +697,7 @@ public class ClinchHandler : MonoBehaviour
             if (thrownAnimator != null)
             {
                 thrownAnimator.speed = _enemyOriginalAnimSpeed;
-                thrownAnimator.SetBool(HashIsBeingGrabbed, false);
+                // Note: HashIsBeingGrabbed already set to false in Phase 1
                 // Play getup/recovery animation if available
                 // thrownAnimator.Play("GetUp"); // Uncomment if you have this animation
             }
@@ -508,7 +724,18 @@ public class ClinchHandler : MonoBehaviour
             }
         }
         
-        Debug.Log("Throw Phase 4: Thrown enemy returned to normal state with recovery cooldown");
+        Debug.Log("Throw Phase 5: Thrown enemy returned to normal state with recovery cooldown");
+        
+        // Deactivate target group cameras
+        CameraManager.OnActivateTargetGroupCams?.Invoke(false, null);
+    }
+
+    private void ResetMovementParams()
+    {
+        // Reset movement animator parameters to idle
+        _animator.SetFloat(HashInputX, 0f);
+        _animator.SetFloat(HashInputY, 0f);
+        _animator.SetBool("isRunningBool", false);
     }
     #endregion
 }
