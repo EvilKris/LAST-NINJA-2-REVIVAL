@@ -270,10 +270,12 @@ public class ClinchHandler : MonoBehaviour
     /// </summary>
     public void ExecuteClinchThrow()
     {
-        if (!_isClinching || _combat.currentStyle.clinchThrow == null) return;
+        //Out of use - for now 
+
+        if (!_isClinching || _combat.currentStyle.clinchThrowDefault == null) return;
 
         // Execute throw animation
-        _combat.ExecuteCustomMove(_combat.currentStyle.clinchThrow);
+        _combat.ExecuteCustomThrow(_combat.currentStyle.clinchThrowDefault);
         
         // Delay cleanup to allow throw animation to start playing
         StartCoroutine(EndClinchDelayed(0.1f));
@@ -326,28 +328,50 @@ public class ClinchHandler : MonoBehaviour
 
     /// <summary>
     /// Breaks the clinch with an animation (used when timer expires).
-    /// Triggers break animation and schedules cleanup after animation completes.
+    /// Triggers break animation and waits for it to complete before cleanup.
     /// </summary>
     public void BreakClinch()
     {
         if (!_isClinching) return;
 
+        StartCoroutine(BreakClinchSequence());
+    }
+
+    /// <summary>
+    /// Coroutine that handles the break clinch sequence:
+    /// 1. Triggers break animation on both characters
+    /// 2. Waits for break animation to complete
+    /// 3. Cleans up clinch state and returns control
+    /// </summary>
+    private IEnumerator BreakClinchSequence()
+    {
+        // Reset throw trigger to prevent it from being activated
+        _animator.ResetTrigger(HashWheelThrow);
+
         // Trigger break clinch animation on both characters
         _animator.SetTrigger(HashBreakClinch);
         if (_enemyAnimator != null)
         {
+            _enemyAnimator.ResetTrigger(HashWheelThrow);
             _enemyAnimator.SetTrigger(HashBreakClinch);
         }
 
-        // Start recovery cooldown immediately for both characters
+        Debug.Log("Break clinch animation started");
+
+        // Wait for the break animation to complete
+        yield return WaitForAnimationComplete(_animator);
+
+        Debug.Log("Break clinch animation complete");
+
+        // Start recovery cooldown for both characters
         _lastThrownTime = Time.time;
         if (_grabbedEnemy != null && _grabbedEnemy.TryGetComponent<ClinchHandler>(out var enemyClinch))
         {
             enemyClinch._lastThrownTime = Time.time;
         }
 
-        // Wait for break animation to complete before cleanup
-        StartCoroutine(EndClinchDelayed(0.5f));
+        // Clean up clinch state and return control
+        EndClinch();
     }
 
     /// <summary>

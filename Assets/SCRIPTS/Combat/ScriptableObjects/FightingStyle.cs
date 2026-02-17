@@ -20,7 +20,7 @@ public class FightingStyle : ScriptableObject
     public bool supportsClinching; // The toggle for your logic
     [Tooltip("Don't bother with these two if no Clinching")]
     public CombatMove clinchKnee;  // Light attack in clinch
-    public CombatMove clinchThrow; // Heavy attack/finish
+    public CombatThrow clinchThrowDefault; // Throw performed if no direction is input during throw release 
 
 
     [Header("Ignore except for unique weapons")]

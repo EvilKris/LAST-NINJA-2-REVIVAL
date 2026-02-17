@@ -480,7 +480,17 @@ public class CombatHandler : MonoBehaviour
         PlayMove(move);
     }
 
+    public void ExecuteCustomThrow(CombatThrow throwMove)
+    {
+        if (_health.IsDead) return;
+        _isClinchAttack = true; // Mark as clinch attack
+        PlayThrowMove(throwMove);
+    }
 
+    private void PlayThrowMove(CombatThrow throwMove)
+    {
+        throw new NotImplementedException();
+    }
 
     public void ClearHitCache() => _hitCache.Clear();
     public void RegisterHit(Transform target) => _hitCache.Add(target);
