@@ -624,6 +624,7 @@ MonoBehaviour:
   acrobaticSpeed: 1.5
   rotationSpeed: 60
   canRotate: 1
+  currentMoveDir: {x: 0, y: 0, z: 0}
 --- !u!114 &4361029597219818444
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -636,7 +637,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ccdb7cca6d493d34490b83df6a7bcd04, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CombatHandler
+  ChargeCount: 1
   currentStyle: {fileID: 11400000, guid: f0d2b02056d92274ca48f8a72c895230, type: 2}
+  ClinchRecovery: 3
+  specialMoveDuration: 1
 --- !u!114 &4110659670583158939
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -654,7 +658,7 @@ MonoBehaviour:
   faction: 0
   lockOnPoint: {fileID: 0}
   isInvulnerable: 0
-  characterAudioSO: {fileID: 0}
+  characterEffects: {fileID: 11400000, guid: 1c611825f59f2da479f041278a5195a5, type: 2}
 --- !u!4 &3217792881604878141 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2412161367050800168, guid: 1138ad1b89295f947bdd9a394f5d8845,

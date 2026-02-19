@@ -198,4 +198,16 @@ public class CombatActorBrain : MonoBehaviour
             }
         }
     }
+    /*
+
+    //BE CAREFUL WITH THIS - Only use if your animations have root motion and you want the animator to control movement directly.   
+    void OnAnimatorMove()
+    {
+        if (_animator.applyRootMotion)
+        {
+            // Apply the animator's movement to the transform manually
+            transform.position += _animator.deltaPosition;
+            transform.rotation *= _animator.deltaRotation;
+        }
+    }*/
 }

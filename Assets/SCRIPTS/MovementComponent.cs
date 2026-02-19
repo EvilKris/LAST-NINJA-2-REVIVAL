@@ -97,10 +97,20 @@ public class MovementComponent : MonoBehaviour
         #region Clinch Check - Grabbing Others
         // Use the Lazy Getter. If the style doesn't support clinching, 
         // Clinch will be null and this check is skipped.
-        if (Clinch != null && Clinch.IsClinching)
+        if (Clinch != null)
         {
-            _rb.linearVelocity = moveDir * (movementSpeed * 0.3f);
-            return;
+            if (Clinch.IsBreakingClinch)
+            {
+                // During break clinch animation, stop all movement
+                StopVelocity();
+                return;
+            }
+            
+            if (Clinch.IsClinching)
+            {
+                _rb.linearVelocity = moveDir * (movementSpeed * 0.3f);
+                return;
+            }
         }
         #endregion
 
@@ -145,6 +155,13 @@ public class MovementComponent : MonoBehaviour
         {
             // Restore physics when released
             _rb.isKinematic = false;
+        }
+        
+        // Check if breaking out of clinch - stop all movement
+        if (Clinch != null && Clinch.IsBreakingClinch)
+        {
+            StopVelocity();
+            return;
         }
         
         bool isMoving = moveDir.sqrMagnitude > 0.0001f;

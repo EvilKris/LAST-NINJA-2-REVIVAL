@@ -9420,7 +9420,7 @@ MonoBehaviour:
   faction: 0
   lockOnPoint: {fileID: 0}
   isInvulnerable: 0
-  characterAudioSO: {fileID: 0}
+  characterEffects: {fileID: 0}
 --- !u!4 &2038818629044555649
 Transform:
   m_ObjectHideFlags: 0
@@ -19372,11 +19372,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Layer
       value: 6
-      objectReference: {fileID: 0}
-    - target: {fileID: 3812518784804858749, guid: 9f00625944c8da040a3c0dfdb84c4449,
-        type: 3}
-      propertyPath: m_ApplyRootMotion
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4624630889542499309, guid: 9f00625944c8da040a3c0dfdb84c4449,
         type: 3}

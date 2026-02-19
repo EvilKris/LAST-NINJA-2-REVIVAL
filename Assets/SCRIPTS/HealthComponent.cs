@@ -27,11 +27,9 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     [Tooltip("If true, this entity cannot take damage (temporary invincibility, cutscenes, etc.).")]
     public bool isInvulnerable = false;
 
-    [Header("Audio")]
-    [Tooltip("ScriptableObject containing sound effects for different hit reaction types.")]
-    public CharacterAudioSO characterAudioSO;
-
-    
+    [Header("Effects")]
+    [Tooltip("ScriptableObject containing all visual and audio effects for this character.")]
+    public CharacterEffects characterEffects;
 
     [Header("Internal References")]
     private Animator _animator;
@@ -99,20 +97,15 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth, faction);
 
-        // Play hit reaction sound if available
-        if (characterAudioSO != null && type != HitReactionType.None)
+        // Play hit effects using CharacterEffects SO
+        if (characterEffects != null)
         {
-            SoundFileObject hitSound = characterAudioSO.GetSoundForReaction(type);
-            if (hitSound != null)
-            {
-                AudioManager.PlaySound(hitSound, transform.position);
-            }
-
-            SoundFileObject painVocal = characterAudioSO.GetRandomPainVocal(type);
-            if (painVocal != null)
-            {
-                AudioManager.PlaySound(painVocal, transform.position);
-            }
+            // Play appropriate hit sound based on damage severity
+            characterEffects.PlayHitSound(damage, maxHealth);
+            
+            // Spawn hit VFX at impact point (offset forward for better visual)
+            Vector3 hitPosition = transform.position + transform.forward * characterEffects.hitEffectForwardOffset;
+            characterEffects.SpawnHitEffect(damage, maxHealth, hitPosition, -transform.forward);
         }
 
         // Check if damage was fatal
@@ -140,6 +133,12 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     {
         OnDeath?.Invoke();
         Debug.Log($"{gameObject.name} has died. (Shibō - 死亡)");
+
+        // Play death effects using CharacterEffects SO
+        if (characterEffects != null)
+        {
+            characterEffects.PlayDeathEffects(transform);
+        }
 
         if (_animator != null)
         {

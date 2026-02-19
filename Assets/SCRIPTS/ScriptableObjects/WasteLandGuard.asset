@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce01191299a3cfc4d8181ca272d7b980, type: 3}
+  m_Name: WasteLandGuard
+  m_EditorClassIdentifier: GameScripts::CharacterEffects
+  sfxLightHit: {fileID: 11400000, guid: dc879221f89ac994ab49e8d4750ce6b2, type: 2}
+  sfxMediumHit: {fileID: 0}
+  sfxHeavyHit: {fileID: 0}
+  sfxCriticalHit: {fileID: 0}
+  sfxBeingThrown: {fileID: 11400000, guid: 85b5d55a51ea55f46a844fdb53083dca, type: 2}
+  sfxLandAfterThrown: {fileID: 11400000, guid: 95c6167c71fe76f41a07829ef42e3f73, type: 2}
+  sfxLightPainVocal: {fileID: 11400000, guid: 00fd5b2fc9e0f024fbc914b771bbf7a5, type: 2}
+  sfxHeavyPainVocal: {fileID: 11400000, guid: 155101a4ffdcd934ea33694d95450812, type: 2}
+  sfxDeathVocal: {fileID: 11400000, guid: 93d98c2b2bc89974d9ab96a39ae526dd, type: 2}
+  speechSFX: {fileID: 11400000, guid: 3da7344fb14547a44ab924f9993f05a6, type: 2}
+  sfxBlock: {fileID: 0}
+  sfxPerfectBlock: {fileID: 0}
+  sfxGuardBreak: {fileID: 0}
+  sfxKnockdown: {fileID: 0}
+  sfxGetUp: {fileID: 0}
+  sfxThrown: {fileID: 0}
+  sfxDeath: {fileID: 0}
+  sfxBodyCollapse: {fileID: 0}
+  sfxJump: {fileID: 0}
+  sfxLand: {fileID: 0}
+  sfxDash: {fileID: 0}
+  sfxBreathing: {fileID: 0}
+  sfxPowerUp: {fileID: 0}
+  sfxStunned: {fileID: 0}
+  sfxHeal: {fileID: 0}
+  vfxLightHit: {fileID: 0}
+  vfxMediumHit: {fileID: 0}
+  vfxHeavyHit: {fileID: 0}
+  vfxCriticalHit: {fileID: 0}
+  vfxBlockSpark: {fileID: 0}
+  vfxPerfectBlock: {fileID: 0}
+  vfxGuardBreak: {fileID: 0}
+  vfxStunned: {fileID: 0}
+  vfxPowerUp: {fileID: 0}
+  vfxHeal: {fileID: 0}
+  vfxLowHealth: {fileID: 0}
+  vfxLandDust: {fileID: 0}
+  vfxDashTrail: {fileID: 0}
+  vfxGroundImpact: {fileID: 0}
+  vfxDeath: {fileID: 0}
+  vfxSoulRelease: {fileID: 0}
+  vfxHeightOffset: 1
+  hitEffectForwardOffset: 0.5
+  defaultVfxLifetime: 2

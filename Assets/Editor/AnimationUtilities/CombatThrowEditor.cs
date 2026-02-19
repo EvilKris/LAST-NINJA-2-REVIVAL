@@ -814,42 +814,10 @@ public class CombatThrowEditor : Editor
             catch { }
         }
 
-        // Sync zoom/distance - try ALL possible approaches
-        // Method 1: Direct field sync
-        var zoomField = previewType.GetField("m_AvatarScale", flags);
-        if (zoomField == null)
-            zoomField = previewType.GetField("avatarScale", flags);
-        if (zoomField == null)
-            zoomField = previewType.GetField("m_ZoomFactor", flags);
-        if (zoomField == null)
-            zoomField = previewType.GetField("m_CameraDistance", flags);
+        // Sync zoom/distance - comprehensive approach trying all possible field/property names
+        TrySyncZoom(attackerPreview, victimPreview, previewType, flags);
         
-        if (zoomField != null)
-        {
-            try
-            {
-                float attackerZoom = (float)zoomField.GetValue(attackerPreview);
-                zoomField.SetValue(victimPreview, attackerZoom);
-            }
-            catch { }
-        }
-        
-        // Method 2: Property-based sync
-        var zoomProperty = previewType.GetProperty("avatarScale", flags);
-        if (zoomProperty == null)
-            zoomProperty = previewType.GetProperty("zoomFactor", flags);
-        
-        if (zoomProperty != null && zoomProperty.CanWrite)
-        {
-            try
-            {
-                float attackerZoom = (float)zoomProperty.GetValue(attackerPreview);
-                zoomProperty.SetValue(victimPreview, attackerZoom);
-            }
-            catch { }
-        }
-        
-        // Method 3: Camera/PreviewUtility sync - sync the actual Camera component properties
+        // Sync camera transform directly as a final attempt
         var previewUtilityField = previewType.GetField("m_PreviewUtility", flags);
         if (previewUtilityField != null)
         {
@@ -891,6 +859,73 @@ public class CombatThrowEditor : Editor
                 }
             }
             catch { }
+        }
+    }
+    
+    /// <summary>
+    /// Attempts to sync zoom/scale using every possible field and property name.
+    /// </summary>
+    private void TrySyncZoom(object attackerPreview, object victimPreview, System.Type previewType, BindingFlags flags)
+    {
+        // List of all possible zoom-related field names to try
+        string[] zoomFieldNames = new[]
+        {
+            "m_AvatarScale",
+            "avatarScale", 
+            "m_ZoomFactor",
+            "zoomFactor",
+            "m_CameraDistance",
+            "cameraDistance",
+            "m_ViewTool",
+            "m_Zoom",
+            "zoom",
+            "m_OrthoGraphicSize",
+            "m_Size"
+        };
+        
+        // Try each field name
+        foreach (string fieldName in zoomFieldNames)
+        {
+            var field = previewType.GetField(fieldName, flags);
+            if (field != null)
+            {
+                try
+                {
+                    object attackerValue = field.GetValue(attackerPreview);
+                    if (attackerValue != null)
+                    {
+                        field.SetValue(victimPreview, attackerValue);
+                        // Don't return - try all of them to maximize chances
+                    }
+                }
+                catch { }
+            }
+        }
+        
+        // Try properties as well
+        string[] zoomPropertyNames = new[]
+        {
+            "avatarScale",
+            "zoomFactor",
+            "cameraDistance",
+            "zoom"
+        };
+        
+        foreach (string propName in zoomPropertyNames)
+        {
+            var property = previewType.GetProperty(propName, flags);
+            if (property != null && property.CanRead && property.CanWrite)
+            {
+                try
+                {
+                    object attackerValue = property.GetValue(attackerPreview);
+                    if (attackerValue != null)
+                    {
+                        property.SetValue(victimPreview, attackerValue);
+                    }
+                }
+                catch { }
+            }
         }
     }
 
