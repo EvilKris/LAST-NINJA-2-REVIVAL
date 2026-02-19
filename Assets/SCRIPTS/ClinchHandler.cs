@@ -51,6 +51,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     private float _lastThrownTime = -999f;
     private bool _isBeingThrown;
     private bool _throwFinished;
+    private bool _isExecutingThrow; // NEW: Tracks if actively performing a throw
     #endregion
 
     #region Cached Layer Masks
@@ -86,6 +87,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     #region Public Properties
     public bool IsClinching => _isClinching;
     public bool IsBreakingClinch => _isBreakingClinch;
+    public bool IsExecutingThrow => _isExecutingThrow; // NEW: Expose throw state
     public bool CanBeClinched => Time.time - _lastThrownTime >= _combat.ClinchRecovery && !_isBeingThrown;
     #endregion
 
@@ -428,11 +430,20 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     /// <param name="throwDirection">World-space direction to throw towards. If zero, uses current forward direction.</param>
     public void ExecuteWheelThrow(Vector3 throwDirection)
     {
-        if (!_isClinching) return;
+        Debug.Log($"[ClinchHandler] ExecuteWheelThrow called - IsClinching: {_isClinching}, IsBreaking: {_isBreakingClinch}, IsExecutingThrow: {_isExecutingThrow}, HasEnemy: {_grabbedEnemy != null}");
+        
+        if (!_isClinching || _isBreakingClinch || _isExecutingThrow)
+        {
+            Debug.LogWarning($"[ClinchHandler] Cannot execute throw - IsClinching: {_isClinching}, IsBreaking: {_isBreakingClinch}, IsExecutingThrow: {_isExecutingThrow}");
+            return;
+        }
 
+        // Set throw flag BEFORE clearing clinch flag to prevent heavy attack from executing
+        _isExecutingThrow = true;
         _isClinching = false;
         _animator.SetBool(HashIsClinching, false);
 
+        Debug.Log("[ClinchHandler] Starting throw sequence...");
         StartCoroutine(ExecuteThrowSequence(throwDirection));
     }
 
@@ -729,6 +740,10 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         {
             _enemyAnimator.applyRootMotion = false;
         }
+        
+        // Clear throw flag - allow normal attacks again
+        _isExecutingThrow = false;
+        Debug.Log("[ClinchHandler] Throw sequence complete - _isExecutingThrow cleared");
     }
 
     /*

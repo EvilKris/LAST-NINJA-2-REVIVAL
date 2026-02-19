@@ -283,17 +283,18 @@ public class PlayerController : MonoBehaviour
 
         // 1. Check if we are currently in a clinch
         ClinchHandler clinch = GetComponent<ClinchHandler>();
-        if (clinch != null && clinch.IsClinching)
+        if (clinch != null && clinch.IsClinching && !clinch.IsBreakingClinch)
         {
             // 2. If clinching, Heavy Attack performs the Wheel Throw
             // Get throw direction from current movement input
             Vector3 throwDir = GetCameraRelativeDirection(_moveInput);
+            Debug.Log($"[PlayerController] Attempting Wheel Throw - IsClinching: {clinch.IsClinching}, IsBreaking: {clinch.IsBreakingClinch}");
             clinch.ExecuteWheelThrow(throwDir);
-            Debug.Log("Wheel Throw Triggered! (Sode-tsurikomi-goshi - 袖釣込腰)");
         }
         else
         {
             // 3. Otherwise, do the normal heavy attack
+            Debug.Log($"[PlayerController] Executing normal heavy attack - Clinch state: {(clinch != null ? $"IsClinching={clinch.IsClinching}, IsBreaking={clinch.IsBreakingClinch}" : "null")}");
             _combat.ExecuteHeavyAttack();
         }
     }

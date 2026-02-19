@@ -342,6 +342,13 @@ public class CombatHandler : MonoBehaviour
     {
         if (_health.IsDead) return;
         if (_activeMove != null && !_canAcceptComboInput) return;
+        
+        // Don't execute heavy attack if we're in a clinch or executing a throw
+        if (_clinchModule != null && (_clinchModule.IsClinching || _clinchModule.IsBreakingClinch || _clinchModule.IsExecutingThrow))
+        {
+            Debug.LogWarning($"[CombatHandler] Heavy attack blocked - Clinch state: IsClinching={_clinchModule.IsClinching}, IsBreaking={_clinchModule.IsBreakingClinch}, IsExecutingThrow={_clinchModule.IsExecutingThrow}");
+            return;
+        }
 
         _comboIndex = 0;
         PlayMove(currentStyle.heavyAttack);
