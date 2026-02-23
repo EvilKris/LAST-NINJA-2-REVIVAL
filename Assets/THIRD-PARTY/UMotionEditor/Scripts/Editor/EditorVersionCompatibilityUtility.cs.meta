@@ -14,5 +14,5 @@ AssetOrigin:
   productId: 95991
   packageName: UMotion Pro - Animation Editor
   packageVersion: 1.29p04
-  assetPath: Assets/UMotionEditor/Scripts/Editor/EditorVersionCompatibilityUtility.cs
+  assetPath: Assets/THIRD-PARTY/UMotionEditor/Scripts/Editor/EditorVersionCompatibilityUtility.cs
   uploadId: 741370

@@ -31,5 +31,5 @@ AssetOrigin:
   productId: 95991
   packageName: UMotion Pro - Animation Editor
   packageVersion: 1.29p04
-  assetPath: Assets/UMotionEditor/Plugins/MacOS/Editor/x64/UMotionFBX_Mac_x64.bundle
+  assetPath: Assets/THIRD-PARTY/UMotionEditor/Plugins/MacOS/Editor/x64/UMotionFBX_Mac_x64.bundle
   uploadId: 741370

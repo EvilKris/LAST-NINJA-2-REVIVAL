@@ -18557,8 +18557,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7721976591884777899, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
         type: 3}
+      propertyPath: movementSpeed
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7721976591884777899, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
+      propertyPath: rotationSpeed
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 7721976591884777899, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
       propertyPath: acrobaticSpeed
       value: 1.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 7721976591884777899, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
+      propertyPath: movementAnimSpeedModifier
+      value: 0.28
       objectReference: {fileID: 0}
     - target: {fileID: 7751054820224624814, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
         type: 3}

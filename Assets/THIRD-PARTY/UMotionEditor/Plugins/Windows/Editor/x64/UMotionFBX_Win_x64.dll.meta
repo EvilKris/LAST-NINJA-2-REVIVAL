@@ -22,5 +22,5 @@ AssetOrigin:
   productId: 95991
   packageName: UMotion Pro - Animation Editor
   packageVersion: 1.29p04
-  assetPath: Assets/UMotionEditor/Plugins/Windows/Editor/x64/UMotionFBX_Win_x64.dll
+  assetPath: Assets/THIRD-PARTY/UMotionEditor/Plugins/Windows/Editor/x64/UMotionFBX_Win_x64.dll
   uploadId: 741370
