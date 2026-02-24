@@ -180,13 +180,15 @@ public class CombatActorBrain : MonoBehaviour
     /// </summary>
     private void FindNewTarget()
     {
-        // Scan for all colliders in detection radius
-        Collider[] cols = Physics.OverlapSphere(transform.position, detectionRange);
-        
-        foreach (var col in cols)
+        // Use OverlapSphereNonAlloc to avoid memory allocation
+        const int maxTargets = 32;
+        Collider[] cols = new Collider[maxTargets];
+        int hitCount = Physics.OverlapSphereNonAlloc(transform.position, detectionRange, cols);
+
+        for (int i = 0; i < hitCount; i++)
         {
             // Check if collider has ITargetable component
-            if (col.TryGetComponent<ITargetable>(out var target))
+            if (cols[i].TryGetComponent<ITargetable>(out var target))
             {
                 // Verify faction matches and target is valid (alive, etc.)
                 if (target.GetFaction() == targetFaction && target.IsValidTarget())

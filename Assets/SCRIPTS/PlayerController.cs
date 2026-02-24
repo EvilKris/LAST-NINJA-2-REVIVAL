@@ -160,6 +160,7 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         if (_health != null && _health.IsDead) return;
+        if (_movement == null || !_movement.enabled) return;
 
         float moveSqrMagnitude = _moveInput.sqrMagnitude;
         bool isMoving = moveSqrMagnitude > _moveThresholdSqr;
@@ -189,28 +190,34 @@ public class PlayerController : MonoBehaviour
             }
         }
 
-        // Drive the MovementComponent
+        // Drive the MovementComponent - all movement and rotation logic is delegated to MovementComponent
         if (_currentTarget != null)
         {
             _movement.ProcessMovement(moveDir, _currentTarget.GetLockOnPoint().position);
         }
         else
         {
-            if (_combat.IsAttacking)
+            if (_combat != null && _combat.IsAttacking)
             {
+                // During attacks, conditionally allow rotation based on combat state
                 if (_combat.CanRotateDuringAttack && isMoving)
+                {
+                    // Temporarily enable rotation and let MovementComponent handle it
+                    bool prevCanRotate = _movement.canRotate;
+                    _movement.canRotate = true;
+                    _movement.ProcessMovement(Vector3.zero);
                     _movement.RotateTowardsDirection(moveDir);
-
-                _movement.ProcessMovement(Vector3.zero);
-            }
-            else if (isMoving)
-            {
-                _movement.ProcessMovement(moveDir);
-                _movement.RotateTowardsDirection(moveDir);
+                    _movement.canRotate = prevCanRotate;
+                }
+                else
+                {
+                    _movement.ProcessMovement(Vector3.zero);
+                }
             }
             else
             {
-                _movement.ProcessMovement(Vector3.zero);
+                // Normal movement - MovementComponent handles everything
+                _movement.ProcessMovement(moveDir);
             }
         }
     }
@@ -305,20 +312,22 @@ public class PlayerController : MonoBehaviour
     {
         if (!context.started) return;
         
-        // Check if we're in a clinch - if so, break out and return to normal
+        // Check if we're in a clinch - if so, break out with proper animation
         ClinchHandler clinch = GetComponent<ClinchHandler>();
-        if (clinch != null && clinch.IsClinching)
+        if (clinch != null && clinch.IsClinching && !clinch.IsBreakingClinch)
         {
-            clinch.EndClinch();
+            clinch.BreakClinch();
             return;
         }
         
-        if (_moveInput.sqrMagnitude > _moveThresholdSqr)
+        if (_movement != null && _moveInput.sqrMagnitude > _moveThresholdSqr)
         {
             Vector3 dir = GetCameraRelativeDirection(_moveInput);
             _movement.RotateTowardsDirection(dir);
         }
-        _combat.ExecuteAcrobatics();
+        
+        if (_combat != null)
+            _combat.ExecuteAcrobatics();
     }
 
     public void OnKIInput(InputAction.CallbackContext _) => _combat.HandleKIInput();

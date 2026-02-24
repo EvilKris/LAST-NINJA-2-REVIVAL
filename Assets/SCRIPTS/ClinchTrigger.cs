@@ -15,8 +15,8 @@ public class ClinchTrigger : MonoBehaviour
                 return;
         }
 
-        // Only look for a grab if we aren't already clinching
-        if (!_clinchHandler.IsClinching)
+        // Only look for a grab if we aren't in any clinch-related state
+        if (!_clinchHandler.IsClinching && !_clinchHandler.IsBreakingClinch && !_clinchHandler.IsExecutingThrow)
         {
             CheckProximity();
         }

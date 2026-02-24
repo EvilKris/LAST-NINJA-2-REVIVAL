@@ -56,10 +56,28 @@ public class MovementComponent : MonoBehaviour
     }
 
 
+    private void OnDisable()
+    {
+        // When MovementComponent is disabled, stop all physics movement immediately
+        // This prevents the Rigidbody from retaining velocity and sliding
+        if (_rb != null)
+        {
+            _rb.linearVelocity = Vector3.zero;
+            _rb.angularVelocity = Vector3.zero;
+        }
+    }
+
     private void Awake()
     {
         _rb = GetComponent<Rigidbody>();
         _animator = GetComponent<Animator>();
+
+        // CRITICAL: Disable root motion by default - MovementComponent handles ALL movement via physics
+        // Only specific systems (like ClinchHandler throws) should temporarily enable root motion
+        if (_animator != null)
+        {
+            _animator.applyRootMotion = false;
+        }
 
         // Constrain rotation so the Ninja doesn't tip over
         // _rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
@@ -81,6 +99,8 @@ public class MovementComponent : MonoBehaviour
 
         #region Clinch Check - Being Grabbed
         // If being grabbed by another entity, make Rigidbody kinematic to allow parenting
+
+        /*
         if (_animator != null && _animator.GetBool("b_IsBeingGrabbed"))
         {
             if (!_rb.isKinematic)
@@ -91,7 +111,7 @@ public class MovementComponent : MonoBehaviour
         {
             // Restore physics when released
             _rb.isKinematic = false;
-        }
+        } */
         #endregion
 
         #region Clinch Check - Grabbing Others
@@ -144,6 +164,7 @@ public class MovementComponent : MonoBehaviour
     {
         currentMoveDir = moveDir;
         
+        /*
         // If being grabbed by another entity, make Rigidbody kinematic to allow parenting
         if (_animator != null && _animator.GetBool("b_IsBeingGrabbed"))
         {
@@ -156,7 +177,7 @@ public class MovementComponent : MonoBehaviour
             // Restore physics when released
             _rb.isKinematic = false;
         }
-        
+        */
         // Check if breaking out of clinch - stop all movement
         if (Clinch != null && Clinch.IsBreakingClinch)
         {
@@ -232,8 +253,8 @@ public class MovementComponent : MonoBehaviour
         // If currently executing a combat move, use attackSpeed
         // If executing an acrobatic move, use acrobaticSpeed
         // Otherwise use movementSpeed for locomotion animations
-        bool isAttacking = _combatHandler != null && _combatHandler.IsAttacking;
-        bool isAcrobatic = _combatHandler != null && _combatHandler.IsAcrobatic;
+        bool isAttacking = _combatHandler != null && _combatHandler.enabled && _combatHandler.IsAttacking;
+        bool isAcrobatic = _combatHandler != null && _combatHandler.enabled && _combatHandler.IsAcrobatic;
         
         if (isAcrobatic)
             _animator.speed = acrobaticSpeed;
