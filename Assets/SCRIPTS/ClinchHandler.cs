@@ -471,11 +471,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
         // Set throw flag BEFORE clearing clinch flag to prevent heavy attack from executing
         _isExecutingThrow = true;
-        _isClinching = false;
-        _animator.SetBool(HashHasGrabbedEnemy, false);
-        
-        // Clear unified clinch bool for both characters
-        _animator.SetBool(HashInClinch, false);
+      
       
 
         Debug.Log("[ClinchHandler] Starting throw sequence...");
