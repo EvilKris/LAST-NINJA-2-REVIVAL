@@ -885,6 +885,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GameScripts::ClinchTrigger
   grabDistance: 1.2
+  detectionOffset: 0.5
+  directionThreshold: 0.7
+  clinchCooldown: 0.2
+  checkInterval: 1
 --- !u!4 &344570333 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 395502435249040696, guid: cde3b9c00f9ea3b4d8df249e25c6e7f0,
@@ -6173,7 +6177,22 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6458726764404913089, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
         type: 3}
+      propertyPath: m_Interpolate
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6458726764404913089, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
       propertyPath: m_IsKinematic
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6458726764404913089, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
+      propertyPath: m_CollisionDetection
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6680183781471399556, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
+      propertyPath: m_CullingMode
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6943194280159611918, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
@@ -6380,6 +6399,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3812518784804858749, guid: 9f00625944c8da040a3c0dfdb84c4449,
         type: 3}
+      propertyPath: m_CullingMode
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3812518784804858749, guid: 9f00625944c8da040a3c0dfdb84c4449,
+        type: 3}
       propertyPath: m_ApplyRootMotion
       value: 0
       objectReference: {fileID: 0}
@@ -6580,7 +6604,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8028676142934338878, guid: 9f00625944c8da040a3c0dfdb84c4449,
         type: 3}
+      propertyPath: m_Interpolate
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8028676142934338878, guid: 9f00625944c8da040a3c0dfdb84c4449,
+        type: 3}
       propertyPath: m_IsKinematic
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8028676142934338878, guid: 9f00625944c8da040a3c0dfdb84c4449,
+        type: 3}
+      propertyPath: m_CollisionDetection
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8087114616697289303, guid: 9f00625944c8da040a3c0dfdb84c4449,

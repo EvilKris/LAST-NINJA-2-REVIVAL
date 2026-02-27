@@ -33,7 +33,6 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
 
     [Header("Internal References")]
     private Animator _animator;
-    private MovementComponent _movementComponent;
    
 
     /// <summary>
@@ -64,17 +63,6 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     {
         currentHealth = maxHealth;
         _animator = GetComponent<Animator>();
-        
-        
-    }
-
-    /// <summary>
-    /// Update animator and movement speed based on the speed variables.
-    /// Animator speed switches between movementSpeed (locomotion) and attackSpeed (combat).
-    /// </summary>
-    private void Update()
-    {
-        
     }
 
     // ═══════════════════════════════════════════════════════════════════

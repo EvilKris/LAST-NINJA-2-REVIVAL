@@ -26,6 +26,9 @@ public class PlayerController : MonoBehaviour
     /// <summary>Manages weapon and item inventory, accessed via MasterSingleton.</summary>
     private InventoryManager _inventoryManager;
 
+    /// <summary>Handles clinch/grappling mechanics.</summary>
+    private ClinchHandler _clinchHandler;
+
     // ========================================
     // ATTACK HOLD MECHANIC
     // ========================================
@@ -94,6 +97,7 @@ public class PlayerController : MonoBehaviour
         _movement = GetComponent<MovementComponent>();
         _health = GetComponent<HealthComponent>();
         _combat = GetComponent<CombatHandler>();
+        _clinchHandler = GetComponent<ClinchHandler>();
         
         // Cache camera references for input direction calculations
         _mainCamera = Camera.main;
@@ -161,6 +165,13 @@ public class PlayerController : MonoBehaviour
     {
         if (_health != null && _health.IsDead) return;
         if (_movement == null || !_movement.enabled) return;
+        
+        // Don't process movement input if in a clinch
+        if (_clinchHandler != null && _clinchHandler.IsClinching)
+        {
+            _movement.ProcessMovement(Vector3.zero);
+            return;
+        }
 
         float moveSqrMagnitude = _moveInput.sqrMagnitude;
         bool isMoving = moveSqrMagnitude > _moveThresholdSqr;
@@ -288,22 +299,7 @@ public class PlayerController : MonoBehaviour
         TryLockOn();
         _isHoldingAttack = false;
 
-        // 1. Check if we are currently in a clinch
-        ClinchHandler clinch = GetComponent<ClinchHandler>();
-        if (clinch != null && clinch.IsClinching && !clinch.IsBreakingClinch)
-        {
-            // 2. If clinching, Heavy Attack performs the Wheel Throw
-            // Get throw direction from current movement input
-            Vector3 throwDir = GetCameraRelativeDirection(_moveInput);
-            Debug.Log($"[PlayerController] Attempting Wheel Throw - IsClinching: {clinch.IsClinching}, IsBreaking: {clinch.IsBreakingClinch}");
-            clinch.ExecuteWheelThrow(throwDir);
-        }
-        else
-        {
-            // 3. Otherwise, do the normal heavy attack
-            Debug.Log($"[PlayerController] Executing normal heavy attack - Clinch state: {(clinch != null ? $"IsClinching={clinch.IsClinching}, IsBreaking={clinch.IsBreakingClinch}" : "null")}");
-            _combat.ExecuteHeavyAttack();
-        }
+        _combat.ExecuteHeavyAttack();        
     }
 
     private void OnBlockInput(InputAction.CallbackContext context) => _combat.SetBlocking(context.started);
@@ -311,15 +307,7 @@ public class PlayerController : MonoBehaviour
     private void OnAcrobatics(InputAction.CallbackContext context)
     {
         if (!context.started) return;
-        
-        // Check if we're in a clinch - if so, break out with proper animation
-        ClinchHandler clinch = GetComponent<ClinchHandler>();
-        if (clinch != null && clinch.IsClinching && !clinch.IsBreakingClinch)
-        {
-            clinch.BreakClinch();
-            return;
-        }
-        
+               
         if (_movement != null && _moveInput.sqrMagnitude > _moveThresholdSqr)
         {
             Vector3 dir = GetCameraRelativeDirection(_moveInput);

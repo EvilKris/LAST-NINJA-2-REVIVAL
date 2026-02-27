@@ -7,8 +7,7 @@ public enum ActorCombatState
 { 
     Idle,     // Not engaged, standing still or patrolling
     Chasing,  // Moving directly towards target at full speed
-    Stalking,  // Circling/weaving around target in close range (Dark Souls-style)
-    InClinch
+    Stalking  // Circling/weaving around target in close range (Dark Souls-style)
 }
 
 /// <summary>
@@ -37,6 +36,7 @@ public class CombatActorBrain : MonoBehaviour
     private MovementComponent _mover;
     private HealthComponent _health;
     private Animator _animator;
+    private ClinchHandler _clinchHandler;
 
     /// <summary>
     /// Cache component references.
@@ -46,6 +46,7 @@ public class CombatActorBrain : MonoBehaviour
         _mover = GetComponent<MovementComponent>();
         _health = GetComponent<HealthComponent>();
         _animator = GetComponent<Animator>();
+        _clinchHandler = GetComponent<ClinchHandler>();
     }
 
     /// <summary>
@@ -54,28 +55,9 @@ public class CombatActorBrain : MonoBehaviour
     /// </summary>
     private void FixedUpdate()
     {
-        // Don't process AI if dead or movement is locked (e.g., during attack animations)
-        // if ((_health != null && _health.IsDead) || _mover.speedMultiplier <= 0.01f) 
-        if ((_health != null && _health.IsDead))
+        // Don't process AI if dead, in clinch, or movement is locked
+        if ((_health != null && _health.IsDead) || (_clinchHandler != null && _clinchHandler.IsClinching))
             return;
-
-        // Check if being grabbed in a clinch
-        if (_animator != null && _animator.GetBool("b_IsBeingGrabbed"))
-        {
-            // Transition to InClinch state and skip AI processing
-            if (currentState != ActorCombatState.InClinch)
-            {
-                currentState = ActorCombatState.InClinch;
-            }
-            
-            // Don't process movement - ClinchHandler controls this
-            return;
-        }
-        else if (currentState == ActorCombatState.InClinch)
-        {
-            // Released from clinch - return to idle state
-            currentState = ActorCombatState.Idle;
-        }
 
         // Validate current target or find a new one
         if (currentTarget == null || !IsTargetValid(currentTarget))
@@ -109,9 +91,6 @@ public class CombatActorBrain : MonoBehaviour
             case ActorCombatState.Stalking:
                 HandleStalk(distance);
                 break;
-
-            case ActorCombatState.InClinch:
-            break;
         }
     }
 

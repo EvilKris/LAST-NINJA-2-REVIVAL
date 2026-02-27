@@ -19,10 +19,6 @@ public class CombatHandler : MonoBehaviour
 
     [Header("Data")]
     public FightingStyle currentStyle;
-
-    [Header("Clinch Settings")]
-    [Tooltip("Time in seconds before an entity can be clinched again after being thrown")]
-    public float ClinchRecovery = 3f;
     
     [Header("Combo Settings")]
     private int _comboIndex = 0;
@@ -36,10 +32,6 @@ public class CombatHandler : MonoBehaviour
     private int _cachedCurrentTier = -1;
     private float _cachedChargeProgress = -1f;
     private int _lastPlayedTierSfx = -1;
-
-    // Inside CombatHandler.cs
-    private ClinchHandler _clinchModule;
-
 
     // Events for UI updates
     public event Action<int> OnMaxChargesChanged;
@@ -57,7 +49,6 @@ public class CombatHandler : MonoBehaviour
     private bool _hitboxActive;
     private bool _canAcceptComboInput;
     private bool _isAcrobaticMove;
-    private bool _isClinchAttack; // Tracks if currently executing a clinch attack
 
     [Header("KI Settings")]
     private float _kiBars = 3f;
@@ -74,7 +65,6 @@ public class CombatHandler : MonoBehaviour
     public bool CanRotateDuringAttack => _canRotateDuringAttack;
     public bool IsAttacking => _activeMove != null;
     public bool IsAcrobatic => _isAcrobaticMove;
-    public bool IsClinchAttack => _isClinchAttack;
     public bool IsCharging => _isCharging;
 
     private void Awake()
@@ -102,17 +92,15 @@ public class CombatHandler : MonoBehaviour
             //GameObject.FindObjectOfType<UIChargeDisplay>();
             playerUI.SetTarget(this);
         }
-
-        InitializeStyleModules(); // Initialize style-specific modules (will need to be called again if style changes) 
+        InitializeStyleModules();
     }
 
 
     private void InitializeStyleModules()
     {
-
-
-        #region Clinch Module Setup 
+                
         // Check if the current style supports clinching
+        // Only players can initiate clinches, enemies should not have ClinchHandler
         if (currentStyle != null && currentStyle.supportsClinching)
         {
             // Add the component if it's missing
@@ -124,14 +112,15 @@ public class CombatHandler : MonoBehaviour
         }
         else
         {
-            // Remove it if the new style doesn't support it
+            // Remove it if the new style doesn't support it or if this is not a player
             if (TryGetComponent<ClinchHandler>(out var oldModule))
             {
                 Destroy(oldModule);
             }
         }
-        #endregion  
+        
     }
+
 
     /*
     private void InvokeCharges()
@@ -255,7 +244,7 @@ public class CombatHandler : MonoBehaviour
     public void ReleaseCharge()
     {
         if (!_isCharging) return;
-        
+
         // Check if we're in a clinch - if so, reset charge and cancel the release
         if (_clinchModule != null && _clinchModule.IsClinching)
         {
@@ -268,7 +257,9 @@ public class CombatHandler : MonoBehaviour
             OnChargeStateChanged?.Invoke(0, 0f);
             return;
         }
-        
+
+
+
         _isCharging = false;
 
         int tier = CurrentTier;
@@ -304,6 +295,7 @@ public class CombatHandler : MonoBehaviour
     }
 
     public float specialMoveDuration = 1f;
+    private ClinchHandler _clinchModule;
 
     IEnumerator SpecialMoveWithAfterimage()
     {
@@ -342,11 +334,11 @@ public class CombatHandler : MonoBehaviour
     {
         if (_health.IsDead) return;
         if (_activeMove != null && !_canAcceptComboInput) return;
-        
-        // Don't execute heavy attack if we're in a clinch or executing a throw
-        if (_clinchModule != null && (_clinchModule.IsClinching || _clinchModule.IsBreakingClinch || _clinchModule.IsExecutingThrow))
+
+        // Check if in clinch - execute wheel throw instead
+        if (_clinchModule != null && _clinchModule.IsClinching)
         {
-            Debug.LogWarning($"[CombatHandler] Heavy attack blocked - Clinch state: IsClinching={_clinchModule.IsClinching}, IsBreaking={_clinchModule.IsBreakingClinch}, IsExecutingThrow={_clinchModule.IsExecutingThrow}");
+            _clinchModule.ExecuteWheelThrow();
             return;
         }
 
@@ -396,7 +388,6 @@ public class CombatHandler : MonoBehaviour
         _canAcceptComboInput = false;
         _canRotateDuringAttack = false;
         _isAcrobaticMove = false;
-        _isClinchAttack = false; // Clear clinch attack flag
         _movement.canRotate = true;
     }
 
@@ -477,26 +468,6 @@ public class CombatHandler : MonoBehaviour
     {
         _kiBars -= 1f;
         Debug.Log("KI Power Up (Ki no chikara - 気の力)");
-    }
-
-    //Clinch Attacks (if applicable)  
-    public void ExecuteCustomMove(CombatMove move)
-    {
-        if (_health.IsDead) return;
-        _isClinchAttack = true; // Mark as clinch attack
-        PlayMove(move);
-    }
-
-    public void ExecuteCustomThrow(CombatThrow throwMove)
-    {
-        if (_health.IsDead) return;
-        _isClinchAttack = true; // Mark as clinch attack
-        PlayThrowMove(throwMove);
-    }
-
-    private void PlayThrowMove(CombatThrow throwMove)
-    {
-        throw new NotImplementedException();
     }
 
     public void ClearHitCache() => _hitCache.Clear();

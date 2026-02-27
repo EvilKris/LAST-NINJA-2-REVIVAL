@@ -24,36 +24,23 @@ public class MovementComponent : MonoBehaviour
 
     private Rigidbody _rb;
     private Animator _animator;
+    private CombatHandler _combatHandler;
 
-    //[HideInInspector] public float speedMultiplier = 1.0f; // Controlled by CombatHandler
-   // [HideInInspector] public float healthSpeedModifier = 1.0f; // Controlled by HealthComponent
-    [HideInInspector] public bool canRotate = true; // Controlled by CombatHandler during attacks
-
-    // Current movement direction (exposed for other systems like ClinchHandler)
+    [HideInInspector] public bool canRotate = true;
     [HideInInspector] public Vector3 currentMoveDir;
+    [HideInInspector] public bool isMovementLocked = false;
+    [HideInInspector] public MovementComponent syncAnimationSource = null;
+    [HideInInspector] public bool syncAnimatorSpeed = false;
 
     // Animator Parameter Hashes (cached for performance)
     private int _hashIsRunning;
     private int _hashXAxis;
     private int _hashYAxis;
-    private CombatHandler _combatHandler;
 
     // Cached animator values to avoid redundant SetFloat/SetBool calls
     private bool _lastIsRunning;
     private float _lastXAxis;
     private float _lastYAxis;
-
-    // ClinchHandler reference (cached) 
-    private ClinchHandler _clinchCache;
-    private ClinchHandler Clinch
-    {
-        get
-        {
-            // If we don't have it cached, try to find it
-            if (_clinchCache == null) _clinchCache = GetComponent<ClinchHandler>();
-            return _clinchCache;
-        }
-    }
 
 
     private void OnDisable()
@@ -75,12 +62,9 @@ public class MovementComponent : MonoBehaviour
         // CRITICAL: Disable root motion by default - MovementComponent handles ALL movement via physics
         // Only specific systems (like ClinchHandler throws) should temporarily enable root motion
         if (_animator != null)
-        {
             _animator.applyRootMotion = false;
-        }
 
-        // Constrain rotation so the Ninja doesn't tip over
-        // _rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        // Constrain rotation to prevent tipping over
         _rb.constraints = RigidbodyConstraints.FreezeRotation;
 
         _combatHandler = GetComponent<CombatHandler>();
@@ -91,60 +75,27 @@ public class MovementComponent : MonoBehaviour
         _hashYAxis = Animator.StringToHash("Input_YFloat");
     }
 
-    // --- MODE 1: FREESTYLE (Gauntlet Style) ---
-    // Used when exploring or moving without a specific target.
+    /// <summary>
+    /// MODE 1: FREESTYLE (Gauntlet Style)
+    /// Used when exploring or moving without a specific target.
+    /// </summary>
     public void ProcessMovement(Vector3 moveDir)
     {
-        currentMoveDir = moveDir;
-
-        #region Clinch Check - Being Grabbed
-        // If being grabbed by another entity, make Rigidbody kinematic to allow parenting
-
-        /*
-        if (_animator != null && _animator.GetBool("b_IsBeingGrabbed"))
+        if (isMovementLocked)
         {
-            if (!_rb.isKinematic)
-                _rb.isKinematic = true;
+            SyncAnimationFromSource();
             return;
         }
-        else if (_rb.isKinematic)
-        {
-            // Restore physics when released
-            _rb.isKinematic = false;
-        } */
-        #endregion
 
-        #region Clinch Check - Grabbing Others
-        // Use the Lazy Getter. If the style doesn't support clinching, 
-        // Clinch will be null and this check is skipped.
-        if (Clinch != null)
-        {
-            if (Clinch.IsBreakingClinch)
-            {
-                // During break clinch animation, stop all movement
-                StopVelocity();
-                return;
-            }
-            
-            if (Clinch.IsClinching)
-            {
-                _rb.linearVelocity = moveDir * (movementSpeed * 0.3f);
-                return;
-            }
-        }
-        #endregion
-
+        currentMoveDir = moveDir;
         float sqrMagnitude = moveDir.sqrMagnitude;
-        bool isMoving = sqrMagnitude > 0.0001f; // sqrMagnitude of 0.01 is ~0.0001
+        bool isMoving = sqrMagnitude > 0.0001f;
 
         UpdateAnimatorBooleans(isMoving);
-
-        //if (speedMultiplier <= 0.01f) { StopVelocity(); return; }
 
         if (isMoving)
         {
             _rb.linearVelocity = moveDir * movementSpeed;
-            //_rb.linearVelocity = moveDir * (movementSpeed * speedMultiplier) * healthSpeedModifier);
             RotateTowardsDirection(moveDir);
 
             // Freestyle uses Y-axis for speed, X is ignored
@@ -158,60 +109,41 @@ public class MovementComponent : MonoBehaviour
         }
     }
 
-    // --- MODE 2: TARGETED (Dark Souls Style) ---
-    // Used by CombatActorBrain or Player Lock-On.
+    /// <summary>
+    /// MODE 2: TARGETED (Dark Souls Style)
+    /// Used by CombatActorBrain or Player Lock-On.
+    /// </summary>
     public void ProcessMovement(Vector3 moveDir, Vector3 lookAtPos)
     {
+        if (isMovementLocked)
+        {
+            SyncAnimationFromSource();
+            return;
+        }
+
         currentMoveDir = moveDir;
-        
-        /*
-        // If being grabbed by another entity, make Rigidbody kinematic to allow parenting
-        if (_animator != null && _animator.GetBool("b_IsBeingGrabbed"))
-        {
-            if (!_rb.isKinematic)
-                _rb.isKinematic = true;
-            return;
-        }
-        else if (_rb.isKinematic)
-        {
-            // Restore physics when released
-            _rb.isKinematic = false;
-        }
-        */
-        // Check if breaking out of clinch - stop all movement
-        if (Clinch != null && Clinch.IsBreakingClinch)
-        {
-            StopVelocity();
-            return;
-        }
-        
         bool isMoving = moveDir.sqrMagnitude > 0.0001f;
+        
         UpdateAnimatorBooleans(isMoving);
 
-        //  if (speedMultiplier <= 0.01f) { StopVelocity(); return; }
-
-        // 1. Move the Physics Body
+        // Move the Physics Body
         _rb.linearVelocity = moveDir * movementSpeed;
-        // _rb.linearVelocity = moveDir * (movementSpeed * speedMultiplier * healthSpeedModifier);
 
-        // 2. Always face the Target
+        // Always face the Target
         Vector3 dirToTarget = (lookAtPos - transform.position);
         dirToTarget.y = 0;
         RotateTowardsDirection(dirToTarget);
 
-        // 3. Calculate Local Directions for Strafing
-        // This maps world movement to your 2D Blend Tree nodes (Forward, Back, Left, Right)
+        // Calculate Local Directions for Strafing (maps world movement to 2D Blend Tree)
         Vector3 localDir = transform.InverseTransformDirection(moveDir);
-
         SetAnimatorFloat(_hashXAxis, localDir.x);
         SetAnimatorFloat(_hashYAxis, localDir.z);
     }
     
     public void RotateTowardsDirection(Vector3 dir)
-    {  
-
-        if (!canRotate) return; // Respect rotation lock from combat system
-        if (dir.sqrMagnitude < 0.01f) return;
+    {
+        if (!canRotate || dir.sqrMagnitude < 0.01f)
+            return;
 
         Quaternion targetRot = Quaternion.LookRotation(dir);
         _rb.MoveRotation(Quaternion.Slerp(_rb.rotation, targetRot, rotationSpeed * Time.fixedDeltaTime));
@@ -247,18 +179,52 @@ public class MovementComponent : MonoBehaviour
         SetAnimatorFloat(_hashYAxis, 0f);
     }
 
+    private void SyncAnimationFromSource()
+    {
+        _rb.linearVelocity = Vector3.zero;
+        
+        if (syncAnimationSource != null)
+        {
+            // Mirror the attacker's animation parameters for synchronized movement
+            SetAnimatorFloat(_hashXAxis, syncAnimationSource._lastXAxis);
+            SetAnimatorFloat(_hashYAxis, syncAnimationSource._lastYAxis);
+            
+            // Sync running state as well
+            bool sourceIsRunning = syncAnimationSource._lastIsRunning;
+            if (_lastIsRunning != sourceIsRunning)
+            {
+                _animator.SetBool(_hashIsRunning, sourceIsRunning);
+                _lastIsRunning = sourceIsRunning;
+            }
+        }
+        else
+        {
+            // No source to sync from, stop animation
+            SetAnimatorFloat(_hashXAxis, 0f);
+            SetAnimatorFloat(_hashYAxis, 0f);
+        }
+    }
+
 
     private void Update()
     {
-        // If currently executing a combat move, use attackSpeed
-        // If executing an acrobatic move, use acrobaticSpeed
-        // Otherwise use movementSpeed for locomotion animations
-        bool isAttacking = _combatHandler != null && _combatHandler.enabled && _combatHandler.IsAttacking;
-        bool isAcrobatic = _combatHandler != null && _combatHandler.enabled && _combatHandler.IsAcrobatic;
-        
-        if (isAcrobatic)
+        // If syncing speed from another MovementComponent (during clinch), copy their animator speed
+        if (syncAnimatorSpeed && syncAnimationSource != null)
+        {
+            _animator.speed = syncAnimationSource._animator.speed;
+            return;
+        }
+
+        if (_combatHandler == null || !_combatHandler.enabled)
+        {
+            _animator.speed = movementSpeed * movementAnimSpeedModifier;
+            return;
+        }
+
+        // Priority: Acrobatic > Attack > Movement
+        if (_combatHandler.IsAcrobatic)
             _animator.speed = acrobaticSpeed;
-        else if (isAttacking)
+        else if (_combatHandler.IsAttacking)
             _animator.speed = attackSpeed;
         else
             _animator.speed = movementSpeed * movementAnimSpeedModifier;
