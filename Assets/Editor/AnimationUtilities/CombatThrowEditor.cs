@@ -179,7 +179,9 @@ public class CombatThrowEditor : Editor
         if (_cachedAvatarPreviewFieldInfo != null && _cachedTimeControlFieldInfo != null && _cachedStopTimeFieldInfo != null)
         {
             var value = _cachedAvatarPreviewFieldInfo.GetValue(editor);
+            if (value == null) return;
             var subValue = _cachedTimeControlFieldInfo.GetValue(value);
+            if (subValue == null) return;
             _cachedStopTimeFieldInfo.SetValue(subValue, clip.length);
         }
         else
@@ -1022,6 +1024,11 @@ public class CombatThrowEditor : Editor
     {
         // Unsubscribe from editor update
         EditorApplication.update -= OnEditorUpdate;
+
+        // Invalidate static reflection cache so it is not used against a destroyed editor
+        _cachedAvatarPreviewFieldInfo = null;
+        _cachedTimeControlFieldInfo = null;
+        _cachedStopTimeFieldInfo = null;
         
         // Clean up preview editors
         if (_attackerPreviewEditor != null)

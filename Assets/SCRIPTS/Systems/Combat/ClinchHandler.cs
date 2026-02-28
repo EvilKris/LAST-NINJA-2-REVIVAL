@@ -26,6 +26,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     #region Enemy State (Cached During Clinch)
     private Transform _grabbedEnemy;
     private Animator _enemyAnimator;
+    private AnimatorOverrideController _enemyOverrideController;
     private Rigidbody _enemyRigidbody;
     private Collider _enemyCollider;
     private MovementComponent _enemyMovement;
@@ -45,6 +46,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     private bool _isBeingThrown;
     private bool _throwFinished;
     private bool _isExecutingThrow;
+    private bool _throwLaunchFired;
     #endregion
 
     #region Cached Layer Masks
@@ -61,6 +63,11 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     }
     #endregion
 
+    #region Throw Animation Slot Keys
+    private const string ThrowAttackerSlotKey = "ReplaceableThrow-Attacker";
+    private const string ThrowVictimSlotKey = "ReplaceableThrow-Victim";
+    #endregion
+
     #region Animator Parameter Hashes
     
     private static readonly int HashInputX = Animator.StringToHash("Input_XFloat");
@@ -70,6 +77,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     private static readonly int HashIsRunning = Animator.StringToHash("isRunningBool");
     private int HashInClinch = Animator.StringToHash("b_InClinch");
     private static readonly int HashThrowTori = Animator.StringToHash("ReplaceableThrow-Attacker");
+    private static readonly int HashThrowUke = Animator.StringToHash("ReplaceableThrow-Victim");
     private static readonly int HashClinchBreakTori = Animator.StringToHash("clinch-break-tori");
     #endregion
 
@@ -95,6 +103,9 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _enemyMovement = target.GetComponent<MovementComponent>();
         _enemyRigidbody = target.GetComponent<Rigidbody>();
         _enemyCollider = target.GetComponent<Collider>();
+
+        _enemyOverrideController = new AnimatorOverrideController(_enemyAnimator.runtimeAnimatorController);
+        _enemyAnimator.runtimeAnimatorController = _enemyOverrideController;
 
         // Immediately stop all physics movement on both actors
         if (_rigidbody != null)
@@ -132,9 +143,23 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         if (!_isClinching) return;
         if (_grabbedEnemy == null || _enemyAnimator == null) return;
 
+        CombatThrow throwData = _combat.currentStyle?.clinchThrowDefault;
+        if (throwData == null) return;
+
+        // Override throw clips on both animators before triggering the animation
+        AnimatorOverrideController attackerOverride = _animator.runtimeAnimatorController as AnimatorOverrideController;
+        if (attackerOverride != null)
+            attackerOverride[ThrowAttackerSlotKey] = throwData.attackerThrowClip;
+
+        if (_enemyOverrideController != null)
+            _enemyOverrideController[ThrowVictimSlotKey] = throwData.victimThrowClip;
+
         // Trigger wheel throw animation on both attacker and victim
         _animator.SetTrigger(HashWheelThrow);
         _enemyAnimator.SetTrigger(HashWheelThrow);
+
+        JSAM.AudioManager.PlaySound(_health.characterEffects.sfxThrowVocal);
+
 
         _enemyParentConstraint.constraintActive = false; // Disable constraint to allow physics-based throw 
         _animator.applyRootMotion = true;
@@ -144,6 +169,25 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
 
         _isExecutingThrow = true;
+        _throwLaunchFired = false;
+    }
+
+    private void Update()
+    {
+        if (!_isExecutingThrow || _throwLaunchFired) return;
+
+        CombatThrow throwData = _combat.currentStyle != null ? _combat.currentStyle.clinchThrowDefault : null;
+        if (throwData == null) return;
+
+        AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
+        if (!stateInfo.IsName("ReplaceableThrow-Attacker")) return;
+
+        if (stateInfo.normalizedTime >= throwData.throwLaunchActivation)
+        {
+            _throwLaunchFired = true;
+            Debug.Log($"[ClinchHandler] Throw launch activation reached at normalizedTime={stateInfo.normalizedTime:F3} (threshold={throwData.throwLaunchActivation:F3})");
+            Debug.Break();
+        }
     }
 
     private void ResetMovementParams(Animator animator)
@@ -173,19 +217,29 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
     }
 
-    public void EndClinch()
+    public void EndClinchTori()
     {
         if (!_isClinching) return;
 
         _isClinching = false;
 
         _animator.SetInteger("ClinchRole", 0);
-        _enemyAnimator.SetInteger("ClinchRole", 0); 
-        _enemyAnimator.SetBool(HashInClinch, false);
         _animator.SetBool(HashInClinch, false);
-        ResetMovementParams(_animator);
-        ResetMovementParams(_enemyAnimator);
-        
+       // ResetMovementParams(_animator);
+        _animator.applyRootMotion = false;
+    }
+
+    public void EndClinchUke()
+    {
+        if (_enemyAnimator == null) return;
+
+        _enemyAnimator.applyRootMotion = false;
+
+        _enemyAnimator.SetInteger("ClinchRole", 0);
+        _enemyAnimator.SetBool(HashInClinch, false);
+       // ResetMovementParams(_enemyAnimator);
+
+        RemoveEnemyParentConstraint();
         // Unlock enemy movement and clear animation sync
         if (_enemyMovement != null)
         {
@@ -193,14 +247,14 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
             _enemyMovement.syncAnimationSource = null;
             _enemyMovement.syncAnimatorSpeed = false;
         }
-        
+
         // Re-enable collision
         if (_playerCollider != null && _enemyCollider != null)
         {
             Physics.IgnoreCollision(_playerCollider, _enemyCollider, false);
         }
+
         
-        RemoveEnemyParentConstraint();
     }
 
     #region Constraint Management   
@@ -290,12 +344,12 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
     private void HandleBreakToriExit()
     {
-        throw new NotImplementedException();
+       
     }
 
     private void HandleThrowExit()
     {
-        throw new NotImplementedException();
+       EndClinchTori();
     }
     #endregion  
 }

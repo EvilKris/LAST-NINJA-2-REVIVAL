@@ -21,7 +21,7 @@ public class MasterSingleton : Singleton<MasterSingleton>
         UIManager = GetComponentInChildren<UIManager>();
         AudioController = GetComponentInChildren<AudioController>();
         GameDataManager = GetComponentInChildren<GameDataManager>();
-        PlayerManager = GetComponentInChildren<PlayerManager>();
+        PlayerManager = GetComponentInChildren<PlayerManager>(); //might not even need this, but just in case
         InventoryManager = GetComponentInChildren<InventoryManager>();
         EventManager = GetComponentInChildren<EventManager>();
     }
