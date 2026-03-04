@@ -56,6 +56,10 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     /// </summary>
     public event Action<float, float, Faction> OnHealthChanged;
 
+    private static bool _deadLayerConfigured = false;
+    private static int _deadLayer = -1;
+    private static int _floorLayer = -1;
+
     /// <summary>
     /// Initialize health to maximum value.
     /// </summary>
@@ -63,6 +67,29 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     {
         currentHealth = maxHealth;
         _animator = GetComponent<Animator>();
+        ConfigureDeadLayer();
+    }
+
+    private static void ConfigureDeadLayer()
+    {
+        if (_deadLayerConfigured) return;
+        _deadLayerConfigured = true;
+
+        _deadLayer = LayerMask.NameToLayer("Dead");
+        _floorLayer = LayerMask.NameToLayer("Floor");
+
+        if (_deadLayer < 0)
+        {
+            Debug.LogWarning("HealthComponent: 'Dead' layer not found. Add it in Edit > Project Settings > Tags and Layers.");
+            return;
+        }
+
+        // Dead entities collide with nothing except the floor
+        for (int i = 0; i < 32; i++)
+        {
+            bool shouldCollide = (i == _floorLayer);
+            Physics.IgnoreLayerCollision(_deadLayer, i, !shouldCollide);
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -119,6 +146,10 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
 
     private void HandleDeath()
     {
+        // Switch to Dead layer so the corpse only collides with the floor
+        if (_deadLayer >= 0)
+            SetLayerRecursive(gameObject, _deadLayer);
+
         OnDeath?.Invoke();
         Debug.Log($"{gameObject.name} has died. (Shibō - 死亡)");
 
@@ -201,4 +232,11 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     /// </summary>
     /// <returns>Faction enum value</returns>
     public Faction GetFaction() => faction;
+
+    private static void SetLayerRecursive(GameObject obj, int layer)
+    {
+        obj.layer = layer;
+        for (int i = 0; i < obj.transform.childCount; i++)
+            SetLayerRecursive(obj.transform.GetChild(i).gameObject, layer);
+    }
 }

@@ -38,6 +38,12 @@ public class CombatActorBrain : MonoBehaviour
     private Animator _animator;
     private ClinchHandler _clinchHandler;
 
+    // Clinch break attempt
+    private float _clinchBreakAttemptTimer;
+    private const float CLINCH_BREAK_MIN_DELAY = 0.8f;
+    private const float CLINCH_BREAK_MAX_DELAY = 2.2f;
+    private const float CLINCH_BREAK_CHANCE = 0.65f;
+
     /// <summary>
     /// Cache component references.
     /// </summary>
@@ -47,6 +53,7 @@ public class CombatActorBrain : MonoBehaviour
         _health = GetComponent<HealthComponent>();
         _animator = GetComponent<Animator>();
         _clinchHandler = GetComponent<ClinchHandler>();
+        _clinchBreakAttemptTimer = Random.Range(CLINCH_BREAK_MIN_DELAY, CLINCH_BREAK_MAX_DELAY);
     }
 
     /// <summary>
@@ -55,6 +62,19 @@ public class CombatActorBrain : MonoBehaviour
     /// </summary>
     private void FixedUpdate()
     {
+        // While grabbed, count down and randomly attempt to break the clinch
+        if (_clinchHandler != null && _clinchHandler.CanBreakClinch)
+        {
+            _clinchBreakAttemptTimer -= Time.fixedDeltaTime;
+            if (_clinchBreakAttemptTimer <= 0f)
+            {
+                _clinchBreakAttemptTimer = Random.Range(CLINCH_BREAK_MIN_DELAY, CLINCH_BREAK_MAX_DELAY);
+                if (Random.value < CLINCH_BREAK_CHANCE)
+                    _clinchHandler.BreakClinch();
+            }
+            return;
+        }
+
         // Don't process AI if dead or in a clinch
         if ((_health != null && _health.IsDead) || (_clinchHandler != null && _clinchHandler.IsClinching))
             return;

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class MovementComponent : MonoBehaviour
+public class MovementComponent : MonoBehaviour, IAnimationStateListener
 {
 
     [Header("Speed Modifiers")]
@@ -29,7 +29,9 @@ public class MovementComponent : MonoBehaviour
     [HideInInspector] public bool canRotate = true;
     [HideInInspector] public Vector3 currentMoveDir;
     [HideInInspector] public bool isMovementLocked = false;
+    [HideInInspector] public bool isImmobilized = false;
     [HideInInspector] public bool isInFlight = false;
+    [HideInInspector] public bool isClinchActive = false;
     [HideInInspector] public MovementComponent syncAnimationSource = null;
     [HideInInspector] public bool syncAnimatorSpeed = false;
 
@@ -82,6 +84,12 @@ public class MovementComponent : MonoBehaviour
     /// </summary>
     public void ProcessMovement(Vector3 moveDir)
     {
+        if (isImmobilized)
+        {
+            StopVelocity();
+            return;
+        }
+
         if (isMovementLocked)
         {
             SyncAnimationFromSource();
@@ -118,6 +126,12 @@ public class MovementComponent : MonoBehaviour
     /// </summary>
     public void ProcessMovement(Vector3 moveDir, Vector3 lookAtPos)
     {
+        if (isImmobilized)
+        {
+            StopVelocity();
+            return;
+        }
+
         if (isMovementLocked)
         {
             SyncAnimationFromSource();
@@ -184,6 +198,13 @@ public class MovementComponent : MonoBehaviour
         SetAnimatorFloat(_hashYAxis, 0f);
     }
 
+    public void ZeroVelocity()
+    {
+        if (isInFlight) return;
+        _rb.linearVelocity = Vector3.zero;
+        _rb.angularVelocity = Vector3.zero;
+    }
+
     private void SyncAnimationFromSource()
     {
         if (!isInFlight)
@@ -191,9 +212,11 @@ public class MovementComponent : MonoBehaviour
         
         if (syncAnimationSource != null)
         {
-            // Mirror the attacker's animation parameters for synchronized movement
-            SetAnimatorFloat(_hashXAxis, syncAnimationSource._lastXAxis);
-            SetAnimatorFloat(_hashYAxis, syncAnimationSource._lastYAxis);
+            // Mirror the attacker's animation parameters for synchronized movement.
+            // X is negated because the enemy faces the opposite direction (180 degrees),
+            // so their local left/right is flipped relative to the attacker.
+            SetAnimatorFloat(_hashXAxis, -syncAnimationSource._lastXAxis);
+            SetAnimatorFloat(_hashYAxis, -syncAnimationSource._lastYAxis);
             
             // Sync running state as well
             bool sourceIsRunning = syncAnimationSource._lastIsRunning;
@@ -212,14 +235,23 @@ public class MovementComponent : MonoBehaviour
     }
 
 
+    private void Start()
+    {
+        // Safety net: if this entity dies while immobilized (e.g. killed mid-throw recovery),
+        // the AnimationStateExitNotifier will never fire, so clear the flag via the death event.
+        if (TryGetComponent<HealthComponent>(out var health))
+            health.OnDeath += () => isImmobilized = false;
+    }
+
     private void Update()
     {
-        // If syncing speed from another MovementComponent (during clinch), copy their animator speed
-        if (syncAnimatorSpeed && syncAnimationSource != null)
-        {
-            _animator.speed = syncAnimationSource._animator.speed;
-            return;
-        }
+        // When locked with a sync source (e.g. enemy grabbed in a clinch), drive animator
+        // floats every frame directly — no external caller needed since the AI brain is disabled.
+        if (isMovementLocked && syncAnimationSource != null)
+            SyncAnimationFromSource();
+
+        // When movement is locked or a clinch is active, an external system owns animator.speed.
+        if (isMovementLocked || isClinchActive) return;
 
         if (_combatHandler == null || !_combatHandler.enabled)
         {
@@ -234,5 +266,15 @@ public class MovementComponent : MonoBehaviour
             _animator.speed = attackSpeed;
         else
             _animator.speed = movementSpeed * movementAnimSpeedModifier;
+    }
+
+    /// <summary>
+    /// Called by AnimationStateExitNotifier when a state with that behaviour exits.
+    /// Filter on exitEvent to react only to relevant notifications.
+    /// </summary>
+    public void OnAnimationStateExit(int layerIndex, AnimationExitEvent exitEvent)
+    {
+        if (exitEvent == AnimationExitEvent.EndImmobilized)
+            isImmobilized = false;
     }
 }

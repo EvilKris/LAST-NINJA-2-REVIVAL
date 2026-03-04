@@ -166,10 +166,20 @@ public class PlayerController : MonoBehaviour
         if (_health != null && _health.IsDead) return;
         if (_movement == null || !_movement.enabled) return;
         
-        // Don't process movement input if in a clinch
+        // During a clinch the player must not physically move, but real input must still be
+        // fed into ProcessMovement so _lastXAxis/_lastYAxis stay live for the enemy to mirror.
+        // Mode 2 is used so local-space X/Y are computed correctly against the grabbed enemy.
+        // ZeroVelocity is called after so the physics body stays pinned in place.
         if (_clinchHandler != null && _clinchHandler.IsClinching)
         {
-            _movement.ProcessMovement(Vector3.zero);
+            _cachedCameraYaw = GetCurrentCameraYaw();
+            Vector3 clinchMoveDir = GetCameraRelativeDirection(_moveInput);
+            Transform grabbedEnemy = _clinchHandler.GrabbedEnemy;
+            if (grabbedEnemy != null)
+                _movement.ProcessMovement(clinchMoveDir, grabbedEnemy.position);
+            else
+                _movement.ProcessMovement(clinchMoveDir);
+            _movement.ZeroVelocity();
             return;
         }
 
@@ -307,7 +317,17 @@ public class PlayerController : MonoBehaviour
     private void OnAcrobatics(InputAction.CallbackContext context)
     {
         if (!context.started) return;
-               
+
+        // While in a clinch, the Acrobatics key breaks out instead of performing a flip.
+        // If a throw is already executing (CanBreakClinch = false) block input entirely.
+        ClinchHandler clinch = GetComponent<ClinchHandler>();
+        if (clinch != null && clinch.IsClinching)
+        {
+            if (clinch.CanBreakClinch)
+                clinch.BreakClinch();
+            return;
+        }
+
         if (_movement != null && _moveInput.sqrMagnitude > _moveThresholdSqr)
         {
             Vector3 dir = GetCameraRelativeDirection(_moveInput);

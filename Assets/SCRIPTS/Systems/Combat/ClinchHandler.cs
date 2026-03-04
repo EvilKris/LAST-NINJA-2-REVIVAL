@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Animations;
 
@@ -29,6 +30,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     private CombatHandler _enemyCombat;
     private CombatActorBrain _enemyBrain;
     private float _enemyOriginalAnimSpeed;
+    private float _playerOriginalAnimSpeed;
     private ParentConstraint _enemyParentConstraint;
     #endregion
 
@@ -37,6 +39,8 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     private bool _isBreakingClinch;
     private float _clinchTimer;
     private const float MAX_CLINCH_DURATION = 3f;
+    private bool _isInClinchRecovery;
+    private const float CLINCH_RECOVERY_DURATION = 3f;
     #endregion
 
     #region Throw State Tracking
@@ -79,16 +83,15 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     private static readonly int HashBreakClinch = Animator.StringToHash("t_BreakClinch");
     private static readonly int HashIsRunning = Animator.StringToHash("isRunningBool");
     private int HashInClinch = Animator.StringToHash("b_InClinch");
-    private static readonly int HashThrowTori = Animator.StringToHash("ReplaceableThrow-Attacker");
-    private static readonly int HashThrowUke = Animator.StringToHash("ReplaceableThrow-Victim");
-    private static readonly int HashClinchBreakTori = Animator.StringToHash("clinch-break-tori");
     private static readonly int HashIsGrounded = Animator.StringToHash("b_isGrounded");
     private static readonly int HashGettingUp = Animator.StringToHash("t_GettingUp");
     #endregion
 
     #region Public Properties
     public bool IsClinching => _animator != null && _animator.GetBool(HashInClinch);
-   
+    public bool IsInClinchRecovery => _isInClinchRecovery;
+    public bool CanBreakClinch => _isClinching && !_isExecutingThrow && !_isBreakingClinch;
+    public Transform GrabbedEnemy => _grabbedEnemy;
     #endregion
 
     public void Initialize(CombatHandler combat)
@@ -103,14 +106,39 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
     public void AttemptClinch(Transform target)
     {
+        if (_isInClinchRecovery) return;
+
+        HealthComponent targetHealth = target.GetComponent<HealthComponent>();
+        if (targetHealth != null && targetHealth.IsDead) return;
+
+        // Reset all triggers and state parameters on self before starting a fresh clinch
+        _animator.ResetTrigger("t_StartClinch");
+        _animator.ResetTrigger(HashWheelThrow);
+        _animator.ResetTrigger(HashBreakClinch);
+        _animator.ResetTrigger(HashGettingUp);       
+        _animator.SetInteger("ClinchRole", 0);
+
         _grabbedEnemy = target;
         _enemyAnimator = target.GetComponent<Animator>();
+
+
+        _enemyAnimator.ResetTrigger("t_StartClinch");
+        _enemyAnimator.ResetTrigger(HashWheelThrow);
+        _enemyAnimator.ResetTrigger(HashBreakClinch);
+        _enemyAnimator.ResetTrigger(HashGettingUp);
+        _enemyAnimator.SetInteger("ClinchRole", 0);
+
         _enemyMovement = target.GetComponent<MovementComponent>();
+        _enemyMovement.isImmobilized = false;
+
         _enemyRigidbody = target.GetComponent<Rigidbody>();
         _enemyCollider = target.GetComponent<Collider>();
-        _enemyHealth = target.GetComponent<HealthComponent>();
+        _enemyHealth = targetHealth;
         _enemyCombat = target.GetComponent<CombatHandler>();
         _enemyBrain = target.GetComponent<CombatActorBrain>();
+
+        if (_enemyHealth != null)
+            _enemyHealth.OnDeath += AbortClinchOnEnemyDeath;
 
         // Immediately stop all physics movement on both actors
         if (_rigidbody != null)
@@ -140,7 +168,6 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         {
             _enemyMovement.isMovementLocked = true;
             _enemyMovement.syncAnimationSource = _movement;
-            _enemyMovement.syncAnimatorSpeed = true;
         }
 
         SetupEnemyParentConstraint(target);
@@ -171,15 +198,46 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _animator.SetTrigger(HashWheelThrow);
         _enemyAnimator.SetTrigger(HashWheelThrow);
 
+        RemoveUkeParentConstraint();
+
+
+
         if (_health.characterEffects != null && _health.characterEffects.sfxThrowVocal != null)
             JSAM.AudioManager.PlaySound(_health.characterEffects.sfxThrowVocal);
 
         _animator.applyRootMotion = true;
         _enemyAnimator.applyRootMotion = true;
 
+        if (_enemyMovement != null)
+            _enemyMovement.isImmobilized = true;
+
         _throwDirection = transform.forward;
         _isExecutingThrow = true;
         _throwLaunchFired = false;
+    }
+
+    public void BreakClinch()
+    {
+        if (!CanBreakClinch) return;
+                
+
+        _isBreakingClinch = true;
+
+        // Release the constraint before triggering break animations
+        // so neither actor is physics-locked during the break
+        RemoveUkeParentConstraint();
+
+        _animator.applyRootMotion = true;
+        if (_enemyAnimator != null)
+            _enemyAnimator.applyRootMotion = true;
+
+        if (_movement != null)
+            _movement.isMovementLocked = true;
+
+        _animator.SetTrigger(HashBreakClinch);
+
+        if (_enemyAnimator != null)
+            _enemyAnimator.SetTrigger(HashBreakClinch);
     }
 
     private void Update()
@@ -202,7 +260,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     {
         if (_enemyRigidbody == null || _grabbedEnemy == null) return;
 
-        RemoveEnemyParentConstraint();
+        RemoveUkeParentConstraint();
        
 
         // Stop animation-driven movement on the enemy
@@ -337,6 +395,8 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         // Fire get-up trigger if still alive, otherwise death handles itself
         if (_enemyHealth != null && !_enemyHealth.IsDead)
             _enemyAnimator.SetTrigger(HashGettingUp);
+
+        StartCoroutine(ClinchRecovery());
     }
 
     private void ResetMovementParams(Animator animator)
@@ -354,7 +414,18 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
       
         _animator.SetInteger("ClinchRole", 1);
         _enemyAnimator.SetInteger("ClinchRole", 2);
-        
+
+        // Lock both animators to speed 1 so locomotion blend trees play at the same rate.
+        // Original speeds are captured here and restored when the clinch ends.
+        _playerOriginalAnimSpeed = _animator.speed;
+        _enemyOriginalAnimSpeed = _enemyAnimator.speed;
+        _animator.speed = 1f;
+        _enemyAnimator.speed = 1f;
+
+        // Lock attacker animator.speed so MovementComponent.Update cannot overwrite the 1f we set.
+        if (_movement != null)
+            _movement.isClinchActive = true;
+
         // Mark clinch as active
         _isClinching = true;
         
@@ -372,30 +443,39 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
         _isClinching = false;
 
+        _animator.speed = _playerOriginalAnimSpeed;
+
         _animator.SetInteger("ClinchRole", 0);
         _animator.SetBool(HashInClinch, false);
-       // ResetMovementParams(_animator);
         _animator.applyRootMotion = false;
+
+        if (_movement != null)
+            _movement.isClinchActive = false;
     }
 
     public void EndClinchUke()
     {
         if (_enemyAnimator == null) return;
 
+        if (_enemyHealth != null)
+            _enemyHealth.OnDeath -= AbortClinchOnEnemyDeath;
+
         _enemyAnimator.applyRootMotion = false;
+        _enemyAnimator.speed = _enemyOriginalAnimSpeed;
 
         _enemyAnimator.SetInteger("ClinchRole", 0);
         _enemyAnimator.SetBool(HashInClinch, false);
         _enemyAnimator.SetBool(HashIsGrounded, true);
        // ResetMovementParams(_enemyAnimator);
 
-        RemoveEnemyParentConstraint();
+        RemoveUkeParentConstraint();
         // Unlock enemy movement and clear animation sync (no-op if already done at launch)
+        // Note: isImmobilized is intentionally NOT cleared here after a throw.
+        // It is cleared by AnimationStateExitNotifier on the get-up clip in MovementComponent.OnAnimationStateExit.
         if (_enemyMovement != null)
         {
             _enemyMovement.isMovementLocked = false;
             _enemyMovement.syncAnimationSource = null;
-            _enemyMovement.syncAnimatorSpeed = false;
             _enemyMovement.isInFlight = false;
         }
 
@@ -411,6 +491,79 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
             _enemyBrain.enabled = true;
             _enemyBrain = null;
         }
+    }
+
+    private void AbortClinchOnEnemyDeath()
+    {
+        if (_enemyHealth != null)
+            _enemyHealth.OnDeath -= AbortClinchOnEnemyDeath;
+
+        AbortClinch();
+    }
+
+    private void AbortClinch()
+    {
+        _isExecutingThrow = false;
+        _throwLaunchFired = false;
+        _enemyInFlight = false;
+        _enemySliding = false;
+        _colliderReenableTimer = 0f;
+        _isInClinchRecovery = false;
+        StopAllCoroutines();
+
+        if (_enemyCollider != null)
+            _enemyCollider.enabled = true;
+
+        RemoveUkeParentConstraint();
+
+        if (_enemyMovement != null)
+        {
+            _enemyMovement.isMovementLocked = false;
+            _enemyMovement.syncAnimationSource = null;
+            _enemyMovement.isInFlight = false;
+            _enemyMovement.isImmobilized = false;
+        }
+
+        if (_enemyAnimator != null)
+        {
+            _enemyAnimator.applyRootMotion = false;
+            _enemyAnimator.speed = _enemyOriginalAnimSpeed;
+        }
+
+        if (_animator != null)
+            _animator.speed = _playerOriginalAnimSpeed;
+
+        if (_playerCollider != null && _enemyCollider != null)
+            Physics.IgnoreCollision(_playerCollider, _enemyCollider, false);
+
+        if (_enemyBrain != null)
+        {
+            _enemyBrain.enabled = true;
+            _enemyBrain = null;
+        }
+
+        // Reset tori (attacker) side
+        _isClinching = false;
+        if (_movement != null)
+        {
+            _movement.isClinchActive = false;
+            _movement.isMovementLocked = false;
+        }
+        if (_animator != null)
+        {
+            _animator.applyRootMotion = false;
+            _animator.SetInteger("ClinchRole", 0);
+            _animator.SetBool(HashInClinch, false);
+        }
+
+        _grabbedEnemy = null;
+        _enemyAnimator = null;
+        _enemyRigidbody = null;
+        _enemyCollider = null;
+        _enemyMovement = null;
+        _enemyHealth = null;
+        _enemyCombat = null;
+        _activeThrowData = null;
     }
 
     #region Constraint Management   
@@ -468,7 +621,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _enemyParentConstraint.weight = 1f;
     }
 
-    private void RemoveEnemyParentConstraint()
+    private void RemoveUkeParentConstraint()
     {
         if (_enemyParentConstraint != null)
         {
@@ -490,22 +643,37 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     #endregion
 
     #region Animation State Callbacks   
-    public void OnAnimationStateExit(int stateHash, int layerIndex)
+    public void OnAnimationStateExit(int layerIndex, AnimationExitEvent exitEvent)
     {
-        if (stateHash == HashThrowTori)
+        if (exitEvent == AnimationExitEvent.EndThrow)
             HandleThrowExit();
-        else if (stateHash == HashClinchBreakTori)
+        else if (exitEvent == AnimationExitEvent.BreakClinch)
             HandleBreakToriExit();
     }
 
     private void HandleBreakToriExit()
     {
-       
+        _isBreakingClinch = false;
+        _isInClinchRecovery = true;
+        if (_movement != null)
+            _movement.isMovementLocked = false;
+        EndClinchUke();
+        EndClinchTori();
+        StartCoroutine(ClinchRecovery());
     }
 
     private void HandleThrowExit()
     {
-       EndClinchTori();
+        _isExecutingThrow = false;
+        _throwLaunchFired = false;
+        EndClinchTori();
+    }
+
+    private IEnumerator ClinchRecovery()
+    {
+        _isInClinchRecovery = true;
+        yield return new WaitForSeconds(CLINCH_RECOVERY_DURATION);
+        _isInClinchRecovery = false;
     }
     #endregion  
 }

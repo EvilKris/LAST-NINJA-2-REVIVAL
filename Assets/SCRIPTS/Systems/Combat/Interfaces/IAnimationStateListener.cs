@@ -1,4 +1,4 @@
 public interface IAnimationStateListener
 {
-    void OnAnimationStateExit(int stateHash, int layerIndex);
+    void OnAnimationStateExit(int layerIndex, AnimationExitEvent exitEvent);
 }

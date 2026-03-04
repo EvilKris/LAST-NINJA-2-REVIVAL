@@ -113,9 +113,8 @@ public class ClinchTrigger : MonoBehaviour
                 return;
         }
 
-        // Only scan for nearby enemies if we're not currently in any clinch state
-        // This prevents attempting multiple clinches or clinching during throw animations
-        if (!_clinchHandler.IsClinching)
+        // Only scan for nearby enemies if we're not currently in any clinch state or recovery
+        if (!_clinchHandler.IsClinching && !_clinchHandler.IsInClinchRecovery)
         {
             // Frame-rate limiting: only check every N frames
             _frameCounter++;

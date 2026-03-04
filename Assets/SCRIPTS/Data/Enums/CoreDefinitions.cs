@@ -69,3 +69,12 @@ public enum HitReactionType
     Knockdown,   // Fall to ground
     Launch       // Air combo starter
 }
+
+public enum AnimationExitEvent
+{
+    None,
+    AttackEnded,
+    EndImmobilized,
+    EndThrow,
+    BreakClinch,
+}

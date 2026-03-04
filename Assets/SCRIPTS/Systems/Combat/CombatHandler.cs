@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(HealthComponent))]
-public class CombatHandler : MonoBehaviour
+public class CombatHandler : MonoBehaviour, IAnimationStateListener
 {
     [Header("Components")]
     private Animator _animator;
@@ -57,6 +57,7 @@ public class CombatHandler : MonoBehaviour
     private bool _isBlocking;
 
     private const string CLIP_SLOT_KEY = "Replaceable_Motion_Base";
+    private static readonly int HashIsAction = Animator.StringToHash("isAction");
 
     [Header("Motion State")]
     private float _lastNormalizedTime;
@@ -339,6 +340,7 @@ public class CombatHandler : MonoBehaviour
 
         CombatMove move = currentStyle.lightAttacks[_comboIndex % currentStyle.lightAttacks.Length];
         PlayMove(move);
+        _animator.SetBool(HashIsAction, true);
 
         _comboIndex++;
         _lastAttackTime = Time.time;
@@ -358,6 +360,7 @@ public class CombatHandler : MonoBehaviour
 
         _comboIndex = 0;
         PlayMove(currentStyle.heavyAttack);
+        _animator.SetBool(HashIsAction, true);
     }
 
     public void ExecuteAcrobatics()
@@ -369,6 +372,7 @@ public class CombatHandler : MonoBehaviour
 
         _isAcrobaticMove = true;
         PlayMove(flipMove);
+        _animator.SetBool(HashIsAction, true);
     }
 
     // --- Core Combat Engine ---
@@ -488,5 +492,9 @@ public class CombatHandler : MonoBehaviour
     public void RegisterHit(Transform target) => _hitCache.Add(target);
     public bool HasHitTarget(Transform target) => _hitCache.Contains(target);
 
-  
+    public void OnAnimationStateExit(int layerIndex, AnimationExitEvent exitEvent)
+    {
+        if (exitEvent == AnimationExitEvent.AttackEnded)
+            _animator.SetBool(HashIsAction, false);
+    }
 }
