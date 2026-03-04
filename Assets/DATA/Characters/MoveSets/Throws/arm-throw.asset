@@ -18,5 +18,5 @@ MonoBehaviour:
   damage: 25
   audioEvents: []
   throwLaunchActivation: 0.5
-  throwArcHeight: 2
-  throwDistance: 7
+  throwArcHeight: 1.5
+  throwDistance: 5
