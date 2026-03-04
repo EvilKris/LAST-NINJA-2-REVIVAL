@@ -110,7 +110,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
 
 
         // Trigger hit reaction only if alive
-        if (_animator != null)
+        if (_animator != null && type != HitReactionType.None)
         {
             SetHitAnimatorParameters(type);
             _animator.SetTrigger("t_GetHit");

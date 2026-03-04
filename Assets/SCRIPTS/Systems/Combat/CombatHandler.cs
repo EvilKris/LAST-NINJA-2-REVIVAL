@@ -66,6 +66,9 @@ public class CombatHandler : MonoBehaviour
     public bool IsAttacking => _activeMove != null;
     public bool IsAcrobatic => _isAcrobaticMove;
     public bool IsCharging => _isCharging;
+    public AnimationClip ClinchThrowAttackerClip { get; private set; }
+    public AnimationClip ClinchThrowVictimClip { get; private set; }
+    public AnimatorOverrideController OverrideController => _overrideController;
 
     private void Awake()
     {
@@ -98,6 +101,17 @@ public class CombatHandler : MonoBehaviour
 
     private void InitializeStyleModules()
     {
+        // Pre-bake clinch throw clips from the current style
+        if (currentStyle != null && currentStyle.clinchThrowDefault != null)
+        {
+            ClinchThrowAttackerClip = currentStyle.clinchThrowDefault.attackerThrowClip;
+            ClinchThrowVictimClip = currentStyle.clinchThrowDefault.victimThrowClip;
+        }
+        else
+        {
+            ClinchThrowAttackerClip = null;
+            ClinchThrowVictimClip = null;
+        }
                 
         // Check if the current style supports clinching
         // Only players can initiate clinches, enemies should not have ClinchHandler

@@ -23,5 +23,5 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f892730f3edbe7841ac6bed7b890f5fb, type: 2}
   supportsClinching: 1
   clinchKnee: {fileID: 0}
-  clinchThrowDefault: {fileID: 11400000, guid: d589600e312129543b52f8a38250d157, type: 2}
+  clinchThrowDefault: {fileID: 11400000, guid: b4ea1c12cda9c2045b9b2325f05c7844, type: 2}
   styleAnimator: {fileID: 0}

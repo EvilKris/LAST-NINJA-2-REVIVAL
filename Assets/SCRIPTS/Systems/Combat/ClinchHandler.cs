@@ -16,20 +16,18 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     #region Clinch Configuration
     [Header("Clinch State")]
     [SerializeField] private float _clinchDistance = 0.65f;
-
-    [Header("Throw Physics")]
-    [SerializeField] private float _throwArcHeight = 2f;
-    [SerializeField] private float _throwDistance = 7f;
-    [SerializeField] private float _throwRotationSpeed = 2f;
+        
     #endregion
 
     #region Enemy State (Cached During Clinch)
     private Transform _grabbedEnemy;
     private Animator _enemyAnimator;
-    private AnimatorOverrideController _enemyOverrideController;
     private Rigidbody _enemyRigidbody;
     private Collider _enemyCollider;
     private MovementComponent _enemyMovement;
+    private HealthComponent _enemyHealth;
+    private CombatHandler _enemyCombat;
+    private CombatActorBrain _enemyBrain;
     private float _enemyOriginalAnimSpeed;
     private ParentConstraint _enemyParentConstraint;
     #endregion
@@ -47,6 +45,14 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     private bool _throwFinished;
     private bool _isExecutingThrow;
     private bool _throwLaunchFired;
+    private bool _enemyInFlight;
+    private bool _enemySliding;
+    private float _colliderReenableTimer;
+    private const float ColliderDisableDuration = 0.15f;
+    private const float SlideDrag = 8f;
+    private const float SlideStopThreshold = 0.4f;
+    private CombatThrow _activeThrowData;
+    private Vector3 _throwDirection;
     #endregion
 
     #region Cached Layer Masks
@@ -63,12 +69,9 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     }
     #endregion
 
-    #region Throw Animation Slot Keys
-    private const string ThrowAttackerSlotKey = "ReplaceableThrow-Attacker";
-    private const string ThrowVictimSlotKey = "ReplaceableThrow-Victim";
-    #endregion
-
     #region Animator Parameter Hashes
+    private const string ThrowAttackerSlotKey = "ReplaceableThrow-Attacker"; //do not change the names of these clips in the Animator
+    private const string ThrowVictimSlotKey = "ReplaceableThrow-Victim"; //do not change the names of these clips in the Animator
     
     private static readonly int HashInputX = Animator.StringToHash("Input_XFloat");
     private static readonly int HashInputY = Animator.StringToHash("Input_YFloat");
@@ -79,6 +82,8 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     private static readonly int HashThrowTori = Animator.StringToHash("ReplaceableThrow-Attacker");
     private static readonly int HashThrowUke = Animator.StringToHash("ReplaceableThrow-Victim");
     private static readonly int HashClinchBreakTori = Animator.StringToHash("clinch-break-tori");
+    private static readonly int HashIsGrounded = Animator.StringToHash("b_isGrounded");
+    private static readonly int HashGettingUp = Animator.StringToHash("t_GettingUp");
     #endregion
 
     #region Public Properties
@@ -103,9 +108,9 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _enemyMovement = target.GetComponent<MovementComponent>();
         _enemyRigidbody = target.GetComponent<Rigidbody>();
         _enemyCollider = target.GetComponent<Collider>();
-
-        _enemyOverrideController = new AnimatorOverrideController(_enemyAnimator.runtimeAnimatorController);
-        _enemyAnimator.runtimeAnimatorController = _enemyOverrideController;
+        _enemyHealth = target.GetComponent<HealthComponent>();
+        _enemyCombat = target.GetComponent<CombatHandler>();
+        _enemyBrain = target.GetComponent<CombatActorBrain>();
 
         // Immediately stop all physics movement on both actors
         if (_rigidbody != null)
@@ -125,6 +130,10 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _enemyAnimator.SetBool(HashInClinch, true);
         _animator.SetBool(HashInClinch, true);
 
+        // Disable AI brain for the full duration of the clinch
+        if (_enemyBrain != null)
+            _enemyBrain.enabled = false;
+
         // Lock enemy movement (uke cannot move during clinch)
         // and sync their animations to match the attacker's movement
         if (_enemyMovement != null)
@@ -143,31 +152,32 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         if (!_isClinching) return;
         if (_grabbedEnemy == null || _enemyAnimator == null) return;
 
-        CombatThrow throwData = _combat.currentStyle?.clinchThrowDefault;
-        if (throwData == null) return;
+        // Use clips pre-baked by CombatHandler from the FightingStyle
+        AnimationClip attackerClip = _combat.ClinchThrowAttackerClip;
+        AnimationClip victimClip = _combat.ClinchThrowVictimClip;
+        if (attackerClip == null || victimClip == null) return;
 
-        // Override throw clips on both animators before triggering the animation
-        AnimatorOverrideController attackerOverride = _animator.runtimeAnimatorController as AnimatorOverrideController;
-        if (attackerOverride != null)
-            attackerOverride[ThrowAttackerSlotKey] = throwData.attackerThrowClip;
+        _activeThrowData = (_combat.currentStyle != null) ? _combat.currentStyle.clinchThrowDefault : null;
+        if (_activeThrowData == null) return;
 
-        if (_enemyOverrideController != null)
-            _enemyOverrideController[ThrowVictimSlotKey] = throwData.victimThrowClip;
+        // Write the attacker clip into the attacker's own override controller
+        _combat.OverrideController[ThrowAttackerSlotKey] = attackerClip;
 
-        // Trigger wheel throw animation on both attacker and victim
+        // Write the victim clip into the enemy's override controller if it has one
+        if (_enemyCombat != null)
+            _enemyCombat.OverrideController[ThrowVictimSlotKey] = victimClip;
+
+        // Trigger throw animation on both actors
         _animator.SetTrigger(HashWheelThrow);
         _enemyAnimator.SetTrigger(HashWheelThrow);
 
-        JSAM.AudioManager.PlaySound(_health.characterEffects.sfxThrowVocal);
+        if (_health.characterEffects != null && _health.characterEffects.sfxThrowVocal != null)
+            JSAM.AudioManager.PlaySound(_health.characterEffects.sfxThrowVocal);
 
-
-        _enemyParentConstraint.constraintActive = false; // Disable constraint to allow physics-based throw 
         _animator.applyRootMotion = true;
         _enemyAnimator.applyRootMotion = true;
-        
 
-
-
+        _throwDirection = transform.forward;
         _isExecutingThrow = true;
         _throwLaunchFired = false;
     }
@@ -176,18 +186,157 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     {
         if (!_isExecutingThrow || _throwLaunchFired) return;
 
-        CombatThrow throwData = _combat.currentStyle != null ? _combat.currentStyle.clinchThrowDefault : null;
-        if (throwData == null) return;
+        if (_activeThrowData == null) return;
 
         AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
         if (!stateInfo.IsName("ReplaceableThrow-Attacker")) return;
 
-        if (stateInfo.normalizedTime >= throwData.throwLaunchActivation)
+        if (stateInfo.normalizedTime >= _activeThrowData.throwLaunchActivation)
         {
             _throwLaunchFired = true;
-            Debug.Log($"[ClinchHandler] Throw launch activation reached at normalizedTime={stateInfo.normalizedTime:F3} (threshold={throwData.throwLaunchActivation:F3})");
-            Debug.Break();
+            LaunchEnemy(_activeThrowData);
         }
+    }
+
+    private void LaunchEnemy(CombatThrow throwData)
+    {
+        if (_enemyRigidbody == null || _grabbedEnemy == null) return;
+
+        RemoveEnemyParentConstraint();
+       
+
+        // Stop animation-driven movement on the enemy
+        _enemyAnimator.applyRootMotion = false;
+        _enemyAnimator.SetBool(HashIsGrounded, false);
+
+        // Fully remove the parent constraint so it cannot fight the rigidbody during flight
+
+        // Unlock movement so MovementComponent stops zeroing linearVelocity each frame
+        if (_enemyMovement != null)
+        {
+            _enemyMovement.isMovementLocked = false;
+            _enemyMovement.syncAnimationSource = null;
+            _enemyMovement.syncAnimatorSpeed = false;
+            _enemyMovement.isInFlight = true;
+        }
+
+        // Disable collider for the first few frames to avoid immediate floor re-detection
+        if (_enemyCollider != null)
+        {
+            _enemyCollider.enabled = false;
+            _colliderReenableTimer = ColliderDisableDuration;
+        }
+
+        // Parabolic launch: derive vertical and horizontal velocity components
+        // from arc height and horizontal distance using projectile motion equations.
+
+
+        
+
+        float gravity = Mathf.Abs(Physics.gravity.y); // Increased gravity by 20%
+        float timeToApex = Mathf.Sqrt(2f * throwData.throwArcHeight / gravity);
+        float verticalVelocity = gravity * timeToApex;
+        float horizontalSpeed = throwData.throwDistance / (2f * timeToApex);
+        Vector3 launchVelocity = _throwDirection * horizontalSpeed + Vector3.up * verticalVelocity;
+        _enemyRigidbody.linearVelocity = launchVelocity;
+
+
+        /*
+       
+
+        float g = Mathf.Abs(Physics.gravity.y);
+        float vy = Mathf.Sqrt(2f * g * throwData.throwArcHeight);
+        float tTotal = 2f * vy / g; 
+        float vx = throwData.throwDistance / tTotal;
+
+       
+        // Launch in the attacker's forward direction
+        Vector3 launchVelocity = transform.forward * vx + Vector3.up * vy;
+        _enemyRigidbody.linearVelocity = Vector3.zero;
+        _enemyRigidbody.angularVelocity = Vector3.zero;
+        _enemyRigidbody.AddForce(launchVelocity, ForceMode.VelocityChange);
+        
+
+        // Play being-thrown SFX on the enemy
+        //  if (_enemyHealth != null && _enemyHealth.characterEffects != null && _enemyHealth.characterEffects.sfxBeingThrown != null)
+        //    JSAM.AudioManager.PlaySound(_enemyHealth.characterEffects.sfxBeingThrown);
+        */
+        
+        _enemyInFlight = true;
+    }
+
+    private void FixedUpdate()
+    {
+        // Countdown before re-enabling the enemy collider post-launch
+        if (_colliderReenableTimer > 0f)
+        {
+            _colliderReenableTimer -= Time.fixedDeltaTime;
+            if (_colliderReenableTimer <= 0f && _enemyCollider != null)
+                _enemyCollider.enabled = true;
+        }
+
+        if (!_enemyInFlight && !_enemySliding) return;
+        if (_grabbedEnemy == null || _enemyRigidbody == null) return;
+
+        // Only test for floor once the collider is back on and the enemy is moving downward
+        if (!_enemySliding && _colliderReenableTimer > 0f) return;
+        if (!_enemySliding && _enemyRigidbody.linearVelocity.y > 0f) return;
+
+        // SphereCast downward from the enemy's current position to detect the Floor layer
+        float castRadius = 0.2f;
+        float castDistance = 0.4f;
+        bool hitFloor = Physics.SphereCast(
+            _grabbedEnemy.position + Vector3.up * castRadius,
+            castRadius,
+            Vector3.down,
+            out _,
+            castDistance,
+            FloorLayerMask,
+            QueryTriggerInteraction.Ignore);
+
+        if (!hitFloor) return;
+
+        if (!_enemySliding)
+        {
+            // Enemy has just landed — start sliding phase
+            _enemySliding = true;
+            _enemyInFlight = false;
+
+            // Apply throw damage on landing impact
+            if (_enemyHealth != null && _activeThrowData != null)
+                _enemyHealth.TakeDamage(_activeThrowData.damage, HitReactionType.None);
+
+            // Play landing SFX
+            if (_enemyHealth != null && _enemyHealth.characterEffects != null && _enemyHealth.characterEffects.sfxLandAfterThrown != null)
+                JSAM.AudioManager.PlaySound(_enemyHealth.characterEffects.sfxLandAfterThrown);
+
+            // Tell the enemy animator to enter the grounded/sliding state
+            _enemyAnimator.SetBool(HashIsGrounded, true);
+        }
+
+        // Decelerate the slide each fixed frame until nearly stopped
+        Vector3 vel = _enemyRigidbody.linearVelocity;
+        vel.y = 0f;
+        if (vel.sqrMagnitude > SlideStopThreshold * SlideStopThreshold)
+        {
+            _enemyRigidbody.linearVelocity = Vector3.MoveTowards(
+                _enemyRigidbody.linearVelocity,
+                new Vector3(0f, _enemyRigidbody.linearVelocity.y, 0f),
+                SlideDrag * Time.fixedDeltaTime);
+            return;
+        }
+
+        // Slide has stopped — clean up
+        _enemySliding = false;
+        _enemyRigidbody.linearVelocity = Vector3.zero;
+        _enemyRigidbody.angularVelocity = Vector3.zero;
+
+        // End the uke side of the clinch
+        EndClinchUke();
+
+        // Fire get-up trigger if still alive, otherwise death handles itself
+        if (_enemyHealth != null && !_enemyHealth.IsDead)
+            _enemyAnimator.SetTrigger(HashGettingUp);
     }
 
     private void ResetMovementParams(Animator animator)
@@ -237,15 +386,17 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
         _enemyAnimator.SetInteger("ClinchRole", 0);
         _enemyAnimator.SetBool(HashInClinch, false);
+        _enemyAnimator.SetBool(HashIsGrounded, true);
        // ResetMovementParams(_enemyAnimator);
 
         RemoveEnemyParentConstraint();
-        // Unlock enemy movement and clear animation sync
+        // Unlock enemy movement and clear animation sync (no-op if already done at launch)
         if (_enemyMovement != null)
         {
             _enemyMovement.isMovementLocked = false;
             _enemyMovement.syncAnimationSource = null;
             _enemyMovement.syncAnimatorSpeed = false;
+            _enemyMovement.isInFlight = false;
         }
 
         // Re-enable collision
@@ -254,7 +405,12 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
             Physics.IgnoreCollision(_playerCollider, _enemyCollider, false);
         }
 
-        
+        // Re-enable AI brain now that the clinch is fully resolved
+        if (_enemyBrain != null)
+        {
+            _enemyBrain.enabled = true;
+            _enemyBrain = null;
+        }
     }
 
     #region Constraint Management   

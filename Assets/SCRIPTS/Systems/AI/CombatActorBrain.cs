@@ -55,7 +55,7 @@ public class CombatActorBrain : MonoBehaviour
     /// </summary>
     private void FixedUpdate()
     {
-        // Don't process AI if dead, in clinch, or movement is locked
+        // Don't process AI if dead or in a clinch
         if ((_health != null && _health.IsDead) || (_clinchHandler != null && _clinchHandler.IsClinching))
             return;
 

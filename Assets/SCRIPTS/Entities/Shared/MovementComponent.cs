@@ -29,6 +29,7 @@ public class MovementComponent : MonoBehaviour
     [HideInInspector] public bool canRotate = true;
     [HideInInspector] public Vector3 currentMoveDir;
     [HideInInspector] public bool isMovementLocked = false;
+    [HideInInspector] public bool isInFlight = false;
     [HideInInspector] public MovementComponent syncAnimationSource = null;
     [HideInInspector] public bool syncAnimatorSpeed = false;
 
@@ -47,7 +48,7 @@ public class MovementComponent : MonoBehaviour
     {
         // When MovementComponent is disabled, stop all physics movement immediately
         // This prevents the Rigidbody from retaining velocity and sliding
-        if (_rb != null)
+        if (_rb != null && !isInFlight)
         {
             _rb.linearVelocity = Vector3.zero;
             _rb.angularVelocity = Vector3.zero;
@@ -93,6 +94,8 @@ public class MovementComponent : MonoBehaviour
 
         UpdateAnimatorBooleans(isMoving);
 
+        if (isInFlight) return;
+
         if (isMoving)
         {
             _rb.linearVelocity = moveDir * movementSpeed;
@@ -127,7 +130,8 @@ public class MovementComponent : MonoBehaviour
         UpdateAnimatorBooleans(isMoving);
 
         // Move the Physics Body
-        _rb.linearVelocity = moveDir * movementSpeed;
+        if (!isInFlight)
+            _rb.linearVelocity = moveDir * movementSpeed;
 
         // Always face the Target
         Vector3 dirToTarget = (lookAtPos - transform.position);
@@ -174,6 +178,7 @@ public class MovementComponent : MonoBehaviour
 
     private void StopVelocity()
     {
+        if (isInFlight) return;
         _rb.linearVelocity = Vector3.zero;
         SetAnimatorFloat(_hashXAxis, 0f);
         SetAnimatorFloat(_hashYAxis, 0f);
@@ -181,7 +186,8 @@ public class MovementComponent : MonoBehaviour
 
     private void SyncAnimationFromSource()
     {
-        _rb.linearVelocity = Vector3.zero;
+        if (!isInFlight)
+            _rb.linearVelocity = Vector3.zero;
         
         if (syncAnimationSource != null)
         {

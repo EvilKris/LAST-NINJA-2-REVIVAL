@@ -1,0 +1,13 @@
+The AnimatorOverrideController is a dictionary keyed by the original clip name from the Animator Controller asset. 
+
+If these files are accidentally deleted please reproduce, at the moment they have animations but can be reproduced with clips of only 1 frame.
+
+Create clips with these names:
+
+Replaceable_Motion_Base
+ReplaceableThrow-Attacker
+ReplaceableThrow-Victim
+
+Animation import controls do not matter, as each clip will have it's own settings. 
+
+Names in code must match the placeholder clip name in the enemy's Animator Controller.
