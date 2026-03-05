@@ -57,7 +57,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     private bool _isBlocking;
 
     private const string CLIP_SLOT_KEY = "Replaceable_Motion_Base";
-    private static readonly int HashIsAction = Animator.StringToHash("isAction");
+    private readonly int HashIsAction = Animator.StringToHash("isAction");
 
     [Header("Motion State")]
     private float _lastNormalizedTime;
@@ -260,17 +260,18 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     {
         if (!_isCharging) return;
 
-        // Check if we're in a clinch - if so, reset charge and cancel the release
+        // Check if we're in a clinch - charged attacks are cancelled, but a tap (tier 0) still fires a clinch light attack
         if (_clinchModule != null && _clinchModule.IsClinching)
         {
-            // Reset charging state - charge is lost if released during clinch
+            bool hasTier = CurrentTier > 0;
             _isCharging = false;
             _currentChargeTimer = 0f;
             _cachedCurrentTier = 0;
             _cachedChargeProgress = 0f;
             _lastPlayedTierSfx = -1;
             OnChargeStateChanged?.Invoke(0, 0f);
-            return;
+            if (hasTier) return; // charged attack is discarded in clinch
+            // fall through so tier-0 release reaches ExecuteLightAttack below
         }
 
 
@@ -334,6 +335,16 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     public void ExecuteLightAttack()
     {
         if (_health.IsDead) return;
+
+        //if (_activeMove != null && !_canAcceptComboInput) return;
+
+        if (_clinchModule != null && _clinchModule.IsClinching)
+        {
+            _clinchModule.ExecuteClinchLightAttack();
+            _animator.SetBool(HashIsAction, true);
+            return;
+        }
+
         if (_activeMove != null && !_canAcceptComboInput) return;
 
         if (Time.time - _lastAttackTime > COMBO_RESET_TIME) _comboIndex = 0;

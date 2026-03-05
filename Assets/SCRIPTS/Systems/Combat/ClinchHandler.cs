@@ -77,14 +77,19 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     private const string ThrowAttackerSlotKey = "ReplaceableThrow-Attacker"; //do not change the names of these clips in the Animator
     private const string ThrowVictimSlotKey = "ReplaceableThrow-Victim"; //do not change the names of these clips in the Animator
     
+
+
     private static readonly int HashInputX = Animator.StringToHash("Input_XFloat");
     private static readonly int HashInputY = Animator.StringToHash("Input_YFloat");
     private static readonly int HashWheelThrow = Animator.StringToHash("t_WheelThrow");
     private static readonly int HashBreakClinch = Animator.StringToHash("t_BreakClinch");
     private static readonly int HashIsRunning = Animator.StringToHash("isRunningBool");
-    private int HashInClinch = Animator.StringToHash("b_InClinch");
+    private readonly int HashInClinch = Animator.StringToHash("b_InClinch");
+    private readonly int HashIsAction = Animator.StringToHash("isAction");
+
     private static readonly int HashIsGrounded = Animator.StringToHash("b_isGrounded");
     private static readonly int HashGettingUp = Animator.StringToHash("t_GettingUp");
+    private static readonly int HashClinchLightAtk = Animator.StringToHash("t_ClinchLightAtk");
     #endregion
 
     #region Public Properties
@@ -214,6 +219,17 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _throwDirection = transform.forward;
         _isExecutingThrow = true;
         _throwLaunchFired = false;
+    }
+
+    public void ExecuteClinchLightAttack()
+    {
+       
+        if (!_isClinching) return;
+        if (_enemyAnimator == null) return;
+
+
+        _animator.SetTrigger(HashClinchLightAtk);
+        _enemyAnimator.SetTrigger(HashClinchLightAtk);
     }
 
     public void BreakClinch()
@@ -649,6 +665,8 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
             HandleThrowExit();
         else if (exitEvent == AnimationExitEvent.BreakClinch)
             HandleBreakToriExit();
+        else if (exitEvent == AnimationExitEvent.AttackEnded)
+            _animator.SetBool(HashIsAction, false);
     }
 
     private void HandleBreakToriExit()

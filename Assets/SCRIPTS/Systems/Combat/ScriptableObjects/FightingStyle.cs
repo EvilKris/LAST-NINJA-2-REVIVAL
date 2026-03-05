@@ -19,7 +19,7 @@ public class FightingStyle : ScriptableObject
     [Header("Clinch Config - Close Range Grappling Attacks + Throws")] 
     public bool supportsClinching; // The toggle for your logic
     [Tooltip("Don't bother with these two if no Clinching")]
-    public CombatMove clinchKnee;  // Light attack in clinch
+    public ClinchAttack clinchLightAtk;  // Light attack in clinch
     public CombatThrow clinchThrowDefault; // Throw performed if no direction is input during throw release 
 
 

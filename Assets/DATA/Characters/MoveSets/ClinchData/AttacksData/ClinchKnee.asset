@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ee9c68efb2032646b2eb208b917b6cf, type: 3}
+  m_Name: ClinchKnee
+  m_EditorClassIdentifier: GameScripts::ClinchAttack
+  attackName: clinch-knee-tori
+  attackerAttackClip: {fileID: 7400000, guid: a0307ec51dbd2ad479b5bd0d4b419af5, type: 2}
+  victimAttackClip: {fileID: 7400000, guid: 5005327b5eb9b0d40aa7e71c64f2dbc4, type: 2}
+  damage: 10
+  reactionToTrigger: 2
+  audioEvents: []
+  hitStart: 0.33
+  hitEnd: 1
+  canCombo: 1
+  comboStart: 0.375
+  comboEnd: 1
