@@ -11,6 +11,8 @@ public class AnimationStateExitNotifier : StateMachineBehaviour
         AnimatorStateInfo stateInfo,
         int layerIndex)
     {
+        //remember - this activates even if the state is interrupted by a transition, so it can be used to trigger events on interruption as well
+
         var listeners = animator.GetComponents<IAnimationStateListener>();
 
         if (exitEvent == AnimationExitEvent.None) return;

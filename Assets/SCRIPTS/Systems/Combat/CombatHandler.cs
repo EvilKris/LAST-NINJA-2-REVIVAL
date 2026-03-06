@@ -43,7 +43,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     public float ChargeProgress => _currentChargeTimer % 1.0f; // For smooth UI bar filling
 
     [Header("Internal State")]
-    private CombatMove _activeMove;
+    private IActiveCombatMove _activeMove;
     private HashSet<Transform> _hitCache = new();
     private CombatHitbox[] _allHitboxes;
     private bool _hitboxActive;
@@ -67,8 +67,11 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     public bool IsAttacking => _activeMove != null;
     public bool IsAcrobatic => _isAcrobaticMove;
     public bool IsCharging => _isCharging;
+    public bool IsActiveClinchAttack => _activeMove is ClinchAttack;
     public AnimationClip ClinchThrowAttackerClip { get; private set; }
     public AnimationClip ClinchThrowVictimClip { get; private set; }
+    public AnimationClip ClinchLightAtkAttackerClip { get; private set; }
+    public AnimationClip ClinchLightAtkDefenderClip { get; private set; }
     public AnimatorOverrideController OverrideController => _overrideController;
 
     private void Awake()
@@ -112,6 +115,18 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         {
             ClinchThrowAttackerClip = null;
             ClinchThrowVictimClip = null;
+        }
+
+        // Pre-bake clinch light attack clips from the current style
+        if (currentStyle != null && currentStyle.clinchLightAtk != null)
+        {
+            ClinchLightAtkAttackerClip = currentStyle.clinchLightAtk.attackerAttackClip;
+            ClinchLightAtkDefenderClip = currentStyle.clinchLightAtk.victimAttackClip;
+        }
+        else
+        {
+            ClinchLightAtkAttackerClip = null;
+            ClinchLightAtkDefenderClip = null;
         }
                 
         // Check if the current style supports clinching
@@ -161,17 +176,20 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             bool shouldBeOpen = _activeMove.IsInHitWindow(currentTime);
             if (shouldBeOpen && !_hitboxActive)
             {
-                OpenHitbox((int)_activeMove.hitboxType);
+                OpenHitbox(GetHitboxType(_activeMove));
                 _hitboxActive = true;
             }
             else if (!shouldBeOpen && _hitboxActive)
             {
-                CloseHitbox((int)_activeMove.hitboxType);
+                CloseHitbox(GetHitboxType(_activeMove));
                 _hitboxActive = false;
             }
 
-            _canAcceptComboInput = _activeMove.IsInComboWindow(currentTime);
-            _canRotateDuringAttack = _activeMove.CanRotate(currentTime);
+            bool newComboState = _activeMove.IsInComboWindow(currentTime);
+            if (newComboState && !_canAcceptComboInput)
+                _animator.SetBool(HashIsAction, false);
+            _canAcceptComboInput = newComboState;
+            _canRotateDuringAttack = _activeMove is CombatMove cm && cm.CanRotate(currentTime);
             _movement.canRotate = _canRotateDuringAttack;
 
             UpdateAudioEvents(currentTime);
@@ -187,25 +205,27 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         {
             float currentTime = stateInfo.normalizedTime;
 
+            /*
             if (currentTime >= 1.0f)
             {
                 ResetCombatState();
                 return;
-            }
+            }*/
 
             if (currentTime > _lastNormalizedTime && _lastNormalizedTime >= 0)
             {
-                float deltaDistance = _activeMove.EvaluateMotionDelta(_lastNormalizedTime, currentTime);
-                if (deltaDistance > 0)
+                if (_activeMove is CombatMove moveCast)
                 {
-                    transform.position += transform.forward * deltaDistance;
+                    float deltaDistance = moveCast.EvaluateMotionDelta(_lastNormalizedTime, currentTime);
+                    if (deltaDistance > 0)
+                        transform.position += transform.forward * deltaDistance;
                 }
             }
             _lastNormalizedTime = currentTime;
         }
         else
         {
-            ResetCombatState();
+          //  ResetCombatState();
         }
     }
 
@@ -248,6 +268,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     public void StartCharging()
     {
         if (_health.IsDead) return;
+        // Block new charge if an action is still playing and the combo window hasn't opened
+        if (_animator.GetBool(HashIsAction) && (_activeMove == null || !_canAcceptComboInput)) return;
         _isCharging = true;
         _currentChargeTimer = 0f;
         _cachedCurrentTier = 0;
@@ -295,7 +317,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     public void ExecuteChargedAttack(int chargeTier)
     {
         if (_health.IsDead) return;
-        if (_activeMove != null && !_canAcceptComboInput) return;
+        if (_animator.GetBool(HashIsAction) && (_activeMove == null || !_canAcceptComboInput)) return;
 
         // Spike Out Logic: Tier 1 = List Index 0
         int moveIndex = chargeTier - 1;
@@ -336,8 +358,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     {
         if (_health.IsDead) return;
 
-        //if (_activeMove != null && !_canAcceptComboInput) return;
-
+        if (_activeMove != null && !_canAcceptComboInput) return;
+       
         if (_clinchModule != null && _clinchModule.IsClinching)
         {
             _clinchModule.ExecuteClinchLightAttack();
@@ -345,7 +367,6 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             return;
         }
 
-        if (_activeMove != null && !_canAcceptComboInput) return;
 
         if (Time.time - _lastAttackTime > COMBO_RESET_TIME) _comboIndex = 0;
 
@@ -360,7 +381,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     public void ExecuteHeavyAttack()
     {
         if (_health.IsDead) return;
-        if (_activeMove != null && !_canAcceptComboInput) return;
+        if (_animator.GetBool(HashIsAction) && (_activeMove == null || !_canAcceptComboInput)) return;
 
         // Check if in clinch - execute wheel throw instead
         if (_clinchModule != null && _clinchModule.IsClinching)
@@ -376,7 +397,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     public void ExecuteAcrobatics()
     {
-        if (_health.IsDead || _activeMove != null) return;
+        if (_health.IsDead) return;
+        if (_animator.GetBool(HashIsAction)) return;
 
         CombatMove flipMove = currentStyle.acrobaticFlip;
         if (flipMove == null) return;
@@ -392,7 +414,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     {
         if (move.animationClip == null) return;
 
-        _activeMove = move;
+        _activeMove = move; // CombatMove satisfies IActiveCombatMove
         _hitboxActive = false;
         _canAcceptComboInput = false;
         _lastNormalizedTime = -0.01f;
@@ -410,7 +432,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     private void ResetCombatState()
     {
         if (_activeMove != null && _hitboxActive)
-            CloseHitbox((int)_activeMove.hitboxType);
+            CloseHitbox(GetHitboxType(_activeMove));
 
         _activeMove = null;
         _hitboxActive = false;
@@ -418,6 +440,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         _canRotateDuringAttack = false;
         _isAcrobaticMove = false;
         _movement.canRotate = true;
+        _animator.SetBool(HashIsAction, false);
     }
 
     // --- Hitbox & Audio Helpers ---
@@ -429,7 +452,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         {
             if (hb.hitboxType == type)
             {
-                hb.SetDamage(_activeMove.damage, _activeMove.reactionToTrigger);
+                hb.SetDamage(_activeMove.Damage, _activeMove.ReactionToTrigger);
                 hb.Activate();
             }
         }
@@ -444,26 +467,70 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         }
     }
 
+    // Returns the hitbox type for a move; clinch attacks use Fist by default
+    private static int GetHitboxType(IActiveCombatMove move)
+        => move is CombatMove cm ? (int)cm.hitboxType : (int)HitboxType.Fist;
+
+    // Called by ClinchHandler when a clinch light attack is in progress so that
+    // CombatHandler can track audio events, hit windows and combo windows.
+    public void NotifyClinchAttackActive(ClinchAttack attack)
+    {
+        _activeMove = attack;
+        _hitboxActive = false;
+        _canAcceptComboInput = false;
+        _lastNormalizedTime = -0.01f;
+        ClearHitCache();
+        ResetAudioEvents();
+    }
+
+    public void NotifyClinchAttackEnded()
+    {
+        if (_activeMove is ClinchAttack && _hitboxActive)
+            CloseHitbox(GetHitboxType(_activeMove));
+        _activeMove = null;
+        _hitboxActive = false;
+        _canAcceptComboInput = false;
+    }
+
+    // Called each frame by ClinchHandler while the clinch light attack animation is playing
+    public void TickClinchAttack(float normalizedTime)
+    {
+        bool shouldBeOpen = _activeMove.IsInHitWindow(normalizedTime);
+        if (shouldBeOpen && !_hitboxActive)
+        {
+            OpenHitbox(GetHitboxType(_activeMove));
+            _hitboxActive = true;
+        }
+        else if (!shouldBeOpen && _hitboxActive)
+        {
+            CloseHitbox(GetHitboxType(_activeMove));
+            _hitboxActive = false;
+        }
+
+        _canAcceptComboInput = _activeMove.IsInComboWindow(normalizedTime);
+        UpdateAudioEvents(normalizedTime);
+    }
+
     private void UpdateAudioEvents(float normalizedTime)
     {
-        if (_activeMove.audioEvents == null) return;
-        for (int i = 0; i < _activeMove.audioEvents.Length; i++)
+        if (_activeMove.AudioEvents == null) return;
+        for (int i = 0; i < _activeMove.AudioEvents.Length; i++)
         {
-            var ev = _activeMove.audioEvents[i];
+            var ev = _activeMove.AudioEvents[i];
             if (!ev.hasPlayed && normalizedTime >= ev.triggerTime)
             {
                 JSAM.AudioManager.PlaySound(ev.sound);
-                _activeMove.audioEvents[i].hasPlayed = true;
+                _activeMove.AudioEvents[i].hasPlayed = true;
             }
         }
     }
 
     private void ResetAudioEvents()
     {
-        if (_activeMove?.audioEvents == null) return;
-        for (int i = 0; i < _activeMove.audioEvents.Length; i++)
+        if (_activeMove?.AudioEvents == null) return;
+        for (int i = 0; i < _activeMove.AudioEvents.Length; i++)
         {
-            _activeMove.audioEvents[i].hasPlayed = false;
+            _activeMove.AudioEvents[i].hasPlayed = false;
         }
     }
 
@@ -506,6 +573,6 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     public void OnAnimationStateExit(int layerIndex, AnimationExitEvent exitEvent)
     {
         if (exitEvent == AnimationExitEvent.AttackEnded)
-            _animator.SetBool(HashIsAction, false);
+            ResetCombatState();
     }
 }

@@ -11,7 +11,7 @@ public struct AnimationAudioEvent
 }
 
 [CreateAssetMenu(fileName = "NewMove", menuName = "Combat/Move")]
-public class CombatMove : ScriptableObject
+public class CombatMove : ScriptableObject, IActiveCombatMove
 {
     // ─────────────────────────────────────────────
     // VISUALS
@@ -81,6 +81,14 @@ public class CombatMove : ScriptableObject
     [Header("Rotation Allowance (Normalized)")]
     [Tooltip("Allows the player to rotate (but not move) during this portion of the attack. 0 = no rotation allowed.")]
     [Range(0f, 1f)] public float rotationAllowanceEnd = 0f;
+
+    // ─────────────────────────────────────────────
+    // IActiveCombatMove
+    // ─────────────────────────────────────────────
+
+    float IActiveCombatMove.Damage => damage;
+    HitReactionType IActiveCombatMove.ReactionToTrigger => reactionToTrigger;
+    AnimationAudioEvent[] IActiveCombatMove.AudioEvents => audioEvents;
 
     // ─────────────────────────────────────────────
     // CACHED DATA

@@ -76,6 +76,8 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     #region Animator Parameter Hashes
     private const string ThrowAttackerSlotKey = "ReplaceableThrow-Attacker"; //do not change the names of these clips in the Animator
     private const string ThrowVictimSlotKey = "ReplaceableThrow-Victim"; //do not change the names of these clips in the Animator
+    private const string LightAtkAttackerSlotKey = "ReplaceableLightAtk-Attacker"; //do not change the names of these clips in the Animator
+    private const string LightAtkDefenderSlotKey = "ReplaceableLightAtk-Defender"; //do not change the names of these clips in the Animator
     
 
 
@@ -112,6 +114,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     public void AttemptClinch(Transform target)
     {
         if (_isInClinchRecovery) return;
+        if (_animator != null && _animator.GetBool(HashIsAction)) return;
 
         HealthComponent targetHealth = target.GetComponent<HealthComponent>();
         if (targetHealth != null && targetHealth.IsDead) return;
@@ -223,13 +226,23 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
     public void ExecuteClinchLightAttack()
     {
-       
         if (!_isClinching) return;
         if (_enemyAnimator == null) return;
 
+        AnimationClip attackerClip = _combat.ClinchLightAtkAttackerClip;
+        AnimationClip defenderClip = _combat.ClinchLightAtkDefenderClip;
+        if (attackerClip == null || defenderClip == null) return;
+
+        _combat.OverrideController[LightAtkAttackerSlotKey] = attackerClip;
+
+        if (_enemyCombat != null)
+            _enemyCombat.OverrideController[LightAtkDefenderSlotKey] = defenderClip;
 
         _animator.SetTrigger(HashClinchLightAtk);
         _enemyAnimator.SetTrigger(HashClinchLightAtk);
+
+        if (_combat.currentStyle != null && _combat.currentStyle.clinchLightAtk != null)
+            _combat.NotifyClinchAttackActive(_combat.currentStyle.clinchLightAtk);
     }
 
     public void BreakClinch()
@@ -258,17 +271,28 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
     private void Update()
     {
-        if (!_isExecutingThrow || _throwLaunchFired) return;
-
-        if (_activeThrowData == null) return;
-
-        AnimatorStateInfo stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-        if (!stateInfo.IsName("ReplaceableThrow-Attacker")) return;
-
-        if (stateInfo.normalizedTime >= _activeThrowData.throwLaunchActivation)
+        if (_isExecutingThrow && !_throwLaunchFired)
         {
-            _throwLaunchFired = true;
-            LaunchEnemy(_activeThrowData);
+            if (_activeThrowData != null)
+            {
+                AnimatorStateInfo throwState = _animator.GetCurrentAnimatorStateInfo(0);
+                if (throwState.IsName("ReplaceableThrow-Attacker") &&
+                    throwState.normalizedTime >= _activeThrowData.throwLaunchActivation)
+                {
+                    _throwLaunchFired = true;
+                    LaunchEnemy(_activeThrowData);
+                }
+            }
+        }
+
+        // Drive hitbox and audio for the active clinch light attack
+        if (_combat.IsActiveClinchAttack)
+        {
+            AnimatorStateInfo lightAtkState = _animator.GetCurrentAnimatorStateInfo(0);
+            if (lightAtkState.IsName("ReplaceableLightAtk-Attacker"))
+            {
+                _combat.TickClinchAttack(lightAtkState.normalizedTime);
+            }
         }
     }
 
@@ -666,7 +690,10 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         else if (exitEvent == AnimationExitEvent.BreakClinch)
             HandleBreakToriExit();
         else if (exitEvent == AnimationExitEvent.AttackEnded)
+        {
             _animator.SetBool(HashIsAction, false);
+            _combat.NotifyClinchAttackEnded();
+        }
     }
 
     private void HandleBreakToriExit()
