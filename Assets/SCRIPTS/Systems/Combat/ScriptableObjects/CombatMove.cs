@@ -150,6 +150,17 @@ public class CombatMove : ScriptableObject, IActiveCombatMove
     public bool CanRotate(float normalizedTime)
         => rotationAllowanceEnd > 0f && normalizedTime <= rotationAllowanceEnd;
 
+    private void ResetRuntimeState()
+    {
+        if (audioEvents != null)
+        {
+            for (int i = 0; i < audioEvents.Length; i++)
+            {
+                audioEvents[i].hasPlayed = false;
+            }
+        }
+    }
+
 #if UNITY_EDITOR
     private void OnValidate()
     {
@@ -178,17 +189,6 @@ public class CombatMove : ScriptableObject, IActiveCombatMove
     private void OnEnable()
     {
         ResetRuntimeState();
-    }
-
-    private void ResetRuntimeState()
-    {
-        if (audioEvents != null)
-        {
-            for (int i = 0; i < audioEvents.Length; i++)
-            {
-                audioEvents[i].hasPlayed = false;
-            }
-        }
     }
 #endif
 }

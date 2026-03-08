@@ -968,12 +968,14 @@ MonoBehaviour:
   motionScale: 1
   damage: 5
   isHeavy: 0
+  reactionToTrigger: 1
   hitboxType: 0
   audioEvents:
   - triggerTime: 0
     sound: {fileID: 11400000, guid: e6ac0ca55c133c04585a8ba5c874503d, type: 2}
-  hitStart: 0.412
-  hitEnd: 0.612
+  hitStart: 0.247
+  hitEnd: 0.46
   canCombo: 1
-  comboStart: 0.6
-  comboEnd: 0.9
+  comboStart: 0.255
+  comboEnd: 0.64
+  rotationAllowanceEnd: 0

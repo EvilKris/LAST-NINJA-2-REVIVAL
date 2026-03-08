@@ -274,6 +274,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     /// </summary>
     public void OnAnimationStateExit(int layerIndex, AnimationExitEvent exitEvent)
     {
+        
         if (exitEvent == AnimationExitEvent.EndImmobilized)
             isImmobilized = false;
     }

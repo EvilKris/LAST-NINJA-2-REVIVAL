@@ -70,6 +70,10 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         ConfigureDeadLayer();
     }
 
+    /// <summary>
+    /// One-time static setup that configures physics layer collision rules for the 'Dead' layer.
+    /// Dead entities will only collide with the floor, preventing corpses from blocking gameplay.
+    /// </summary>
     private static void ConfigureDeadLayer()
     {
         if (_deadLayerConfigured) return;
@@ -126,17 +130,13 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         // Check if damage was fatal
         if (IsDead)
         {
-            HandleDeath(); // Trigger the sequence
-            return; // Exit early so we don't play a hit reaction on a corpse
-        }
-        else
-        {
-            // Entity survived - trigger hit reaction
-            OnHit?.Invoke();
+            HandleDeath();
+            return;
         }
 
+        // Entity survived - trigger hit reaction
+        OnHit?.Invoke();
 
-        // Trigger hit reaction only if alive
         if (_animator != null && type != HitReactionType.None)
         {
             SetHitAnimatorParameters(type);
@@ -144,6 +144,10 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         }
     }
 
+    /// <summary>
+    /// Handles all death logic: layer swap, events, effects, animator trigger,
+    /// material swap, and starting the cleanup coroutine.
+    /// </summary>
     private void HandleDeath()
     {
         // Switch to Dead layer so the corpse only collides with the floor
@@ -151,7 +155,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
             SetLayerRecursive(gameObject, _deadLayer);
 
         OnDeath?.Invoke();
-        Debug.Log($"{gameObject.name} has died. (Shibō - 死亡)");
+        //Debug.Log($"{gameObject.name} has died. (Shibō - 死亡)");
 
         // Play death effects using CharacterEffects SO
         if (characterEffects != null)
@@ -180,6 +184,9 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         StartCoroutine(DeathCleanupSequence());
     }
 
+    /// <summary>
+    /// Coroutine that waits for the death animation to finish, then destroys the GameObject.
+    /// </summary>
     private System.Collections.IEnumerator DeathCleanupSequence()
     {
         // Wait for the animation to play out (adjust 3.0f to match your clip length)
@@ -190,6 +197,11 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         Destroy(gameObject); // Remove from scene
     }
 
+    /// <summary>
+    /// Sets the Animator parameters that drive the hit-reaction blend tree
+    /// based on the <see cref="HitReactionType"/> of the incoming attack.
+    /// </summary>
+    /// <param name="type">The category of hit reaction to play.</param>
     private void SetHitAnimatorParameters(HitReactionType type)
     {
         // Organized your animator logic into a helper method
@@ -233,10 +245,16 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     /// <returns>Faction enum value</returns>
     public Faction GetFaction() => faction;
 
+    /// <summary>
+    /// Recursively sets the physics layer on <paramref name="obj"/> and all of its children.
+    /// </summary>
+    /// <param name="obj">Root GameObject to update.</param>
+    /// <param name="layer">Layer index to assign.</param>
     private static void SetLayerRecursive(GameObject obj, int layer)
     {
         obj.layer = layer;
-        for (int i = 0; i < obj.transform.childCount; i++)
-            SetLayerRecursive(obj.transform.GetChild(i).gameObject, layer);
+        // GetComponentsInChildren includes the root and avoids manual recursion
+        foreach (Transform child in obj.GetComponentsInChildren<Transform>(true))
+            child.gameObject.layer = layer;
     }
 }

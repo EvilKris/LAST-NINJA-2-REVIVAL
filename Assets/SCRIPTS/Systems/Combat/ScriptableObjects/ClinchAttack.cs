@@ -91,6 +91,17 @@ public class ClinchAttack : ScriptableObject, IActiveCombatMove
     public bool IsInComboWindow(float normalizedTime)
         => canCombo && normalizedTime >= comboStart && normalizedTime <= comboEnd;
 
+    private void ResetRuntimeState()
+    {
+        if (audioEvents != null)
+        {
+            for (int i = 0; i < audioEvents.Length; i++)
+            {
+                audioEvents[i].hasPlayed = false;
+            }
+        }
+    }
+
 #if UNITY_EDITOR
     private void OnValidate()
     {
@@ -118,17 +129,6 @@ public class ClinchAttack : ScriptableObject, IActiveCombatMove
     private void OnEnable()
     {
         ResetRuntimeState();
-    }
-
-    private void ResetRuntimeState()
-    {
-        if (audioEvents != null)
-        {
-            for (int i = 0; i < audioEvents.Length; i++)
-            {
-                audioEvents[i].hasPlayed = false;
-            }
-        }
     }
 #endif
 }

@@ -889,6 +889,19 @@ MonoBehaviour:
   directionThreshold: 0.7
   clinchCooldown: 0.2
   checkInterval: 1
+--- !u!114 &339859039
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 288377762}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 236c7353267fd2741bd903c727953e3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameScripts::CombatComboWindowDebugger
+  overrideMaterial: {fileID: 0}
 --- !u!4 &344570333 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 395502435249040696, guid: cde3b9c00f9ea3b4d8df249e25c6e7f0,
@@ -1908,7 +1921,7 @@ Transform:
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
   m_LocalRotation: {x: 0.20624357, y: 0.78083605, z: -0.3291045, w: 0.48933515}
-  m_LocalPosition: {x: 394.0557, y: 7.157978, z: 629.9548}
+  m_LocalPosition: {x: 396.7957, y: 7.1579833, z: 624.9048}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6318,6 +6331,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 339859030}
+    - targetCorrespondingSourceObject: {fileID: 80848986472197700, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 339859039}
   m_SourcePrefab: {fileID: 100100000, guid: 411878b1cc9a5d446aaa95b142dd4b7f, type: 3}
 --- !u!1001 &6911578228669481013
 PrefabInstance:
@@ -6400,7 +6417,7 @@ PrefabInstance:
     - target: {fileID: 3812518784804858749, guid: 9f00625944c8da040a3c0dfdb84c4449,
         type: 3}
       propertyPath: m_CullingMode
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3812518784804858749, guid: 9f00625944c8da040a3c0dfdb84c4449,
         type: 3}

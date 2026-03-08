@@ -168,9 +168,9 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         if (_activeMove == null) return;
 
         var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-        if (stateInfo.IsName("ReplaceableAttack"))
-        {
-            float currentTime = stateInfo.normalizedTime;
+        if (!stateInfo.IsName("ReplaceableAttack")) return;
+
+        float currentTime = stateInfo.normalizedTime;
 
             // Hitbox Management
             bool shouldBeOpen = _activeMove.IsInHitWindow(currentTime);
@@ -193,7 +193,6 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             _movement.canRotate = _canRotateDuringAttack;
 
             UpdateAudioEvents(currentTime);
-        }
     }
 
     private void FixedUpdate()
@@ -430,7 +429,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     }
 
     private void ResetCombatState()
-    {
+    {   
+
         if (_activeMove != null && _hitboxActive)
             CloseHitbox(GetHitboxType(_activeMove));
 
@@ -572,7 +572,15 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     public void OnAnimationStateExit(int layerIndex, AnimationExitEvent exitEvent)
     {
-        if (exitEvent == AnimationExitEvent.AttackEnded)
-            ResetCombatState();
+        if (exitEvent == AnimationExitEvent.ClipEnded)
+        {
+            /*
+            if (_canAcceptComboInput)
+            {
+                Debug.Break();
+                return;
+            }*/
+                ResetCombatState();
+        }
     }
 }

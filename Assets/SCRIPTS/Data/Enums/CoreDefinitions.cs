@@ -70,11 +70,13 @@ public enum HitReactionType
     Launch       // Air combo starter
 }
 
+[System.Flags]
 public enum AnimationExitEvent
 {
-    None,
-    AttackEnded,
-    EndImmobilized,
-    EndThrow,
-    BreakClinch,
+    None            = 0,
+    ClipEnded     = 1 << 0,
+    ClipInterrupted = 1 << 1,
+    EndImmobilized  = 1 << 2,
+    EndThrow        = 1 << 3,
+    BreakClinch     = 1 << 4,
 }

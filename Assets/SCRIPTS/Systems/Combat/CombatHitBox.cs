@@ -67,7 +67,7 @@ public class CombatHitbox : MonoBehaviour
                     Instantiate(hitEffectPrefab, contactPoint, Quaternion.identity);
                 }
 
-                Debug.Log($"{_owner.name} hit {victimRoot.name}!");
+                // Debug.Log($"{_owner.name} hit {victimRoot.name}!");
             }
         }
     }

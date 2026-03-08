@@ -468,13 +468,13 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
         // Mark clinch as active
         _isClinching = true;
-        
+
         // Disable collision between player and enemy to prevent physics glitches
         if (_playerCollider != null && _enemyCollider != null)
-        {
             Physics.IgnoreCollision(_playerCollider, _enemyCollider, true);
-        }
 
+        if (CameraZoneManager.Instance != null)
+            CameraZoneManager.Instance.SetClinchZoom(true);
     }
 
     public void EndClinchTori()
@@ -491,6 +491,9 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
         if (_movement != null)
             _movement.isClinchActive = false;
+
+        if (CameraZoneManager.Instance != null)
+            CameraZoneManager.Instance.SetClinchZoom(false);
     }
 
     public void EndClinchUke()
@@ -596,6 +599,9 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
             _animator.SetBool(HashInClinch, false);
         }
 
+        if (CameraZoneManager.Instance != null)
+            CameraZoneManager.Instance.SetClinchZoom(false);
+
         _grabbedEnemy = null;
         _enemyAnimator = null;
         _enemyRigidbody = null;
@@ -685,14 +691,17 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     #region Animation State Callbacks   
     public void OnAnimationStateExit(int layerIndex, AnimationExitEvent exitEvent)
     {
+
+
         if (exitEvent == AnimationExitEvent.EndThrow)
             HandleThrowExit();
         else if (exitEvent == AnimationExitEvent.BreakClinch)
             HandleBreakToriExit();
-        else if (exitEvent == AnimationExitEvent.AttackEnded)
+        else if (exitEvent == AnimationExitEvent.ClipEnded)
         {
             _animator.SetBool(HashIsAction, false);
             _combat.NotifyClinchAttackEnded();
+            
         }
     }
 

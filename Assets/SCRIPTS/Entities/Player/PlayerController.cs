@@ -185,12 +185,18 @@ public class PlayerController : MonoBehaviour
 
         float moveSqrMagnitude = _moveInput.sqrMagnitude;
         bool isMoving = moveSqrMagnitude > _moveThresholdSqr;
+        bool isAttacking = _combat != null && _combat.IsAttacking;
 
-        // Update camera yaw only when movement state changes
-        if (isMoving != _wasMovingLastFrame)
+        // Always refresh camera yaw when an attack ends so movement resumes with a correct direction
+        if (!isAttacking && _wasMovingLastFrame != isMoving)
         {
             _cachedCameraYaw = GetCurrentCameraYaw();
             _wasMovingLastFrame = isMoving;
+        }
+        else if (!isAttacking && isMoving)
+        {
+            // Refresh every frame while moving so direction stays accurate
+            _cachedCameraYaw = GetCurrentCameraYaw();
         }
 
         // Convert input to camera-relative direction
@@ -214,25 +220,26 @@ public class PlayerController : MonoBehaviour
         // Drive the MovementComponent - all movement and rotation logic is delegated to MovementComponent
         if (_currentTarget != null)
         {
-            _movement.ProcessMovement(moveDir, _currentTarget.GetLockOnPoint().position);
+            // Prevent physical movement during attacks but keep facing the target
+            if (isAttacking)
+                _movement.ProcessMovement(Vector3.zero, _currentTarget.GetLockOnPoint().position);
+            else
+                _movement.ProcessMovement(moveDir, _currentTarget.GetLockOnPoint().position);
         }
         else
         {
-            if (_combat != null && _combat.IsAttacking)
+            if (isAttacking)
             {
-                // During attacks, conditionally allow rotation based on combat state
+                // Pass zero so ProcessMovement zeroes velocity, stops the run bool, and clears animator floats.
+                // Rotation during the attack window is handled separately below.
+                _movement.ProcessMovement(Vector3.zero);
+
                 if (_combat.CanRotateDuringAttack && isMoving)
                 {
-                    // Temporarily enable rotation and let MovementComponent handle it
                     bool prevCanRotate = _movement.canRotate;
                     _movement.canRotate = true;
-                    _movement.ProcessMovement(Vector3.zero);
                     _movement.RotateTowardsDirection(moveDir);
                     _movement.canRotate = prevCanRotate;
-                }
-                else
-                {
-                    _movement.ProcessMovement(Vector3.zero);
                 }
             }
             else
