@@ -575,6 +575,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   activePriority: 20
   inactivePriority: 10
+  clinchFovOffset: -20
+  clinchEaseInDuration: 0.4
+  clinchEaseOutDuration: 0.6
 --- !u!1001 &225718912
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6206,7 +6209,7 @@ PrefabInstance:
     - target: {fileID: 6680183781471399556, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
         type: 3}
       propertyPath: m_CullingMode
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6943194280159611918, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
         type: 3}

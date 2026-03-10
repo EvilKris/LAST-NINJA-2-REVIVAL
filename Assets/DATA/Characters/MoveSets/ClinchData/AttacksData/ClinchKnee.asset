@@ -15,11 +15,11 @@ MonoBehaviour:
   attackName: clinch-knee-tori
   attackerAttackClip: {fileID: 7400000, guid: a0307ec51dbd2ad479b5bd0d4b419af5, type: 2}
   victimAttackClip: {fileID: 7400000, guid: 5005327b5eb9b0d40aa7e71c64f2dbc4, type: 2}
-  damage: 10
-  reactionToTrigger: 2
+  damage: 1
+  reactionToTrigger: 0
   audioEvents: []
   hitStart: 0.33
   hitEnd: 1
   canCombo: 1
-  comboStart: 0.375
+  comboStart: 0.36
   comboEnd: 1

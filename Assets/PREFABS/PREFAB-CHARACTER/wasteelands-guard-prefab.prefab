@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &136051382700955294
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6702585388434576692}
+  m_Layer: 6
+  m_Name: Clinch-Position
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6702585388434576692
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 136051382700955294}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.15}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7064148311014502663}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3020985925964868895
 GameObject:
   m_ObjectHideFlags: 0
@@ -554,6 +585,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 6bf9d7e9389c6f84ead045eaafcd77ca,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6702585388434576692}
     - targetCorrespondingSourceObject: {fileID: -6874584590210671055, guid: 6bf9d7e9389c6f84ead045eaafcd77ca,
         type: 3}
       insertIndex: -1
@@ -605,6 +640,12 @@ Transform:
 --- !u!4 &4979518521224644829 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -6874584590210671055, guid: 6bf9d7e9389c6f84ead045eaafcd77ca,
+    type: 3}
+  m_PrefabInstance: {fileID: 7314509948728940268}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &7064148311014502663 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 6bf9d7e9389c6f84ead045eaafcd77ca,
     type: 3}
   m_PrefabInstance: {fileID: 7314509948728940268}
   m_PrefabAsset: {fileID: 0}
@@ -683,6 +724,12 @@ MonoBehaviour:
   rotationSpeed: 60
   canRotate: 1
   currentMoveDir: {x: 0, y: 0, z: 0}
+  isMovementLocked: 0
+  isImmobilized: 0
+  isInFlight: 0
+  isClinchActive: 0
+  syncAnimationSource: {fileID: 0}
+  syncAnimatorSpeed: 0
 --- !u!114 &1375097959745992342
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -697,7 +744,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CombatHandler
   ChargeCount: 1
   currentStyle: {fileID: 11400000, guid: f0d2b02056d92274ca48f8a72c895230, type: 2}
-  ClinchRecovery: 3
   specialMoveDuration: 1
 --- !u!114 &8699775234062316184
 MonoBehaviour:
@@ -716,7 +762,6 @@ MonoBehaviour:
   faction: 2
   lockOnPoint: {fileID: 0}
   isInvulnerable: 0
-  characterAudioSO: {fileID: 11400000, guid: 3a7fdf66a8af2ec4fae3651f64a6ef25, type: 2}
   characterEffects: {fileID: 11400000, guid: 8fea334dc66e4b943a70209e5f9500c4, type: 2}
 --- !u!114 &6703860365585140426
 MonoBehaviour:

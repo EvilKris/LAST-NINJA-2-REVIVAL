@@ -106,7 +106,8 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
 
         if (isMoving)
         {
-            _rb.linearVelocity = moveDir * movementSpeed;
+            float speedScale = isClinchActive ? 0.333f : 1f;
+            _rb.linearVelocity = moveDir * movementSpeed * speedScale;
             RotateTowardsDirection(moveDir);
 
             // Freestyle uses Y-axis for speed, X is ignored
@@ -145,7 +146,10 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
 
         // Move the Physics Body
         if (!isInFlight)
-            _rb.linearVelocity = moveDir * movementSpeed;
+        {
+            float speedScale = isClinchActive ? 0.333f : 1f;
+            _rb.linearVelocity = movementSpeed * speedScale * moveDir;
+        }
 
         // Always face the Target
         Vector3 dirToTarget = (lookAtPos - transform.position);
@@ -163,8 +167,9 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
         if (!canRotate || dir.sqrMagnitude < 0.01f)
             return;
 
+        float effectiveRotationSpeed = isClinchActive ? rotationSpeed * 0.25f : rotationSpeed;
         Quaternion targetRot = Quaternion.LookRotation(dir);
-        _rb.MoveRotation(Quaternion.Slerp(_rb.rotation, targetRot, rotationSpeed * Time.fixedDeltaTime));
+        _rb.MoveRotation(Quaternion.Slerp(_rb.rotation, targetRot, effectiveRotationSpeed * Time.fixedDeltaTime));
     }
 
     private void UpdateAnimatorBooleans(bool isMoving)
@@ -213,10 +218,10 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
         if (syncAnimationSource != null)
         {
             // Mirror the attacker's animation parameters for synchronized movement.
-            // X is negated because the enemy faces the opposite direction (180 degrees),
-            // so their local left/right is flipped relative to the attacker.
+            // X is negated because the enemy faces 180 degrees opposite, so local left/right is flipped.
+            // Y is not negated: both actors share the same forward/backward blend direction.
             SetAnimatorFloat(_hashXAxis, -syncAnimationSource._lastXAxis);
-            SetAnimatorFloat(_hashYAxis, -syncAnimationSource._lastYAxis);
+            SetAnimatorFloat(_hashYAxis, syncAnimationSource._lastYAxis);
             
             // Sync running state as well
             bool sourceIsRunning = syncAnimationSource._lastIsRunning;

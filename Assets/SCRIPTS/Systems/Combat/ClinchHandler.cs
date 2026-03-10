@@ -120,21 +120,22 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         if (targetHealth != null && targetHealth.IsDead) return;
 
         // Reset all triggers and state parameters on self before starting a fresh clinch
-        _animator.ResetTrigger("t_StartClinch");
         _animator.ResetTrigger(HashWheelThrow);
         _animator.ResetTrigger(HashBreakClinch);
         _animator.ResetTrigger(HashGettingUp);       
-        _animator.SetInteger("ClinchRole", 0);
 
         _grabbedEnemy = target;
         _enemyAnimator = target.GetComponent<Animator>();
 
 
+        _animator.ResetTrigger("t_StartClinch");
         _enemyAnimator.ResetTrigger("t_StartClinch");
+        _animator.SetInteger("ClinchRole", 0);
+        _enemyAnimator.SetInteger("ClinchRole", 0);
+        
         _enemyAnimator.ResetTrigger(HashWheelThrow);
         _enemyAnimator.ResetTrigger(HashBreakClinch);
         _enemyAnimator.ResetTrigger(HashGettingUp);
-        _enemyAnimator.SetInteger("ClinchRole", 0);
 
         _enemyMovement = target.GetComponent<MovementComponent>();
         _enemyMovement.isImmobilized = false;
@@ -163,8 +164,10 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _animator.SetTrigger("t_StartClinch");
         _enemyAnimator.SetTrigger("t_StartClinch"); 
 
-        _enemyAnimator.SetBool(HashInClinch, true);
         _animator.SetBool(HashInClinch, true);
+        _enemyAnimator.SetBool(HashInClinch, true);
+
+
 
         // Disable AI brain for the full duration of the clinch
         if (_enemyBrain != null)
@@ -452,15 +455,21 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         //1. attacker logic
         //2. defender logic 
       
-        _animator.SetInteger("ClinchRole", 1);
-        _enemyAnimator.SetInteger("ClinchRole", 2);
 
+
+        
         // Lock both animators to speed 1 so locomotion blend trees play at the same rate.
         // Original speeds are captured here and restored when the clinch ends.
         _playerOriginalAnimSpeed = _animator.speed;
         _enemyOriginalAnimSpeed = _enemyAnimator.speed;
         _animator.speed = 1f;
         _enemyAnimator.speed = 1f;
+
+        _animator.SetInteger("ClinchRole", 1);
+        _enemyAnimator.SetInteger("ClinchRole", 2);
+
+
+        
 
         // Lock attacker animator.speed so MovementComponent.Update cannot overwrite the 1f we set.
         if (_movement != null)
@@ -643,7 +652,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         }
 
         // Create constraint source pointing to the attacker
-        ConstraintSource source = new ConstraintSource
+        ConstraintSource source = new()
         {
             sourceTransform = transform,
             weight = 1f
@@ -653,7 +662,11 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _enemyParentConstraint.AddSource(source);
         
         // Set translation and rotation offsets to maintain relative position/rotation
-        _enemyParentConstraint.SetTranslationOffset(0, new Vector3(0f, 0f, _clinchDistance));
+        Transform clinchPositionMarker = transform.Find("Clinch-Position");
+        Vector3 translationOffset = clinchPositionMarker != null
+            ? clinchPositionMarker.localPosition
+            : new Vector3(0f, 0f, _clinchDistance);
+        _enemyParentConstraint.SetTranslationOffset(0, translationOffset);
         _enemyParentConstraint.SetRotationOffset(0, new Vector3(0f, 180f, 0f));
         
         // Lock axes as needed - typically you want to maintain Y rotation
