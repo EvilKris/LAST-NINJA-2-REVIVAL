@@ -575,7 +575,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   activePriority: 20
   inactivePriority: 10
-  clinchFovOffset: -20
+  clinchFovOffset: -30
   clinchEaseInDuration: 0.4
   clinchEaseOutDuration: 0.6
 --- !u!1001 &225718912
@@ -6250,6 +6250,11 @@ PrefabInstance:
         type: 3}
       propertyPath: rotationSpeed
       value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 7721976591884777899, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
+      propertyPath: useRootMotion
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7721976591884777899, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
         type: 3}

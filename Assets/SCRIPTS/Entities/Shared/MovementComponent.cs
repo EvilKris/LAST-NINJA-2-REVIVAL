@@ -16,11 +16,16 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     public float attackSpeed = 1f;
     [Tooltip("Controls acrobatic animation speed (flips, climb, etc.). 1.0 = normal, 0.5 = half speed, 2.0 = double speed.")]
     [Range(1.5f, 10f)]
-    public float acrobaticSpeed = 5f;   
+    public float acrobaticSpeed = 5f;
 
     [Header("Movement Settings")]
-
     public float rotationSpeed = 12f;
+
+    [Header("Root Motion Settings")]
+    [Tooltip("Use root motion for movement instead of velocity-based movement")]
+    public bool useRootMotion = false;
+    [Tooltip("Additional scaling applied to root motion movement")]
+    public float rootMotionScale = 1f;
 
     private Rigidbody _rb;
     private Animator _animator;
@@ -39,6 +44,9 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     private int _hashIsRunning;
     private int _hashXAxis;
     private int _hashYAxis;
+    private int _hashRawXAxis;
+    private int _hashRawYAxis;
+    private int _hashRawIsRunning;
 
     // Cached animator values to avoid redundant SetFloat/SetBool calls
     private bool _lastIsRunning;
@@ -63,7 +71,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
         _animator = GetComponent<Animator>();
 
         // CRITICAL: Disable root motion by default - MovementComponent handles ALL movement via physics
-        // Only specific systems (like ClinchHandler throws) should temporarily enable root motion
+        // We manually handle root motion in OnAnimatorMove when useRootMotion is enabled
         if (_animator != null)
             _animator.applyRootMotion = false;
 
@@ -76,6 +84,9 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
         _hashIsRunning = Animator.StringToHash("isRunningBool");
         _hashXAxis = Animator.StringToHash("Input_XFloat");
         _hashYAxis = Animator.StringToHash("Input_YFloat");
+        _hashRawXAxis = Animator.StringToHash("Input_X");
+        _hashRawYAxis = Animator.StringToHash("Input_Y");
+        _hashRawIsRunning = Animator.StringToHash("isRunning");
     }
 
     /// <summary>
@@ -106,14 +117,33 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
 
         if (isMoving)
         {
-            float speedScale = isClinchActive ? 0.333f : 1f;
-            _rb.linearVelocity = moveDir * movementSpeed * speedScale;
-            RotateTowardsDirection(moveDir);
+            // Only apply velocity if NOT using root motion
+            // Root motion will handle movement in OnAnimatorMove
+            if (!useRootMotion && !isClinchActive)
+            {
+                _rb.linearVelocity = moveDir * movementSpeed;
+            }
 
-            // Freestyle uses Y-axis for speed, X is ignored
-            float magnitude = Mathf.Sqrt(sqrMagnitude);
-            SetAnimatorFloat(_hashYAxis, magnitude);
-            SetAnimatorFloat(_hashXAxis, 0f);
+            if (!isClinchActive)
+            {
+                RotateTowardsDirection(moveDir);
+                // Freestyle uses Y-axis for speed, X is ignored
+                float magnitude = Mathf.Sqrt(sqrMagnitude);
+                SetAnimatorFloat(_hashYAxis, magnitude);
+                SetAnimatorFloat(_hashXAxis, 0f);
+            }
+            else
+            {
+                // During clinch: rotate toward input and use local-space X/Y so the
+                // blend tree drives all directions (forward, back, strafe) correctly.
+                RotateTowardsDirection(moveDir);
+                Vector3 localDir = transform.InverseTransformDirection(moveDir);
+                SetAnimatorFloat(_hashXAxis, localDir.x);
+                SetAnimatorFloat(_hashYAxis, localDir.z);
+                _animator.SetFloat(_hashRawXAxis, localDir.x);
+                _animator.SetFloat(_hashRawYAxis, localDir.z);
+                _animator.SetBool(_hashRawIsRunning, true);
+            }
         }
         else
         {
@@ -141,15 +171,13 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
 
         currentMoveDir = moveDir;
         bool isMoving = moveDir.sqrMagnitude > 0.0001f;
-        
+
         UpdateAnimatorBooleans(isMoving);
 
-        // Move the Physics Body
-        if (!isInFlight)
-        {
-            float speedScale = isClinchActive ? 0.333f : 1f;
-            _rb.linearVelocity = movementSpeed * speedScale * moveDir;
-        }
+        // Only apply velocity if NOT using root motion
+        // Root motion will handle movement in OnAnimatorMove
+        if (!useRootMotion && !isInFlight && !isClinchActive)
+            _rb.linearVelocity = movementSpeed * moveDir;
 
         // Always face the Target
         Vector3 dirToTarget = (lookAtPos - transform.position);
@@ -161,7 +189,29 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
         SetAnimatorFloat(_hashXAxis, localDir.x);
         SetAnimatorFloat(_hashYAxis, localDir.z);
     }
-    
+
+    /// <summary>
+    /// Called by Unity when Animator updates - handle root motion here
+    /// Uses root motion's magnitude (animation speed) but applies it in currentMoveDir direction
+    /// This prevents the "offset drift" problem while preserving animation-driven speed
+    /// </summary>
+    private void OnAnimatorMove()
+    {
+        if (!useRootMotion || isImmobilized || isMovementLocked || isInFlight || isClinchActive)
+            return;
+
+        // Don't apply root motion if not moving (prevents idle animation drift)
+        if (currentMoveDir.sqrMagnitude < 0.0001f)
+            return;
+
+        // Use root motion's magnitude (animation speed) but currentMoveDir's direction
+        // This gives us animation-accurate speed without directional drift
+        float rootMotionDistance = _animator.deltaPosition.magnitude;
+        Vector3 movement = currentMoveDir.normalized * rootMotionDistance * rootMotionScale;
+
+        _rb.MovePosition(_rb.position + movement);
+    }
+
     public void RotateTowardsDirection(Vector3 dir)
     {
         if (!canRotate || dir.sqrMagnitude < 0.01f)
@@ -197,24 +247,44 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
 
     private void StopVelocity()
     {
-        if (isInFlight) return;
-        _rb.linearVelocity = Vector3.zero;
+        if (!isClinchActive && !isInFlight)
+            _rb.linearVelocity = Vector3.zero;
+        else if (isInFlight)
+            return;
+
         SetAnimatorFloat(_hashXAxis, 0f);
         SetAnimatorFloat(_hashYAxis, 0f);
+        _animator.SetFloat(_hashRawXAxis, 0f);
+        _animator.SetFloat(_hashRawYAxis, 0f);
+        _animator.SetBool(_hashRawIsRunning, false);
     }
 
     public void ZeroVelocity()
     {
-        if (isInFlight) return;
+        if (isInFlight || isClinchActive) return;
         _rb.linearVelocity = Vector3.zero;
         _rb.angularVelocity = Vector3.zero;
+    }
+
+    public void ZeroAnimatorInputs()
+    {
+        _lastXAxis = 1f;  // force dirty so SetAnimatorFloat actually writes
+        _lastYAxis = 1f;
+        SetAnimatorFloat(_hashXAxis, 0f);
+        SetAnimatorFloat(_hashYAxis, 0f);
+        _animator.SetFloat(_hashRawXAxis, 0f);
+        _animator.SetFloat(_hashRawYAxis, 0f);
+        _lastIsRunning = true; // force dirty
+        _animator.SetBool(_hashIsRunning, false);
+        _lastIsRunning = false;
+        _animator.SetBool(_hashRawIsRunning, false);
     }
 
     private void SyncAnimationFromSource()
     {
         if (!isInFlight)
             _rb.linearVelocity = Vector3.zero;
-        
+
         if (syncAnimationSource != null)
         {
             // Mirror the attacker's animation parameters for synchronized movement.
@@ -222,7 +292,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
             // Y is not negated: both actors share the same forward/backward blend direction.
             SetAnimatorFloat(_hashXAxis, -syncAnimationSource._lastXAxis);
             SetAnimatorFloat(_hashYAxis, syncAnimationSource._lastYAxis);
-            
+
             // Sync running state as well
             bool sourceIsRunning = syncAnimationSource._lastIsRunning;
             if (_lastIsRunning != sourceIsRunning)
@@ -279,7 +349,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     /// </summary>
     public void OnAnimationStateExit(int layerIndex, AnimationExitEvent exitEvent)
     {
-        
+
         if (exitEvent == AnimationExitEvent.EndImmobilized)
             isImmobilized = false;
     }

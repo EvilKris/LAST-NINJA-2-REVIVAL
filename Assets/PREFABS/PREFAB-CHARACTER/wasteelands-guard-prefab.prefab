@@ -574,6 +574,11 @@ PrefabInstance:
       objectReference: {fileID: 9100000, guid: d2fab7941ce7c2648917962e7e6e1d48, type: 2}
     - target: {fileID: 5866666021909216657, guid: 6bf9d7e9389c6f84ead045eaafcd77ca,
         type: 3}
+      propertyPath: m_AnimatePhysics
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 6bf9d7e9389c6f84ead045eaafcd77ca,
+        type: 3}
       propertyPath: m_ApplyRootMotion
       value: 0
       objectReference: {fileID: 0}
@@ -630,6 +635,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 6703860365585140426}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6bf9d7e9389c6f84ead045eaafcd77ca,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1468003498082240318}
   m_SourcePrefab: {fileID: 100100000, guid: 6bf9d7e9389c6f84ead045eaafcd77ca, type: 3}
 --- !u!4 &4593171191068230447 stripped
 Transform:
@@ -679,9 +688,9 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 1
+  m_Interpolate: 0
   m_Constraints: 112
-  m_CollisionDetection: 1
+  m_CollisionDetection: 0
 --- !u!136 &985856626319214293
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -722,6 +731,8 @@ MonoBehaviour:
   attackSpeed: 1
   acrobaticSpeed: 2.2
   rotationSpeed: 60
+  useRootMotion: 1
+  rootMotionScale: 1
   canRotate: 1
   currentMoveDir: {x: 0, y: 0, z: 0}
   isMovementLocked: 0
@@ -779,6 +790,21 @@ MonoBehaviour:
   currentTarget: {fileID: 0}
   detectionRange: 15
   currentState: 0
+--- !u!114 &1468003498082240318
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7584965410055891901}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e2d5558187ed1242ad68d58f8c11b98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameScripts::AnimatorStateDebugger
+  breakOnStateChange: 1
+  logStateChanges: 1
+  layerToMonitor: 0
 --- !u!4 &7922796429195489424 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 608321761475470972, guid: 6bf9d7e9389c6f84ead045eaafcd77ca,

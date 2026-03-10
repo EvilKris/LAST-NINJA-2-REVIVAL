@@ -2421,9 +2421,9 @@ BlendTree:
     m_Threshold: 0.33333334
     m_Position: {x: -1, y: 0}
     m_TimeScale: 1
-    m_CycleOffset: 0
+    m_CycleOffset: 0.5
     m_DirectBlendParameter: Input_XFloat
-    m_Mirror: 0
+    m_Mirror: 1
   - serializedVersion: 2
     m_Motion: {fileID: 7400000, guid: 5f6b14b25ea02b14d85618398b4375a3, type: 2}
     m_Threshold: 0.4166667
@@ -3107,7 +3107,7 @@ BlendTree:
   m_Name: UnarmedTree
   m_Childs:
   - serializedVersion: 2
-    m_Motion: {fileID: 7400000, guid: 115586abae88f9d418181828ec0b3429, type: 2}
+    m_Motion: {fileID: 7400000, guid: 63c1f552bc9f6e6488050706b80d2fd4, type: 2}
     m_Threshold: 0
     m_Position: {x: 0, y: 1}
     m_TimeScale: 1
@@ -3115,7 +3115,7 @@ BlendTree:
     m_DirectBlendParameter: Input_X
     m_Mirror: 0
   - serializedVersion: 2
-    m_Motion: {fileID: 7400000, guid: 115586abae88f9d418181828ec0b3429, type: 2}
+    m_Motion: {fileID: 7400000, guid: 63c1f552bc9f6e6488050706b80d2fd4, type: 2}
     m_Threshold: 0.125
     m_Position: {x: -1, y: 1}
     m_TimeScale: 1
@@ -3992,9 +3992,9 @@ BlendTree:
     m_Threshold: 0.33333334
     m_Position: {x: -1, y: 0}
     m_TimeScale: 1
-    m_CycleOffset: 0
+    m_CycleOffset: 0.5
     m_DirectBlendParameter: Input_XFloat
-    m_Mirror: 0
+    m_Mirror: 1
   - serializedVersion: 2
     m_Motion: {fileID: 7400000, guid: 1a0952270326b3542a7eb573063644c3, type: 2}
     m_Threshold: 0.4166667

@@ -41,6 +41,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     private const float MAX_CLINCH_DURATION = 3f;
     private bool _isInClinchRecovery;
     private const float CLINCH_RECOVERY_DURATION = 3f;
+    private bool _clinchRootMotionActive;
     #endregion
 
     #region Throw State Tracking
@@ -83,6 +84,9 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
     private static readonly int HashInputX = Animator.StringToHash("Input_XFloat");
     private static readonly int HashInputY = Animator.StringToHash("Input_YFloat");
+    private static readonly int HashRawInputX = Animator.StringToHash("Input_X");
+    private static readonly int HashRawInputY = Animator.StringToHash("Input_Y");
+    private static readonly int HashRawIsRunning = Animator.StringToHash("isRunning");
     private static readonly int HashWheelThrow = Animator.StringToHash("t_WheelThrow");
     private static readonly int HashBreakClinch = Animator.StringToHash("t_BreakClinch");
     private static readonly int HashIsRunning = Animator.StringToHash("isRunningBool");
@@ -99,6 +103,8 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     public bool IsInClinchRecovery => _isInClinchRecovery;
     public bool CanBreakClinch => _isClinching && !_isExecutingThrow && !_isBreakingClinch;
     public Transform GrabbedEnemy => _grabbedEnemy;
+    public bool IsClinchRootMotionActive => _clinchRootMotionActive;
+    public bool IsExecutingThrow => _isExecutingThrow;
     #endregion
 
     public void Initialize(CombatHandler combat)
@@ -181,6 +187,12 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
             _enemyMovement.syncAnimationSource = _movement;
         }
 
+        _animator.applyRootMotion = false;
+        if (_enemyAnimator != null)
+            _enemyAnimator.applyRootMotion = true;
+
+        _clinchRootMotionActive = true;
+
         SetupEnemyParentConstraint(target);
         ClinchSequence(target);
     }
@@ -209,14 +221,35 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _animator.SetTrigger(HashWheelThrow);
         _enemyAnimator.SetTrigger(HashWheelThrow);
 
-        RemoveUkeParentConstraint();
+        // Zero all input parameters on both animators so the throw blend tree
+        // cannot be steered by any stale or live input values.
+        _animator.SetFloat(HashInputX, 0f);
+        _animator.SetFloat(HashInputY, 0f);
+        _animator.SetFloat(HashRawInputX, 0f);
+        _animator.SetFloat(HashRawInputY, 0f);
+        _animator.SetBool(HashRawIsRunning, false);
+        _enemyAnimator.SetFloat(HashInputX, 0f);
+        _enemyAnimator.SetFloat(HashInputY, 0f);
+        _enemyAnimator.SetFloat(HashRawInputX, 0f);
+        _enemyAnimator.SetFloat(HashRawInputY, 0f);
+        _enemyAnimator.SetBool(HashRawIsRunning, false);
+
+        // Also zero the cached values in MovementComponent so SyncAnimationFromSource
+        // does not immediately re-mirror stale non-zero values back onto the enemy animator.
+        if (_movement != null)
+            _movement.ZeroAnimatorInputs();
+        if (_enemyMovement != null)
+            _enemyMovement.ZeroAnimatorInputs();
+
+       
 
 
 
         if (_health.characterEffects != null && _health.characterEffects.sfxThrowVocal != null)
             JSAM.AudioManager.PlaySound(_health.characterEffects.sfxThrowVocal);
 
-        _animator.applyRootMotion = true;
+        
+        _animator.applyRootMotion = false;
         _enemyAnimator.applyRootMotion = true;
 
         if (_enemyMovement != null)
@@ -225,6 +258,19 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _throwDirection = transform.forward;
         _isExecutingThrow = true;
         _throwLaunchFired = false;
+
+        // Lock the attacker's movement so keyboard input cannot rotate the
+        // thrower or update Input_XFloat / Input_YFloat during the throw clip.
+        if (_movement != null)
+        {
+            _movement.isMovementLocked = true;
+            _movement.canRotate = false;
+        }
+
+        // Disconnect the animation sync so SyncAnimationFromSource cannot
+        // re-mirror player input floats onto the enemy during the throw clip.
+        if (_enemyMovement != null)
+            _enemyMovement.syncAnimationSource = null;
     }
 
     public void ExecuteClinchLightAttack()
@@ -259,7 +305,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         // so neither actor is physics-locked during the break
         RemoveUkeParentConstraint();
 
-        _animator.applyRootMotion = true;
+        _animator.applyRootMotion = false;
         if (_enemyAnimator != null)
             _enemyAnimator.applyRootMotion = true;
 
@@ -364,6 +410,13 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         */
         
         _enemyInFlight = true;
+    }
+
+    private void OnAnimatorMove()
+    {
+        if (!_clinchRootMotionActive || _rigidbody == null) return;
+
+        _rigidbody.MovePosition(_rigidbody.position + _animator.deltaPosition);
     }
 
     private void FixedUpdate()
@@ -492,6 +545,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
         _isClinching = false;
 
+        _clinchRootMotionActive = false;
         _animator.speed = _playerOriginalAnimSpeed;
 
         _animator.SetInteger("ClinchRole", 0);
@@ -561,6 +615,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _enemySliding = false;
         _colliderReenableTimer = 0f;
         _isInClinchRecovery = false;
+        _clinchRootMotionActive = false;
         StopAllCoroutines();
 
         if (_enemyCollider != null)
@@ -600,6 +655,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         {
             _movement.isClinchActive = false;
             _movement.isMovementLocked = false;
+            _movement.canRotate = true;
         }
         if (_animator != null)
         {
@@ -733,6 +789,14 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     {
         _isExecutingThrow = false;
         _throwLaunchFired = false;
+
+        // Restore attacker movement that was locked in ExecuteWheelThrow
+        if (_movement != null)
+        {
+            _movement.isMovementLocked = false;
+            _movement.canRotate = true;
+        }
+
         EndClinchTori();
     }
 

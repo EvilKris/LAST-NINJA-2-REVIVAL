@@ -172,14 +172,17 @@ public class PlayerController : MonoBehaviour
         // ZeroVelocity is called after so the physics body stays pinned in place.
         if (_clinchHandler != null && _clinchHandler.IsClinching)
         {
+            // During a throw all input is suppressed — direction and animation are owned by the throw clip.
+            if (_clinchHandler.IsExecutingThrow)
+                return;
+
             _cachedCameraYaw = GetCurrentCameraYaw();
             Vector3 clinchMoveDir = GetCameraRelativeDirection(_moveInput);
-            Transform grabbedEnemy = _clinchHandler.GrabbedEnemy;
-            if (grabbedEnemy != null)
-                _movement.ProcessMovement(clinchMoveDir, grabbedEnemy.position);
-            else
-                _movement.ProcessMovement(clinchMoveDir);
-            _movement.ZeroVelocity();
+            // MODE 1: drives animator floats only (velocity writes are skipped while isClinchActive).
+            // Rotation follows the input direction so the pair pivots together.
+            _movement.ProcessMovement(clinchMoveDir);
+            if (clinchMoveDir.sqrMagnitude > 0.0001f)
+                _movement.RotateTowardsDirection(clinchMoveDir);
             return;
         }
 
