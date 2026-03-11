@@ -65,16 +65,27 @@ public class AnimationStateNotifier : StateMachineBehaviour
         AnimatorStateInfo stateInfo,
         int layerIndex)
     {
-        if (!(stateInfo.normalizedTime >= 1.0f)) return;
+        bool completed = stateInfo.normalizedTime >= 1.0f;
 
-        if (_combatHandler != null && combatHandlerEvent != AnimationExitEvent.None)
-            _combatHandler.OnAnimationStateExit(layerIndex, combatHandlerEvent);
+        if (completed)
+        {
+            if (_combatHandler != null && combatHandlerEvent != AnimationExitEvent.None)
+                _combatHandler.OnAnimationStateExit(layerIndex, combatHandlerEvent);
 
-        if (_movement != null && movementEvent != AnimationExitEvent.None)
-            _movement.OnAnimationStateExit(layerIndex, movementEvent);
+            if (_movement != null && movementEvent != AnimationExitEvent.None)
+                _movement.OnAnimationStateExit(layerIndex, movementEvent);
 
-        if (_clinchHandler != null && clinchHandlerEvent != AnimationExitEvent.None)
-            _clinchHandler.OnAnimationStateExit(layerIndex, clinchHandlerEvent);
+            if (_clinchHandler != null && clinchHandlerEvent != AnimationExitEvent.None)
+                _clinchHandler.OnAnimationStateExit(layerIndex, clinchHandlerEvent);
+        }
+        else
+        {
+            if (_combatHandler != null && combatHandlerEvent != AnimationExitEvent.None)
+                _combatHandler.OnAnimationStateExit(layerIndex, AnimationExitEvent.ClipInterrupted);
+
+            if (_clinchHandler != null && clinchHandlerEvent != AnimationExitEvent.None)
+                _clinchHandler.OnAnimationStateExit(layerIndex, AnimationExitEvent.ClipInterrupted);
+        }
     }
 }
 

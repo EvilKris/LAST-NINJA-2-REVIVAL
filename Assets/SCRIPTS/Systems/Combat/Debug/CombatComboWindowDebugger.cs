@@ -6,6 +6,7 @@ using UnityEngine;
 /// DEBUG ONLY — swaps the character's skinned mesh materials while a combo window is open,
 /// then restores them when the window closes or the move ends.
 /// Attach this to the same GameObject as CombatHandler.
+/// Works for both regular attacks (ReplaceableAttack) and clinch light attacks (ReplaceableLightAtk-Attacker).
 /// Uses PhantomMaterial from PrefabBankManager as the "window open" indicator.
 /// Remove or strip this component before shipping.
 /// </summary>
@@ -49,7 +50,11 @@ public class CombatComboWindowDebugger : MonoBehaviour
         }
 
         var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-        if (!stateInfo.IsName("ReplaceableAttack"))
+
+        bool inRegularAttack = stateInfo.IsName("ReplaceableAttack");
+        bool inClinchAttack = stateInfo.IsName("ReplaceableLightAtk-Attacker");
+
+        if (!inRegularAttack && !inClinchAttack)
         {
             if (_windowWasOpen)
                 RestoreMaterials();
@@ -60,7 +65,7 @@ public class CombatComboWindowDebugger : MonoBehaviour
 
         if (windowIsOpen && !_windowWasOpen)
         {
-            ApplyDebugMaterial();
+            ApplyDebugMaterial(inClinchAttack);
             _windowWasOpen = true;
         }
         else if (!windowIsOpen && _windowWasOpen)
@@ -80,7 +85,7 @@ public class CombatComboWindowDebugger : MonoBehaviour
         return null;
     }
 
-    private void ApplyDebugMaterial()
+    private void ApplyDebugMaterial(bool inClinchAttack)
     {
         Material flash = GetFlashMaterial();
         if (flash == null)
@@ -102,7 +107,8 @@ public class CombatComboWindowDebugger : MonoBehaviour
             _renderers[i].materials = swapped;
         }
 
-        Debug.Log($"[CombatComboWindowDebugger] Combo window OPEN on {gameObject.name}");
+        string moveType = inClinchAttack ? "Clinch" : "Regular";
+        Debug.Log($"[CombatComboWindowDebugger] {moveType} combo window OPEN on {gameObject.name}");
     }
 
     private void RestoreMaterials()

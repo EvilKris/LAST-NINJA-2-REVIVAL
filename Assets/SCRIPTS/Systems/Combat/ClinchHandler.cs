@@ -42,6 +42,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     private bool _isInClinchRecovery;
     private const float CLINCH_RECOVERY_DURATION = 3f;
     private bool _clinchRootMotionActive;
+    private bool _pendingClinchLightAtk;
     #endregion
 
     #region Throw State Tracking
@@ -282,16 +283,28 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         AnimationClip defenderClip = _combat.ClinchLightAtkDefenderClip;
         if (attackerClip == null || defenderClip == null) return;
 
+        // If a clinch attack is already active (combo window repeat), end it cleanly
+        // before starting the new one so hitbox, hit cache and state are reset.
+       
+
         _combat.OverrideController[LightAtkAttackerSlotKey] = attackerClip;
 
         if (_enemyCombat != null)
             _enemyCombat.OverrideController[LightAtkDefenderSlotKey] = defenderClip;
 
-        _animator.SetTrigger(HashClinchLightAtk);
-        _enemyAnimator.SetTrigger(HashClinchLightAtk);
 
-        if (_combat.currentStyle != null && _combat.currentStyle.clinchLightAtk != null)
-            _combat.NotifyClinchAttackActive(_combat.currentStyle.clinchLightAtk);
+        _animator.Play("ReplaceableLightAtk-Attacker", -1, 0f);  
+        _enemyAnimator.Play("ReplaceableLightAtk-Defender", -1, 0f);
+
+        _animator.SetBool(HashIsAction, true);
+       
+        /*  
+          _animator.ResetTrigger(HashClinchLightAtk);
+          _enemyAnimator.ResetTrigger(HashClinchLightAtk);
+          _animator.SetTrigger(HashClinchLightAtk);
+          _enemyAnimator.SetTrigger(HashClinchLightAtk);
+
+          */
     }
 
     public void BreakClinch()
@@ -330,18 +343,18 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
                 {
                     _throwLaunchFired = true;
                     LaunchEnemy(_activeThrowData);
+                    return;
                 }
             }
         }
 
-        // Drive hitbox and audio for the active clinch light attack
-        if (_combat.IsActiveClinchAttack)
+      
+
+        if (_isClinching)
         {
             AnimatorStateInfo lightAtkState = _animator.GetCurrentAnimatorStateInfo(0);
             if (lightAtkState.IsName("ReplaceableLightAtk-Attacker"))
-            {
                 _combat.TickClinchAttack(lightAtkState.normalizedTime);
-            }
         }
     }
 
@@ -495,12 +508,6 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         StartCoroutine(ClinchRecovery());
     }
 
-    private void ResetMovementParams(Animator animator)
-    {
-        animator.SetFloat(HashInputX, 0f);
-        animator.SetFloat(HashInputY, 0f);
-        animator.SetBool(HashIsRunning, false);
-    }
     private void ClinchSequence(Transform target)
     {
         //Clinch Role:    
@@ -760,8 +767,6 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     #region Animation State Callbacks   
     public void OnAnimationStateExit(int layerIndex, AnimationExitEvent exitEvent)
     {
-
-
         if (exitEvent == AnimationExitEvent.EndThrow)
             HandleThrowExit();
         else if (exitEvent == AnimationExitEvent.BreakClinch)
@@ -769,8 +774,13 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         else if (exitEvent == AnimationExitEvent.ClipEnded)
         {
             _animator.SetBool(HashIsAction, false);
-            _combat.NotifyClinchAttackEnded();
-            
+            _combat.ResetCombatState();
+        }
+        else if (exitEvent == AnimationExitEvent.ClipInterrupted)
+        {
+            // Clinch light attack was interrupted mid-clip (e.g. repeated during combo window).
+            // NotifyClinchAttackEnded is not called here because ExecuteClinchLightAttack
+            // already called it before starting the new rep.
         }
     }
 
