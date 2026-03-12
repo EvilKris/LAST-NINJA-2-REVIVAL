@@ -72,6 +72,8 @@ public class CombatComboWindowDebugger : MonoBehaviour
         {
             RestoreMaterials();
         }
+
+        
     }
 
     private Material GetFlashMaterial()
@@ -120,7 +122,7 @@ public class CombatComboWindowDebugger : MonoBehaviour
             _renderers[i].materials = _originalMaterials[i];
         }
 
-        Debug.Log($"[CombatComboWindowDebugger] Combo window CLOSED on {gameObject.name}");
+        //Debug.Log($"[CombatComboWindowDebugger] Combo window CLOSED on {gameObject.name}");
     }
 
     private void OnDisable()

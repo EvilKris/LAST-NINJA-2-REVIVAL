@@ -15,8 +15,8 @@ MonoBehaviour:
   throwName: arm-throw
   attackerThrowClip: {fileID: 7400000, guid: 3e36c503a605d3f4abdcec4848f355ae, type: 2}
   victimThrowClip: {fileID: 7400000, guid: de7f91850bb67624aaaac2617127fec6, type: 2}
-  damage: 25
+  damage: 1
   audioEvents: []
   throwLaunchActivation: 0.5
-  throwArcHeight: 1.5
-  throwDistance: 5
+  throwArcHeight: 2
+  throwDistance: 3.5

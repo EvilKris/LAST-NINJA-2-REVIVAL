@@ -153,7 +153,7 @@ MonoBehaviour:
   myMusic: {fileID: 11400000, guid: dec5a987c10e1564c81c259e7259b54f, type: 2}
   musicFadeOutDuration: 1
   mainMenuCanvasGroup: {fileID: 565682588}
-  fadeOutDuration: 1
+  fadeOutDuration: 2
   fadeOutCurve:
     serializedVersion: 2
     m_Curve:
@@ -179,6 +179,11 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   uiCanvasRect: {fileID: 1956514273}
+  uiTextButton: {fileID: 1008590834}
+  videoPlayer: {fileID: 1801556583}
+  displayImage: {fileID: 528801421}
+  videoFadeLeadTime: 0.2
+  flashLeadTime: 1
 --- !u!4 &289474788
 Transform:
   m_ObjectHideFlags: 0
@@ -205,7 +210,6 @@ GameObject:
   - component: {fileID: 528801420}
   - component: {fileID: 528801422}
   - component: {fileID: 528801421}
-  - component: {fileID: 528801423}
   m_Layer: 5
   m_Name: Video
   m_TagString: Untagged
@@ -267,21 +271,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 528801419}
   m_CullTransparentMesh: 1
---- !u!114 &528801423
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 528801419}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7a939a4a9e6c30f45ac03bc883c34f4a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  videoPlayer: {fileID: 1801556583}
-  displayImage: {fileID: 528801421}
-  fadeDuration: 1
 --- !u!1 &565682583
 GameObject:
   m_ObjectHideFlags: 0
@@ -470,7 +459,7 @@ GameObject:
   - component: {fileID: 1008590839}
   - component: {fileID: 1008590840}
   m_Layer: 5
-  m_Name: Button
+  m_Name: TextButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -840,7 +829,7 @@ VideoPlayer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1801556582}
   m_Enabled: 1
-  m_VideoClip: {fileID: 32900000, guid: a3e761aebcc5571488814d76db7ae330, type: 3}
+  m_VideoClip: {fileID: 32900000, guid: f7abd9f54c9ddd9408032872079007a1, type: 3}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
   m_TargetCamera: {fileID: 0}
@@ -862,7 +851,7 @@ VideoPlayer:
   m_EnabledAudioTracks: 01
   m_DirectAudioMutes: 00
   m_ControlledAudioTrackCount: 1
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_SkipOnDrop: 1
   m_Looping: 0
   m_WaitForFirstFrame: 1
@@ -877,7 +866,7 @@ Transform:
   m_GameObject: {fileID: 1801556582}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 400.7906, y: 1.57183, z: 627.227}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1452,7 +1441,7 @@ MonoBehaviour:
   m_ToneFilter: 0
   m_ToneIntensity: 1
   m_ColorFilter: 1
-  m_ColorIntensity: 0.94358975
+  m_ColorIntensity: 1
   m_Color: {r: 0.8490566, g: 0.309282, b: 0.244304, a: 1}
   m_ColorGlow: 0
   m_SamplingFilter: 0

@@ -17,6 +17,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     #region Clinch Configuration
     [Header("Clinch State")]
     [SerializeField] private float _clinchDistance = 0.65f;
+    [SerializeField] [Range(1f, 5f)] private float _throwLaunchSpeedMultiplier = 1f;
         
     #endregion
 
@@ -42,21 +43,17 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     private bool _isInClinchRecovery;
     private const float CLINCH_RECOVERY_DURATION = 3f;
     private bool _clinchRootMotionActive;
-    private bool _pendingClinchLightAtk;
     #endregion
 
     #region Throw State Tracking
-    private float _lastThrownTime = -999f;
-    private bool _isBeingThrown;
-    private bool _throwFinished;
+
     private bool _isExecutingThrow;
     private bool _throwLaunchFired;
     private bool _enemyInFlight;
-    private bool _enemySliding;
+    private bool _enemyLanded;
     private float _colliderReenableTimer;
     private const float ColliderDisableDuration = 0.15f;
-    private const float SlideDrag = 8f;
-    private const float SlideStopThreshold = 0.4f;
+    private const float LandedGetUpDelay = 2f;
     private CombatThrow _activeThrowData;
     private Vector3 _throwDirection;
     #endregion
@@ -188,10 +185,6 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
             _enemyMovement.syncAnimationSource = _movement;
         }
 
-        _animator.applyRootMotion = false;
-        if (_enemyAnimator != null)
-            _enemyAnimator.applyRootMotion = true;
-
         _clinchRootMotionActive = true;
 
         SetupEnemyParentConstraint(target);
@@ -222,6 +215,9 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _animator.SetTrigger(HashWheelThrow);
         _enemyAnimator.SetTrigger(HashWheelThrow);
 
+
+        /*
+
         // Zero all input parameters on both animators so the throw blend tree
         // cannot be steered by any stale or live input values.
         _animator.SetFloat(HashInputX, 0f);
@@ -242,23 +238,34 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         if (_enemyMovement != null)
             _enemyMovement.ZeroAnimatorInputs();
 
-       
+         RemoveUkeParentConstraint();
+        if (_grabbedEnemy != null)
+           _grabbedEnemy.position = transform.position + transform.forward * 0.5f;
 
+         SetupEnemyParentConstraint(_grabbedEnemy);  
+        */
+
+        // Snap both actors to a shared throw start position: attacker stays put,
+        // victim is placed 0.1 units in front of the attacker. Rotations are untouched.
+
+        RemoveUkeParentConstraint();
 
 
         if (_health.characterEffects != null && _health.characterEffects.sfxThrowVocal != null)
             JSAM.AudioManager.PlaySound(_health.characterEffects.sfxThrowVocal);
 
-        
-        _animator.applyRootMotion = false;
-        _enemyAnimator.applyRootMotion = true;
+      
 
-        if (_enemyMovement != null)
-            _enemyMovement.isImmobilized = true;
+
+       // if (_enemyMovement != null)
+         //   _enemyMovement.isImmobilized = true;
 
         _throwDirection = transform.forward;
         _isExecutingThrow = true;
+        
         _throwLaunchFired = false;
+
+
 
         // Lock the attacker's movement so keyboard input cannot rotate the
         // thrower or update Input_XFloat / Input_YFloat during the throw clip.
@@ -270,8 +277,8 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
         // Disconnect the animation sync so SyncAnimationFromSource cannot
         // re-mirror player input floats onto the enemy during the throw clip.
-        if (_enemyMovement != null)
-            _enemyMovement.syncAnimationSource = null;
+        //if (_enemyMovement != null)
+          //  _enemyMovement.syncAnimationSource = null;
     }
 
     public void ExecuteClinchLightAttack()
@@ -354,7 +361,20 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         {
             AnimatorStateInfo lightAtkState = _animator.GetCurrentAnimatorStateInfo(0);
             if (lightAtkState.IsName("ReplaceableLightAtk-Attacker"))
-                _combat.TickClinchAttack(lightAtkState.normalizedTime);
+            {
+                // If the animation has finished and no AnimationStateNotifier fired ClipEnded
+                // (e.g. the notifier is missing or misconfigured on this state), reset manually
+                // so IsAttacking and isAction don't stay true indefinitely.
+                if (lightAtkState.normalizedTime >= 1f)
+                {
+                    _animator.SetBool(HashIsAction, false);
+                    _combat.ResetCombatState();
+                }
+                else
+                {
+                    _combat.TickClinchAttack(lightAtkState.normalizedTime);
+                }
+            }
         }
     }
 
@@ -391,46 +411,27 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         // from arc height and horizontal distance using projectile motion equations.
 
 
-        
 
-        float gravity = Mathf.Abs(Physics.gravity.y); // Increased gravity by 20%
+
+        float gravity = Mathf.Abs(Physics.gravity.y * 0.8f);
         float timeToApex = Mathf.Sqrt(2f * throwData.throwArcHeight / gravity);
         float verticalVelocity = gravity * timeToApex;
         float horizontalSpeed = throwData.throwDistance / (2f * timeToApex);
-        Vector3 launchVelocity = _throwDirection * horizontalSpeed + Vector3.up * verticalVelocity;
+        Vector3 launchDirection = throwData.flipThrow ? -_throwDirection : _throwDirection;
+        Vector3 launchVelocity = (launchDirection * horizontalSpeed + Vector3.up * verticalVelocity) * _throwLaunchSpeedMultiplier;
         _enemyRigidbody.linearVelocity = launchVelocity;
 
-
-        /*
-       
-
-        float g = Mathf.Abs(Physics.gravity.y);
-        float vy = Mathf.Sqrt(2f * g * throwData.throwArcHeight);
-        float tTotal = 2f * vy / g; 
-        float vx = throwData.throwDistance / tTotal;
-
-       
-        // Launch in the attacker's forward direction
-        Vector3 launchVelocity = transform.forward * vx + Vector3.up * vy;
-        _enemyRigidbody.linearVelocity = Vector3.zero;
-        _enemyRigidbody.angularVelocity = Vector3.zero;
-        _enemyRigidbody.AddForce(launchVelocity, ForceMode.VelocityChange);
-        
-
-        // Play being-thrown SFX on the enemy
-        //  if (_enemyHealth != null && _enemyHealth.characterEffects != null && _enemyHealth.characterEffects.sfxBeingThrown != null)
-        //    JSAM.AudioManager.PlaySound(_enemyHealth.characterEffects.sfxBeingThrown);
-        */
         
         _enemyInFlight = true;
     }
 
+    /*
     private void OnAnimatorMove()
     {
         if (!_clinchRootMotionActive || _rigidbody == null) return;
 
         _rigidbody.MovePosition(_rigidbody.position + _animator.deltaPosition);
-    }
+    }*/
 
     private void FixedUpdate()
     {
@@ -442,12 +443,12 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
                 _enemyCollider.enabled = true;
         }
 
-        if (!_enemyInFlight && !_enemySliding) return;
+        if (!_enemyInFlight || _enemyLanded) return;
         if (_grabbedEnemy == null || _enemyRigidbody == null) return;
 
         // Only test for floor once the collider is back on and the enemy is moving downward
-        if (!_enemySliding && _colliderReenableTimer > 0f) return;
-        if (!_enemySliding && _enemyRigidbody.linearVelocity.y > 0f) return;
+        if (_colliderReenableTimer > 0f) return;
+        if (_enemyRigidbody.linearVelocity.y > 0f) return;
 
         // SphereCast downward from the enemy's current position to detect the Floor layer
         float castRadius = 0.2f;
@@ -463,49 +464,29 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
 
         if (!hitFloor) return;
 
-        if (!_enemySliding)
-        {
-            // Enemy has just landed — start sliding phase
-            _enemySliding = true;
-            _enemyInFlight = false;
+        // Enemy has landed — stop immediately and start the get-up delay
+        _enemyLanded = true;
+        _enemyInFlight = false;
 
-            // Apply throw damage on landing impact
-            if (_enemyHealth != null && _activeThrowData != null)
-                _enemyHealth.TakeDamage(_activeThrowData.damage, HitReactionType.None);
+        //_enemyRigidbody.linearVelocity = Vector3.zero;
+        //_enemyRigidbody.angularVelocity = Vector3.zero;
 
-            // Play landing SFX
-            if (_enemyHealth != null && _enemyHealth.characterEffects != null && _enemyHealth.characterEffects.sfxLandAfterThrown != null)
-                JSAM.AudioManager.PlaySound(_enemyHealth.characterEffects.sfxLandAfterThrown);
+        if (_enemyMovement != null)
+            _enemyMovement.isInFlight = false;
 
-            // Tell the enemy animator to enter the grounded/sliding state
+        // Apply throw damage on landing impact
+        if (_enemyHealth != null && _activeThrowData != null)
+            _enemyHealth.TakeDamage(_activeThrowData.damage, HitReactionType.None);
+
+        // Play landing SFX
+        if (_enemyHealth != null && _enemyHealth.characterEffects != null && _enemyHealth.characterEffects.sfxLandAfterThrown != null)
+            JSAM.AudioManager.PlaySound(_enemyHealth.characterEffects.sfxLandAfterThrown);
+
+        // Tell the enemy animator to enter the grounded state
+        if (_enemyAnimator != null)
             _enemyAnimator.SetBool(HashIsGrounded, true);
-        }
 
-        // Decelerate the slide each fixed frame until nearly stopped
-        Vector3 vel = _enemyRigidbody.linearVelocity;
-        vel.y = 0f;
-        if (vel.sqrMagnitude > SlideStopThreshold * SlideStopThreshold)
-        {
-            _enemyRigidbody.linearVelocity = Vector3.MoveTowards(
-                _enemyRigidbody.linearVelocity,
-                new Vector3(0f, _enemyRigidbody.linearVelocity.y, 0f),
-                SlideDrag * Time.fixedDeltaTime);
-            return;
-        }
-
-        // Slide has stopped — clean up
-        _enemySliding = false;
-        _enemyRigidbody.linearVelocity = Vector3.zero;
-        _enemyRigidbody.angularVelocity = Vector3.zero;
-
-        // End the uke side of the clinch
-        EndClinchUke();
-
-        // Fire get-up trigger if still alive, otherwise death handles itself
-        if (_enemyHealth != null && !_enemyHealth.IsDead)
-            _enemyAnimator.SetTrigger(HashGettingUp);
-
-        StartCoroutine(ClinchRecovery());
+        StartCoroutine(LandedGetUpSequence());
     }
 
     private void ClinchSequence(Transform target)
@@ -619,7 +600,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _isExecutingThrow = false;
         _throwLaunchFired = false;
         _enemyInFlight = false;
-        _enemySliding = false;
+        _enemyLanded = false;
         _colliderReenableTimer = 0f;
         _isInClinchRecovery = false;
         _clinchRootMotionActive = false;
@@ -808,6 +789,22 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         }
 
         EndClinchTori();
+    }
+
+    private IEnumerator LandedGetUpSequence()
+    {
+        yield return new WaitForSeconds(LandedGetUpDelay);
+
+        // End the uke side of the clinch
+        EndClinchUke();
+
+        // Fire get-up trigger if still alive, otherwise death handles itself
+        if (_enemyHealth != null && !_enemyHealth.IsDead)
+            _enemyAnimator.SetTrigger(HashGettingUp);
+
+        _enemyLanded = false;
+
+        StartCoroutine(ClinchRecovery());
     }
 
     private IEnumerator ClinchRecovery()

@@ -44,15 +44,12 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     private int _hashIsRunning;
     private int _hashXAxis;
     private int _hashYAxis;
-    private int _hashRawXAxis;
-    private int _hashRawYAxis;
-    private int _hashRawIsRunning;
 
     // Cached animator values to avoid redundant SetFloat/SetBool calls
     private bool _lastIsRunning;
     private float _lastXAxis;
     private float _lastYAxis;
-
+    
 
     private void OnDisable()
     {
@@ -72,8 +69,8 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
 
         // CRITICAL: Disable root motion by default - MovementComponent handles ALL movement via physics
         // We manually handle root motion in OnAnimatorMove when useRootMotion is enabled
-        if (_animator != null)
-            _animator.applyRootMotion = false;
+       // if (_animator != null)
+         //   _animator.applyRootMotion = false;
 
         // Constrain rotation to prevent tipping over
         _rb.constraints = RigidbodyConstraints.FreezeRotation;
@@ -84,9 +81,6 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
         _hashIsRunning = Animator.StringToHash("isRunningBool");
         _hashXAxis = Animator.StringToHash("Input_XFloat");
         _hashYAxis = Animator.StringToHash("Input_YFloat");
-        _hashRawXAxis = Animator.StringToHash("Input_X");
-        _hashRawYAxis = Animator.StringToHash("Input_Y");
-        _hashRawIsRunning = Animator.StringToHash("isRunning");
     }
 
     /// <summary>
@@ -140,9 +134,6 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
                 Vector3 localDir = transform.InverseTransformDirection(moveDir);
                 SetAnimatorFloat(_hashXAxis, localDir.x);
                 SetAnimatorFloat(_hashYAxis, localDir.z);
-                _animator.SetFloat(_hashRawXAxis, localDir.x);
-                _animator.SetFloat(_hashRawYAxis, localDir.z);
-                _animator.SetBool(_hashRawIsRunning, true);
             }
         }
         else
@@ -195,22 +186,43 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     /// Uses root motion's magnitude (animation speed) but applies it in currentMoveDir direction
     /// This prevents the "offset drift" problem while preserving animation-driven speed
     /// </summary>
+    /// 
+
+
     private void OnAnimatorMove()
     {
+       
+        /*
+        float rootMotionDistance = _animator.deltaPosition.magnitude;
+        Vector3 movement = rootMotionDistance * rootMotionScale * currentMoveDir.normalized;
+
+        _rb.MovePosition(_rb.position + movement);
+        */
+        _rb.MovePosition(_rb.position + _animator.deltaPosition);
+        _rb.MoveRotation(_rb.rotation * _animator.deltaRotation);
+    }
+
+
+    /*
+    private void OnAnimatorMove()
+    {
+        
         if (!useRootMotion || isImmobilized || isMovementLocked || isInFlight || isClinchActive)
             return;
-
+        
         // Don't apply root motion if not moving (prevents idle animation drift)
-        if (currentMoveDir.sqrMagnitude < 0.0001f)
-            return;
+       // if (currentMoveDir.sqrMagnitude < 0.0001f)
+         //   return;
 
         // Use root motion's magnitude (animation speed) but currentMoveDir's direction
         // This gives us animation-accurate speed without directional drift
         float rootMotionDistance = _animator.deltaPosition.magnitude;
-        Vector3 movement = currentMoveDir.normalized * rootMotionDistance * rootMotionScale;
+        Vector3 movement = rootMotionDistance * rootMotionScale * currentMoveDir.normalized;
 
-        _rb.MovePosition(_rb.position + movement);
-    }
+        //_rb.MovePosition(_rb.position + movement);
+
+        _rb.MovePosition(_rb.position + _animator.deltaPosition);
+    }*/
 
     public void RotateTowardsDirection(Vector3 dir)
     {
@@ -254,9 +266,6 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
 
         SetAnimatorFloat(_hashXAxis, 0f);
         SetAnimatorFloat(_hashYAxis, 0f);
-        _animator.SetFloat(_hashRawXAxis, 0f);
-        _animator.SetFloat(_hashRawYAxis, 0f);
-        _animator.SetBool(_hashRawIsRunning, false);
     }
 
     public void ZeroVelocity()
@@ -272,12 +281,9 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
         _lastYAxis = 1f;
         SetAnimatorFloat(_hashXAxis, 0f);
         SetAnimatorFloat(_hashYAxis, 0f);
-        _animator.SetFloat(_hashRawXAxis, 0f);
-        _animator.SetFloat(_hashRawYAxis, 0f);
         _lastIsRunning = true; // force dirty
         _animator.SetBool(_hashIsRunning, false);
         _lastIsRunning = false;
-        _animator.SetBool(_hashRawIsRunning, false);
     }
 
     private void SyncAnimationFromSource()
@@ -287,6 +293,10 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
 
         if (syncAnimationSource != null)
         {
+            // Keep currentMoveDir in sync so any system that reads it (e.g. root motion) gets
+            // the same direction the attacker is moving in.
+            currentMoveDir = syncAnimationSource.currentMoveDir;
+
             // Mirror the attacker's animation parameters for synchronized movement.
             // X is negated because the enemy faces 180 degrees opposite, so local left/right is flipped.
             // Y is not negated: both actors share the same forward/backward blend direction.

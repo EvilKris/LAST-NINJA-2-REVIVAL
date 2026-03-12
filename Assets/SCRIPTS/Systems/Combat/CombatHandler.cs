@@ -112,6 +112,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     /// <summary>Exposes the override controller so other systems (e.g. <see cref="ClinchHandler"/>) can swap clips.</summary>
     public AnimatorOverrideController OverrideController => _overrideController;
 
+    
     private void Awake()
     {
         _animator = GetComponent<Animator>();
@@ -503,6 +504,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     /// </summary>
     public void ResetCombatState()
     {
+        
         if (_activeMove != null && _hitboxActive)
             CloseHitbox(GetHitboxType(_activeMove)); // Safety: close hitbox if animation ended early
 
@@ -556,6 +558,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     // Called each frame by ClinchHandler while the clinch light attack animation is playing
     public void TickClinchAttack(float normalizedTime)
     {
+        if (_activeMove == null) return;
         TickMoveState(normalizedTime);
     }
 

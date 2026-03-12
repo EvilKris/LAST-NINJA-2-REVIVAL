@@ -15,8 +15,9 @@ MonoBehaviour:
   throwName: sode-tsurikomi-gosh-mata
   attackerThrowClip: {fileID: 7400000, guid: 60b044c632058f14993389ad1c134412, type: 2}
   victimThrowClip: {fileID: 7400000, guid: 8b3681f82ca91464888a847f76facb13, type: 2}
-  damage: 25
+  damage: 1
   audioEvents: []
   throwLaunchActivation: 0.572
   throwArcHeight: 2
-  throwDistance: 7
+  throwDistance: 3
+  flipThrow: 1
