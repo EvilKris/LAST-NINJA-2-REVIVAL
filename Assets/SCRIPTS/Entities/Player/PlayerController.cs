@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
@@ -148,6 +149,8 @@ public class PlayerController : MonoBehaviour
             _controls.UI.SwitchItems.started += ctx => _inventoryManager.CycleItem();
         }
     }
+
+    
 
     private void OnDisable()
     {
@@ -322,8 +325,13 @@ public class PlayerController : MonoBehaviour
         _combat.ExecuteHeavyAttack();        
     }
 
-    private void OnBlockInput(InputAction.CallbackContext context) => _combat.SetBlocking(context.started);
-
+    private void OnBlockInput(InputAction.CallbackContext context)
+    {
+        if (context.started)
+            _combat.SetBlocking(true);
+        else
+            _combat.ResetBlocking();
+    }
     private void OnAcrobatics(InputAction.CallbackContext context)
     {
         if (!context.started) return;

@@ -4,7 +4,7 @@
         lighthitfistwhoosh,
         lighthitland,
         whoosh,
-        lastninjamenu,
+        lastninjamenuvoices,
         buttonclick,
         menuopenclose,
         buttonpress,
@@ -17,7 +17,9 @@
         chargedrivestrikecomplete,
         toss,
         landthrown,
-        throwVocal1
+        throwVocal1,
+        fsteps_track,
+        fsteps_grass
     }
     public enum MyCombatAudioLibraryMusic {
         Level1TheWastelands,

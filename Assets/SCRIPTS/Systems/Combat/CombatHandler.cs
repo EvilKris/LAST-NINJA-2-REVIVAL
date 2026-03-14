@@ -84,10 +84,16 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     [Header("KI Settings")]
     private float _kiBars = 3f;                      // Current KI energy; each defensive action costs 1 bar
     private const float KI_PARRY_WINDOW = 0.2f;      // Seconds after blocking begins during which a KI parry can be triggered
+    private const float BLOCK_HOLD_THRESHOLD = 0.9f; // Normalized time at which the block clip pauses via animatorSpeed = 0
     private float _lastBlockStartTime;               // Timestamp when the block input was first held down
     private bool _isBlocking;                        // Whether the entity is currently in a blocking stance
+    private bool _blockAnimationPlaying;             // True while the block clip is playing (cancellation suppressed until EndBlock fires)
+    private bool _blockFrozen;                       // True while animatorSpeed is 0 and the clip is held at the hold frame
+    private bool _blockReleased;                     // True after ResetBlocking() so Update() does not re-freeze the clip
+    private bool _blockHeld;                         // True while the block button is physically held down
 
     private const string CLIP_SLOT_KEY = "Replaceable_Motion_Base"; // Name of the placeholder clip inside the AnimatorController that gets swapped at runtime
+    private const string BLOCK_CLIP_SLOT_KEY = "ReplaceableBlock";   // Placeholder clip slot for the block animation
     private readonly int HashIsAction = Animator.StringToHash("isAction"); // Pre-hashed Animator parameter for performance
 
     // -------------------------------------------------------------------------
@@ -102,12 +108,14 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     public bool IsAttacking => _activeMove != null;              // True whenever any move is in progress
     public bool IsAcrobatic => _isAcrobaticMove;                 // True while an acrobatic move is executing
     public bool IsCharging => _isCharging;                       // True while the charge button is held
+    public bool IsBlocking => _isBlocking;                       // True while the entity is in a blocking stance
 
     // Pre-baked animation clips shared with ClinchHandler to avoid repeated lookups
     public AnimationClip ClinchThrowAttackerClip { get; private set; }
     public AnimationClip ClinchThrowVictimClip { get; private set; }
     public AnimationClip ClinchLightAtkAttackerClip { get; private set; }
     public AnimationClip ClinchLightAtkDefenderClip { get; private set; }
+    public AnimationClip BlockClip { get; private set; }
 
     /// <summary>Exposes the override controller so other systems (e.g. <see cref="ClinchHandler"/>) can swap clips.</summary>
     public AnimatorOverrideController OverrideController => _overrideController;
@@ -143,6 +151,9 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             playerUI.SetTarget(this);
         }
         InitializeStyleModules();
+
+        // Force-release a frozen block if this entity dies while the hold is active
+        _health.OnDeath += ForceReleaseBlock;
     }
 
 
@@ -171,6 +182,9 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             ClinchLightAtkAttackerClip = null;
             ClinchLightAtkDefenderClip = null;
         }
+
+        // Pre-bake block clip from the current style
+        BlockClip = currentStyle != null ? currentStyle.blockClip : null;
                 
         // Check if the current style supports clinching
         // Only players can initiate clinches, enemies should not have ClinchHandler
@@ -208,6 +222,24 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     {
         // Always tick the charge system, even when not attacking
         HandleChargeLogic();
+
+        // --- Block hold tick ---
+        // Once the block clip reaches BLOCK_HOLD_THRESHOLD, pause it via animatorSpeed = 0.
+        // The pose holds until ResetBlocking() restores animatorSpeed to 1, or ForceReleaseBlock
+        // is called on death.
+        if (_blockAnimationPlaying)
+        {
+            AnimatorStateInfo blockState = _animator.GetCurrentAnimatorStateInfo(0);
+            if (blockState.IsName("ReplaceableBlock"))
+            {
+                if (!_blockFrozen && !_blockReleased && _blockHeld && blockState.normalizedTime >= BLOCK_HOLD_THRESHOLD)
+                {
+                    _blockFrozen = true;
+                    _animator.SetFloat("animatorSpeed", 0f);
+                }
+                return; // Skip attack ticking while block is active
+            }
+        }
 
         if (_activeMove == null) return;
 
@@ -406,10 +438,13 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     {
         if (_health.IsDead) return;
         if (_activeMove != null && !_canAcceptComboInput) return; // Block input outside the combo window
+        if (IsBlocking) return; // Cannot attack while blocking
 
         // While clinching, light attack maps to the clinch-specific strike
         if (_clinchModule != null && _clinchModule.IsClinching)
         {
+            if (_clinchModule.IsExecutingThrow) return;
+
             _activeMove = currentStyle.clinchLightAtk; // Set the active move so the clinch module can drive hitboxes and audio events properly
             
             _clinchModule.ExecuteClinchLightAttack();
@@ -436,6 +471,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     {
         if (_health.IsDead) return;
         if (_animator.GetBool(HashIsAction) && (_activeMove == null || !_canAcceptComboInput)) return;
+        if (IsBlocking) return; // Cannot attack while blocking
 
         // While clinching, heavy input triggers a wheel throw instead
         if (_clinchModule != null && _clinchModule.IsClinching)
@@ -458,6 +494,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     {
         if (_health.IsDead) return;
         if (_animator.GetBool(HashIsAction)) return; // No acrobatics mid-attack
+        if (IsBlocking) return; // Cannot attack while blocking
 
         CombatMove flipMove = currentStyle.acrobaticFlip;
         if (flipMove == null) return;
@@ -510,11 +547,17 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
         _activeMove = null;
         _hitboxActive = false;
+        _blockAnimationPlaying = false;
+        _blockFrozen = false;
+        _blockReleased = false;
+        _blockHeld = false;
+        _isBlocking = false;
         _canAcceptComboInput = false;
         _canRotateDuringAttack = false;
         _isAcrobaticMove = false;
-        _movement.canRotate = true;              // Restore free rotation
-        _animator.SetBool(HashIsAction, false);  // Allow new actions
+        _movement.canRotate = true;
+        _animator.SetFloat("animatorSpeed", 1f);
+        _animator.SetBool(HashIsAction, false);
     }
 
     // =========================================================================
@@ -629,12 +672,69 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     // Defensive & KI Logic
     // =========================================================================
 
-    /// <summary>Enters or exits the blocking stance and records the timestamp for parry window evaluation.</summary>
+    /// <summary>
+    /// Enters or exits the blocking stance.
+    /// On press: hot-swaps the block clip into ReplaceableBlock and plays it from the start.
+    /// The clip runs freely until it reaches <see cref="BLOCK_HOLD_THRESHOLD"/> (0.9 normalizedTime),
+    /// at which point Update() sets <c>animatorSpeed</c> to 0, freezing the pose.
+    /// On release before the threshold: input is suppressed — the clip must reach the hold frame first.
+    /// On release at or after the hold frame: call <see cref="ResetBlocking"/> directly (player via
+    /// input callback, enemy AI via CombatActorBrain), which restores animatorSpeed so the final
+    /// 10% plays through and EndBlock fires from the AnimationStateNotifier.
+    /// </summary>
     public void SetBlocking(bool blocking)
     {
-        _isBlocking = blocking;
-        if (blocking) _lastBlockStartTime = Time.time;
-        _animator.SetBool("IsBlocking", _isBlocking);
+        if (blocking)
+        {
+            // Cannot block while attacking or already mid-block
+            if (_activeMove != null || _isBlocking) return;
+            if (BlockClip == null) return;
+
+            _isBlocking = true;
+            _blockAnimationPlaying = true;
+            _blockFrozen = false;
+            _blockHeld = true;
+            _lastBlockStartTime = Time.time;
+
+            _animator.SetBool(HashIsAction, true);
+            _animator.SetFloat("animatorSpeed", 1f);
+
+            _overrideController[BLOCK_CLIP_SLOT_KEY] = BlockClip;
+            _animator.Play("ReplaceableBlock", 0, 0f);
+            _animator.Update(0f);
+        }
+        else
+        {
+            // Suppress release until the hold frame has been reached;
+            // once frozen, ResetBlocking() is the correct unfreeze path.
+            if (_blockAnimationPlaying) return;
+        }
+    }
+
+    /// <summary>
+    /// Unfreezes the block clip so its final 10% plays through to completion.
+    /// Called by <see cref="PlayerController"/> when the block button is released, and by
+    /// <see cref="CombatActorBrain"/> for enemy-controlled entities.
+    /// Has no effect if the clip has not yet reached the hold frame (the hold threshold
+    /// acts as a minimum committed block duration).
+    /// </summary>
+    public void ResetBlocking()
+    {
+        _blockHeld = false;                      // Mark the button as released
+
+        if (!_blockFrozen)
+        {
+            // Clip hasn't reached the hold frame yet — it will now play through
+            // to the end naturally because _blockHeld is false, so Update()
+            // will skip the freeze at BLOCK_HOLD_THRESHOLD.
+            _blockReleased = true;
+            return;
+        }
+
+        _blockReleased = true;                   // Prevent Update() from re-freezing the clip
+        _blockFrozen = false;
+        _isBlocking = false;                     // No longer absorbing hits from this point
+        _animator.SetFloat("animatorSpeed", 1f); // Resume playback of the final 10%
     }
 
     /// <summary>
@@ -678,6 +778,26 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     public bool HasHitTarget(Transform target) => _hitCache.Contains(target);
 
     /// <summary>
+    /// Immediately clears all block state and restores animatorSpeed.
+    /// Subscribed to <see cref="HealthComponent.OnDeath"/> so a frozen block is
+    /// always cleaned up even if the entity dies while holding the block pose.
+    /// </summary>
+    private void ForceReleaseBlock()
+    {
+        if (!_blockFrozen && !_blockAnimationPlaying) return;
+
+        _blockFrozen = false;
+        _blockReleased = false;
+        _blockHeld = false;
+        _blockAnimationPlaying = false;
+        _isBlocking = false;
+        _animator.SetFloat("animatorSpeed", 1f);
+
+        if (_movement != null)
+            _movement.isMovementLocked = false;
+    }
+
+    /// <summary>
     /// Implements <see cref="IAnimationStateListener"/>. Called by <see cref="AnimationStateNotifier"/>
     /// via a StateMachineBehaviour when an Animator state exits.
     /// Triggers <see cref="ResetCombatState"/> when the attack clip finishes naturally.
@@ -688,5 +808,20 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         {
             ResetCombatState();
         }
+        else if (exitEvent == AnimationExitEvent.EndBlock)
+        {
+            _blockAnimationPlaying = false;
+            _blockFrozen = false;
+            _blockReleased = false;
+            _blockHeld = false;
+            _isBlocking = false;
+            _animator.SetFloat("animatorSpeed", 1f);
+            _animator.SetBool(HashIsAction, false);
+
+            if (_movement != null)
+                _movement.isMovementLocked = false;
+        }
     }
+
+   
 }

@@ -94,6 +94,10 @@ ShaderVariantCollection:
         passType: 0
       - keywords: COLOR_FILTER EDGE_PLAIN
         passType: 0
+      - keywords: COLOR_FILTER EDGE_SHINY
+        passType: 0
+      - keywords: COLOR_FILTER GRADATION_COLOR2
+        passType: 0
       - keywords: EDGE_PLAIN
         passType: 0
       - keywords: GRADATION_COLOR2

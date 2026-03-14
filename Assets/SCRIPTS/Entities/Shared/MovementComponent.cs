@@ -37,6 +37,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     [HideInInspector] public bool isImmobilized = false;
     [HideInInspector] public bool isInFlight = false;
     [HideInInspector] public bool isClinchActive = false;
+    [HideInInspector] public bool CanBeClinched = true;
     [HideInInspector] public MovementComponent syncAnimationSource = null;
     [HideInInspector] public bool syncAnimatorSpeed = false;
 
@@ -361,6 +362,9 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     {
 
         if (exitEvent == AnimationExitEvent.EndImmobilized)
+        {
             isImmobilized = false;
+            CanBeClinched = true; // reset clinch vulnerability when immobilization ends    
+        }
     }
 }

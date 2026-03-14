@@ -33,6 +33,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
 
     [Header("Internal References")]
     private Animator _animator;
+    private CombatHandler _combatHandler;
    
 
     /// <summary>
@@ -67,6 +68,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     {
         currentHealth = maxHealth;
         _animator = GetComponent<Animator>();
+        _combatHandler = GetComponent<CombatHandler>();
         ConfigureDeadLayer();
     }
 
@@ -106,23 +108,33 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     /// Fires OnHit if damaged, OnDeath if health reaches 0.
     /// </summary>
     /// <param name="damage">Amount of damage to apply (positive value)</param>
+    /// <summary>Block damage multiplier — blocked hits deal only this fraction of full damage.</summary>
+    private const float BlockDamageMultiplier = 0.05f;
+
     public void TakeDamage(float damage, HitReactionType type)
     {
         if (IsDead || isInvulnerable) return;
 
-        // FIXED: Only subtract damage once
+        // If the entity is blocking, reduce damage to 5% and suppress knockdown
+        bool isBlocking = _combatHandler != null && _combatHandler.IsBlocking;
+        if (isBlocking)
+        {
+            damage *= BlockDamageMultiplier;
+            type = HitReactionType.None; // Knockdown / stagger cannot happen while blocking
+
+            if (characterEffects != null)
+                characterEffects.PlayBlockEffects(false, transform.position + transform.forward * characterEffects.hitEffectForwardOffset, transform.forward);
+        }
+
         currentHealth -= damage;
         currentHealth = Mathf.Max(currentHealth, 0);
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth, faction);
 
-        // Play hit effects using CharacterEffects SO
-        if (characterEffects != null)
+        // Play hit effects using CharacterEffects SO (skipped while blocking — block effects fired above)
+        if (!isBlocking && characterEffects != null)
         {
-            // Play appropriate hit sound based on damage severity
             characterEffects.PlayHitSound(damage, maxHealth);
-            
-            // Spawn hit VFX at impact point (offset forward for better visual)
             Vector3 hitPosition = transform.position + transform.forward * characterEffects.hitEffectForwardOffset;
             characterEffects.SpawnHitEffect(damage, maxHealth, hitPosition, -transform.forward);
         }

@@ -635,6 +635,10 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 6703860365585140426}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 6bf9d7e9389c6f84ead045eaafcd77ca,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4053268944689305720}
   m_SourcePrefab: {fileID: 100100000, guid: 6bf9d7e9389c6f84ead045eaafcd77ca, type: 3}
 --- !u!4 &4593171191068230447 stripped
 Transform:
@@ -786,6 +790,25 @@ MonoBehaviour:
   currentTarget: {fileID: 0}
   detectionRange: 15
   currentState: 0
+--- !u!114 &4053268944689305720
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7584965410055891901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff06ebc01deb5004e827e9fd0e77dfb9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameScripts::FootstepHandler
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 8
+  groundCheckDistance: 1.2
+  raycastOriginHeight: 0.1
+  walkVolumeScale: 0.8
+  runVolumeScale: 1
 --- !u!4 &7922796429195489424 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 608321761475470972, guid: 6bf9d7e9389c6f84ead045eaafcd77ca,

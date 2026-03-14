@@ -77,7 +77,8 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     private const string ThrowVictimSlotKey = "ReplaceableThrow-Victim"; //do not change the names of these clips in the Animator
     private const string LightAtkAttackerSlotKey = "ReplaceableLightAtk-Attacker"; //do not change the names of these clips in the Animator
     private const string LightAtkDefenderSlotKey = "ReplaceableLightAtk-Defender"; //do not change the names of these clips in the Animator
-    
+    private const string BlockSlotKey = "ReplaceableBlock"; //do not change the names of these clips in the Animator
+
 
 
     private static readonly int HashInputX = Animator.StringToHash("Input_XFloat");
@@ -120,6 +121,10 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         if (_isInClinchRecovery) return;
         if (_animator != null && _animator.GetBool(HashIsAction)) return;
 
+        _enemyMovement = target.GetComponent<MovementComponent>();
+        if (!_enemyMovement.CanBeClinched) return;
+
+        
         HealthComponent targetHealth = target.GetComponent<HealthComponent>();
         if (targetHealth != null && targetHealth.IsDead) return;
 
@@ -141,7 +146,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _enemyAnimator.ResetTrigger(HashBreakClinch);
         _enemyAnimator.ResetTrigger(HashGettingUp);
 
-        _enemyMovement = target.GetComponent<MovementComponent>();
+        
         _enemyMovement.isImmobilized = false;
 
         _enemyRigidbody = target.GetComponent<Rigidbody>();
@@ -214,7 +219,8 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         // Trigger throw animation on both actors
         _animator.SetTrigger(HashWheelThrow);
         _enemyAnimator.SetTrigger(HashWheelThrow);
-
+        if (_enemyMovement != null)
+            _enemyMovement.CanBeClinched = false;    
 
         /*
 
@@ -235,7 +241,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         // does not immediately re-mirror stale non-zero values back onto the enemy animator.
         if (_movement != null)
             _movement.ZeroAnimatorInputs();
-        if (_enemyMovement != null)
+
             _enemyMovement.ZeroAnimatorInputs();
 
          RemoveUkeParentConstraint();
@@ -273,6 +279,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         {
             _movement.isMovementLocked = true;
             _movement.canRotate = false;
+            
         }
 
         // Disconnect the animation sync so SyncAnimationFromSource cannot
@@ -617,6 +624,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
             _enemyMovement.syncAnimationSource = null;
             _enemyMovement.isInFlight = false;
             _enemyMovement.isImmobilized = false;
+            _enemyMovement.CanBeClinched = false;
         }
 
         if (_enemyAnimator != null)
@@ -770,7 +778,10 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _isBreakingClinch = false;
         _isInClinchRecovery = true;
         if (_movement != null)
+        {
             _movement.isMovementLocked = false;
+            _movement.CanBeClinched = true; 
+        }
         EndClinchUke();
         EndClinchTori();
         StartCoroutine(ClinchRecovery());
@@ -812,6 +823,8 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _isInClinchRecovery = true;
         yield return new WaitForSeconds(CLINCH_RECOVERY_DURATION);
         _isInClinchRecovery = false;
+        if (_movement != null)
+            _movement.CanBeClinched = true;
     }
     #endregion  
 }

@@ -53,6 +53,27 @@ public class AnimationStateNotifier : StateMachineBehaviour
             _clinchHandler = animator.GetComponent<ClinchHandler>();
     }
 
+    public override void OnStateUpdate(
+        Animator animator,
+        AnimatorStateInfo stateInfo,
+        int layerIndex)
+    {
+        // If the state loops, we want to treat each loop as a separate playthrough.
+        // So if the state has looped back to the beginning, we clear the cached references
+        // so they will be re-resolved on the next update (which will be the same as the next entry).
+        
+    }
+
+    public override void OnStateMove(
+        Animator animator,
+        AnimatorStateInfo stateInfo,
+        int layerIndex)
+    {
+        // If the state loops, we want to treat each loop as a separate playthrough.
+        // So if the state has looped back to the beginning, we clear the cached references
+        // so they will be re-resolved on the next update (which will be the same as the next entry).
+    }
+
     /// <summary>
     /// Called by Unity when the Animator exits this state — including when interrupted
     /// by a transition. Each component is notified independently using its own event field.

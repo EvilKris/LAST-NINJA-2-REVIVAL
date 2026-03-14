@@ -98,6 +98,7 @@ public class MainMenuManager : MonoBehaviour
 
         if (!_flashTriggered && timeRemaining <= flashLeadTime)
         {
+            AudioManager.PlayMusic(myMusic, true);
             _flashTriggered = true;
             StartCoroutine(WhiteFlash(flashLeadTime));
         }
@@ -208,7 +209,7 @@ public class MainMenuManager : MonoBehaviour
     /// </summary>
     private void OnVideoFinished(VideoPlayer vp)
     {
-        AudioManager.PlayMusic(myMusic, true);
+        
 
         if (uiTextButton != null)
             uiTextButton.gameObject.SetActive(true);
@@ -252,10 +253,10 @@ public class MainMenuManager : MonoBehaviour
         }
 
         // Play button click sound for audio feedback
-        JSAM.AudioManager.PlaySound(clickSound);
+        AudioManager.PlaySound(clickSound);
         
         // Stop the menu music immediately (no fade)
-        JSAM.AudioManager.StopMusic(myMusic, null, false);
+        AudioManager.StopMusic(myMusic, null, true);
 
         // Trigger a shake effect on the UI for dramatic impact
         // Parameters: target, duration (2s), strength (10), vibrato (25 shakes)

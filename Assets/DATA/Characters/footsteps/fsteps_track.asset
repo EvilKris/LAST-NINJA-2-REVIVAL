@@ -10,14 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0d15ae218647a2d4f85e14306846c10c, type: 3}
-  m_Name: last-ninja-menu
+  m_Name: fsteps_track
   m_EditorClassIdentifier: com.Brogrammist.JSAM::JSAM.SoundFileObject
   safeName: 
   presetDescription: 
   files:
-  - {fileID: 8300000, guid: 752331d2c5230324ea58b63896006f44, type: 3}
-  - {fileID: 8300000, guid: 72fe31b671942d14b83a7b01cdb298c9, type: 3}
-  neverRepeat: 1
+  - {fileID: 8300000, guid: a1832dc3b4a8c484ba567359dc1b7d2b, type: 3}
+  - {fileID: 8300000, guid: c24bddb65c58d2e40bc922532c67d968, type: 3}
+  - {fileID: 8300000, guid: ed43a8d6fac387f408bfc3e7c6f4ecf6, type: 3}
+  - {fileID: 8300000, guid: e95364dc4ccabb040a98d3c02f19abaf, type: 3}
+  neverRepeat: 0
   loopStart: 0
   loopEnd: 0
   bpm: 120

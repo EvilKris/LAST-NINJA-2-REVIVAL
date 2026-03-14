@@ -25,3 +25,4 @@ MonoBehaviour:
   clinchLightAtk: {fileID: 11400000, guid: a366724006e9ae843baa074cb1aa27a4, type: 2}
   clinchThrowDefault: {fileID: 11400000, guid: d589600e312129543b52f8a38250d157, type: 2}
   styleAnimator: {fileID: 0}
+  blockClip: {fileID: 7400000, guid: 412cb7c4ba865a441b3872bb43fee9d5, type: 2}

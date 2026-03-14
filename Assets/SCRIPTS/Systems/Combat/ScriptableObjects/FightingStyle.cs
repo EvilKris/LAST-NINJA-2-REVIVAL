@@ -26,4 +26,8 @@ public class FightingStyle : ScriptableObject
     [Header("Ignore except for unique weapons")]
     [Tooltip("IGNORE unless req for completely unique weapons! (bow/arrow etc) Defines the fighting style's unique animations. ")]
     public RuntimeAnimatorController styleAnimator; // Swappable animators!
+
+    [Header("Defensive")]
+    [Tooltip("Block animation clip swapped into the ReplaceableBlock slot at runtime.")]
+    public AnimationClip blockClip;
 }

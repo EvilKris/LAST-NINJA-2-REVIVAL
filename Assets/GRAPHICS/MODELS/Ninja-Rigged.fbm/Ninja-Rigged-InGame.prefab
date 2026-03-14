@@ -1000,11 +1000,11 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1138ad1b89295f947bdd9a394f5d8845,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1622152926958377335}
+      addedObject: {fileID: 4948865570488888835}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1138ad1b89295f947bdd9a394f5d8845,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4948865570488888835}
+      addedObject: {fileID: 4940660725989629818}
   m_SourcePrefab: {fileID: 100100000, guid: 1138ad1b89295f947bdd9a394f5d8845, type: 3}
 --- !u!1 &80848986472197700 stripped
 GameObject:
@@ -1251,19 +1251,6 @@ MonoBehaviour:
   lockOnPoint: {fileID: 0}
   isInvulnerable: 0
   characterEffects: {fileID: 11400000, guid: 1c611825f59f2da479f041278a5195a5, type: 2}
---- !u!114 &1622152926958377335
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 80848986472197700}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 236c7353267fd2741bd903c727953e3e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: GameScripts::CombatComboWindowDebugger
-  overrideMaterial: {fileID: 0}
 --- !u!114 &4948865570488888835
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1281,6 +1268,25 @@ MonoBehaviour:
   directionThreshold: 0.7
   clinchCooldown: 0.2
   checkInterval: 1
+--- !u!114 &4940660725989629818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 80848986472197700}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff06ebc01deb5004e827e9fd0e77dfb9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameScripts::FootstepHandler
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 8
+  groundCheckDistance: 1.2
+  raycastOriginHeight: 0.1
+  walkVolumeScale: 0.8
+  runVolumeScale: 1
 --- !u!4 &3217792881604878141 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2412161367050800168, guid: 1138ad1b89295f947bdd9a394f5d8845,

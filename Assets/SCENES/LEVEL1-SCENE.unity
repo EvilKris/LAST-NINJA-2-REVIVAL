@@ -450,7 +450,7 @@ Transform:
   m_GameObject: {fileID: 185921170}
   serializedVersion: 2
   m_LocalRotation: {x: 0.20624357, y: 0.78083605, z: -0.3291045, w: 0.48933515}
-  m_LocalPosition: {x: 394.0557, y: 7.157978, z: 629.9548}
+  m_LocalPosition: {x: 396.7957, y: 7.1579833, z: 624.9048}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1078,7 +1078,11 @@ PrefabInstance:
     - {fileID: 7578240563513979395, guid: 64bbe6dd3e7353b48abd2fe5aafef53e, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 492123599088471460, guid: 64bbe6dd3e7353b48abd2fe5aafef53e,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 905166424}
   m_SourcePrefab: {fileID: 100100000, guid: 64bbe6dd3e7353b48abd2fe5aafef53e, type: 3}
 --- !u!4 &427295585 stripped
 Transform:
@@ -1773,6 +1777,27 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 900476898}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &905166423 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 492123599088471460, guid: 64bbe6dd3e7353b48abd2fe5aafef53e,
+    type: 3}
+  m_PrefabInstance: {fileID: 401254820}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &905166424
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 905166423}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f8be87edeb9cd8448fbaeb9a9fd5b86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameScripts::TerrainLayerSoundMap
+  layerSounds:
+  - {fileID: 11400000, guid: 255f1c418642e4b4fa6a10cbbcd847f6, type: 2}
+  - {fileID: 11400000, guid: a9724e17d4dbca7478c727a2bfa0d386, type: 2}
 --- !u!4 &955520947 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4204330183001905577, guid: 362392f005939df4aac89702344b6c4e,

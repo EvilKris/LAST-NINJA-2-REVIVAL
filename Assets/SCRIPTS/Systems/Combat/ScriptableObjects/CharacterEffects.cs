@@ -76,6 +76,13 @@ public class CharacterEffects : ScriptableObject
     [Tooltip("Body collapsing sound")]
     public SoundFileObject sfxBodyCollapse;
     
+    [Header("--- FOOTSTEPS ---")]
+    [Tooltip("Default footstep sound played while walking (used when no TerrainSoundData is found).")]
+    public SoundFileObject sfxFootstepWalk;
+
+    [Tooltip("Default footstep sound played while running (used when no TerrainSoundData is found). Falls back to sfxFootstepWalk if unassigned.")]
+    public SoundFileObject sfxFootstepRun;
+
     [Header("--- MOVEMENT & EXERTION ---")]
     [Tooltip("Jumping effort sound")]
     public SoundFileObject sfxJump;
