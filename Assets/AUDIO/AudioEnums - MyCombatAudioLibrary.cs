@@ -19,7 +19,8 @@
         landthrown,
         throwVocal1,
         fsteps_track,
-        fsteps_grass
+        fsteps_grass,
+        pickupItem
     }
     public enum MyCombatAudioLibraryMusic {
         Level1TheWastelands,

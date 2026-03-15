@@ -283,6 +283,7 @@ MonoBehaviour:
     type: 2}
   Charge_Drive_Strike_Tier_Complete: {fileID: 11400000, guid: 31acd13e4d8b1fa43aa1a87bbb8c414d,
     type: 2}
+  DefaultPickupSound: {fileID: 11400000, guid: f520321739d28634083f39b5e292dcfa, type: 2}
 --- !u!114 &3571197963282959883
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -423,6 +424,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   TargetGroupCams: {fileID: 2731288125025071637}
   targetGroup: {fileID: 3378648734681861489}
+  blendWaitTime: 1
 --- !u!1 &3148289131340771517
 GameObject:
   m_ObjectHideFlags: 0
@@ -452,8 +454,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3148289131340771517}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.19066116, y: -0.47813952, z: 0.10717142, w: -0.85061467}
-  m_LocalPosition: {x: 406.2304, y: 6.734098, z: 592.30206}
+  m_LocalRotation: {x: 0.20624357, y: 0.78083605, z: -0.3291045, w: 0.48933515}
+  m_LocalPosition: {x: 396.7957, y: 7.1579833, z: 624.9048}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -810,6 +812,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4b8f1774b72cd547a6bb648aba77b52, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+  fadeDuration: 0.4
 --- !u!1 &8070682079959636319
 GameObject:
   m_ObjectHideFlags: 0

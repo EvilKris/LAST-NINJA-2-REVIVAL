@@ -30,6 +30,9 @@ public class PlayerController : MonoBehaviour
     /// <summary>Handles clinch/grappling mechanics.</summary>
     private ClinchHandler _clinchHandler;
 
+    /// <summary>Handles proximity item pickup triggered by the block button.</summary>
+    private PickupDetector _pickupDetector;
+
     // ========================================
     // ATTACK HOLD MECHANIC
     // ========================================
@@ -99,6 +102,7 @@ public class PlayerController : MonoBehaviour
         _health = GetComponent<HealthComponent>();
         _combat = GetComponent<CombatHandler>();
         _clinchHandler = GetComponent<ClinchHandler>();
+        _pickupDetector = GetComponent<PickupDetector>();
         
         // Cache camera references for input direction calculations
         _mainCamera = Camera.main;
@@ -328,9 +332,19 @@ public class PlayerController : MonoBehaviour
     private void OnBlockInput(InputAction.CallbackContext context)
     {
         if (context.started)
+        {
+            // Block button doubles as the pickup button (classic Last Ninja behaviour).
+            // Only attempt pickup when the player is not already blocking or attacking.
+            if (_pickupDetector != null && !_combat.IsBlocking && !_combat.IsAttacking)
+            {
+                if (_pickupDetector.TryPickup()) return;
+            }
             _combat.SetBlocking(true);
+        }
         else
+        {
             _combat.ResetBlocking();
+        }
     }
     private void OnAcrobatics(InputAction.CallbackContext context)
     {

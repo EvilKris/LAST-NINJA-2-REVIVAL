@@ -13,6 +13,10 @@ public class PrefabBankManager : MonoBehaviour
     public SoundFileObject Tier_One_Drive_Strike;
     public SoundFileObject Charge_Drive_Strike_Tier_Complete;
 
+    [Header("Pickup")]
+    [Tooltip("Default sound played when any item is picked up. Can be overridden per-item in ItemData.")]
+    public SoundFileObject DefaultPickupSound;
+
     #region Useful Universal Functions
     /// <summary>
     /// Swaps materials on all renderers in a target GameObject's hierarchy.
