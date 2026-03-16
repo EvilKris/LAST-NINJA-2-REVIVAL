@@ -21,6 +21,21 @@ MonoBehaviour:
       surfaceData: 2
     screenSpaceSettings:
       normalBlend: 0
+--- !u!114 &-5363851012511089451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b036b133d9381541b74131e8be9a73b, type: 3}
+  m_Name: C64RevealRendererFeature
+  m_EditorClassIdentifier: Assembly-CSharp::C64RevealRendererFeature
+  m_Active: 1
+  settings: {revealMaterial: {fileID: 2100000, guid: ede0dec8fc43c714585fa7cb54437974,
+      type: 2}, renderPassEvent: 550}
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -50,7 +65,8 @@ MonoBehaviour:
   m_RendererFeatures:
   - {fileID: 6968647871995622034}
   - {fileID: -6623318099462524821}
-  m_RendererFeatureMap: 92b2146f519cb5606bf01ec7473f15a4
+  - {fileID: 0}
+  m_RendererFeatureMap: 92b2146f519cb5606bf01ec7473f15a4d53c284becc58fb5
   m_UseNativeRenderPass: 0
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}

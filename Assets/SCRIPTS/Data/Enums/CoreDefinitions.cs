@@ -80,4 +80,5 @@ public enum AnimationExitEvent
     EndThrow        = 1 << 3,
     BreakClinch     = 1 << 4,
     EndBlock        = 1 << 5,
+    EndPickup       = 1 << 6,
 }

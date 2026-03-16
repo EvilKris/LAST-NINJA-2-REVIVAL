@@ -30,10 +30,18 @@ public class AnimationStateNotifier : StateMachineBehaviour
     [Tooltip("Event sent to ClinchHandler on exit. None = do not notify.")]
     public AnimationExitEvent clinchHandlerEvent = AnimationExitEvent.None;
 
+    /// <summary>
+    /// Event sent to <see cref="PickupDetector"/> on exit.
+    /// Set to <see cref="AnimationExitEvent.None"/> to skip it.
+    /// </summary>
+    [Tooltip("Event sent to PickupDetector on exit. None = do not notify.")]
+    public AnimationExitEvent pickupDetectorEvent = AnimationExitEvent.None;
+
     // Cached direct references — resolved once on state enter to avoid per-exit allocations.
     private CombatHandler _combatHandler;
     private MovementComponent _movement;
     private ClinchHandler _clinchHandler;
+    private PickupDetector _pickupDetector;
 
     /// <summary>
     /// Called by Unity when the Animator enters this state.
@@ -51,6 +59,8 @@ public class AnimationStateNotifier : StateMachineBehaviour
             _movement = animator.GetComponent<MovementComponent>();
         if (_clinchHandler == null)
             _clinchHandler = animator.GetComponent<ClinchHandler>();
+        if (_pickupDetector == null)
+            _pickupDetector = animator.GetComponent<PickupDetector>();
     }
 
     public override void OnStateUpdate(
@@ -58,10 +68,14 @@ public class AnimationStateNotifier : StateMachineBehaviour
         AnimatorStateInfo stateInfo,
         int layerIndex)
     {
-        // If the state loops, we want to treat each loop as a separate playthrough.
-        // So if the state has looped back to the beginning, we clear the cached references
-        // so they will be re-resolved on the next update (which will be the same as the next entry).
-        
+        // Drive the pickup collect window from here so it fires even if the state
+        // never fully completes (normalizedTime never reaches 1.0 before cleanup).
+        if (_pickupDetector != null
+            && pickupDetectorEvent != AnimationExitEvent.None
+            && stateInfo.normalizedTime >= 0.5f)
+        {
+            _pickupDetector.NotifyCollectWindow();
+        }
     }
 
     public override void OnStateMove(
@@ -107,6 +121,11 @@ public class AnimationStateNotifier : StateMachineBehaviour
             if (_clinchHandler != null && clinchHandlerEvent != AnimationExitEvent.None)
                 _clinchHandler.OnAnimationStateExit(layerIndex, AnimationExitEvent.ClipInterrupted);
         }
+
+        // PickupDetector cleanup fires on every exit regardless of completion,
+        // because isAction must always be cleared for the Animator to return to Idle.
+        if (_pickupDetector != null && pickupDetectorEvent != AnimationExitEvent.None)
+            _pickupDetector.OnAnimationStateExit(layerIndex, completed ? pickupDetectorEvent : AnimationExitEvent.ClipInterrupted);
     }
 }
 

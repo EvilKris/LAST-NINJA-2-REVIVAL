@@ -334,15 +334,19 @@ public class PlayerController : MonoBehaviour
         if (context.started)
         {
             // Block button doubles as the pickup button (classic Last Ninja behaviour).
-            // Only attempt pickup when the player is not already blocking or attacking.
-            if (_pickupDetector != null && !_combat.IsBlocking && !_combat.IsAttacking)
+            // Only attempt pickup when the player is idle (not blocking, attacking, or already picking up).
+            if (_pickupDetector != null
+                && !_combat.IsBlocking
+                && !_combat.IsAttacking
+                && !_pickupDetector.IsPickingUp)
             {
-                if (_pickupDetector.TryPickup()) return;
+                if (_pickupDetector.TryBeginPickup()) return;
             }
             _combat.SetBlocking(true);
         }
         else
         {
+            if(_combat.IsBlocking)
             _combat.ResetBlocking();
         }
     }

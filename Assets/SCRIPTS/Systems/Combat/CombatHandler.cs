@@ -394,6 +394,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         if (_health.IsDead) return;
         if (_animator.GetBool(HashIsAction) && (_activeMove == null || !_canAcceptComboInput)) return;
 
+        _animator.SetBool(HashIsAction, true);
         // Convert tier to zero-based list index (Tier 1 → index 0)
         int moveIndex = chargeTier - 1;
 
@@ -422,6 +423,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         yield return new WaitForSeconds(specialMoveDuration);
 
         Destroy(effect);
+        _animator.SetBool(HashIsAction, false); 
         Debug.Log("Special move finished!");
     }
 
@@ -684,6 +686,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     /// </summary>
     public void SetBlocking(bool blocking)
     {
+        if(_clinchModule.IsClinching) return; //not available during clinch (yet)
+
         if (blocking)
         {
             // Cannot block while attacking or already mid-block
