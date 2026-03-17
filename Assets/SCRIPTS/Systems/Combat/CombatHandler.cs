@@ -502,8 +502,24 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         if (flipMove == null) return;
 
         _isAcrobaticMove = true;
+        StartCoroutine(FlipWithAfterimage(flipMove));
         PlayMove(flipMove);
         _animator.SetBool(HashIsAction, true);
+    }
+
+    /// <summary>
+    /// Attaches a <see cref="FlipAfterimageEffect"/> for the duration of the flip animation,
+    /// producing a white, semi-transparent ghost trail that is more spread out than the
+    /// charged-attack afterimage.
+    /// </summary>
+    private IEnumerator FlipWithAfterimage(CombatMove flipMove)
+    {
+        FlipAfterimageEffect effect = gameObject.AddComponent<FlipAfterimageEffect>();
+
+        float duration = flipMove.animationClip != null ? flipMove.animationClip.length : specialMoveDuration;
+        yield return new WaitForSeconds(duration);
+
+        Destroy(effect);
     }
 
     // =========================================================================

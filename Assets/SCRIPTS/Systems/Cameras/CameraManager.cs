@@ -8,6 +8,7 @@ public class CameraManager : MonoBehaviour
     [SerializeField] private GameObject TargetGroupCams;
     [SerializeField] private CinemachineTargetGroup targetGroup;
     [SerializeField] private float blendWaitTime = 1f;
+    [SerializeField] private RetroViewportController retroViewportController;
 
     public static Action<bool, Transform[]> OnActivateTargetGroupCams;
 
@@ -94,5 +95,13 @@ public class CameraManager : MonoBehaviour
         targetGroup.Targets.Clear();
         clearTargetsCoroutine = null;
     }
+
+    public void SetRetroMode(bool isRetro)
+    {
+        if (retroViewportController != null)
+        {
+            retroViewportController.SetRetroMode(isRetro);
+        }
+    }   
 }
 

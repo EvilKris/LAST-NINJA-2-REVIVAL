@@ -65,8 +65,7 @@ MonoBehaviour:
   m_RendererFeatures:
   - {fileID: 6968647871995622034}
   - {fileID: -6623318099462524821}
-  - {fileID: 0}
-  m_RendererFeatureMap: 92b2146f519cb5606bf01ec7473f15a4d53c284becc58fb5
+  m_RendererFeatureMap: 92b2146f519cb5606bf01ec7473f15a4
   m_UseNativeRenderPass: 0
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -114,10 +113,10 @@ MonoBehaviour:
     AfterOpaque: 0
     Source: 1
     NormalSamples: 1
-    Intensity: 1
+    Intensity: 7.72
     DirectLightingStrength: 0.228
-    Radius: 1
+    Radius: 40.9
     Samples: 1
     BlurQuality: 0
-    Falloff: 100
+    Falloff: 56.4
     SampleCount: -1
