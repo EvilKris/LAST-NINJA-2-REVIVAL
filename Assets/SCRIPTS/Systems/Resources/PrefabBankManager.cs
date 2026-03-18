@@ -9,6 +9,8 @@ public class PrefabBankManager : MonoBehaviour
     [Header("GhostTrail")]
     [Tooltip("Material used for Drive Strike ghost trail vfx")]
     public Material GhostTrailsMat;
+    public Material GhostTrailsMatAdditive;
+
     [Tooltip("Sound commences on Tier One Drive Strike")]
     public SoundFileObject Tier_One_Drive_Strike;
     public SoundFileObject Charge_Drive_Strike_Tier_Complete;

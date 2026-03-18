@@ -20,7 +20,8 @@
         throwVocal1,
         fsteps_track,
         fsteps_grass,
-        pickupItem
+        pickupItem,
+        lightCry
     }
     public enum MyCombatAudioLibraryMusic {
         Level1TheWastelands,

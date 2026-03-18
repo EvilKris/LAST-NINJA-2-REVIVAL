@@ -460,6 +460,14 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         PlayMove(move);
         _animator.SetBool(HashIsAction, true);
 
+        // ~1-in-5 chance to play a light attack cry
+        if (_health.characterEffects != null
+            && _health.characterEffects.sfxLightAttackCry != null
+            && UnityEngine.Random.Range(0, 5) == 0)
+        {
+            JSAM.AudioManager.PlaySound(_health.characterEffects.sfxLightAttackCry);
+        }
+
         _comboIndex++;
         _lastAttackTime = Time.time;
     }
@@ -516,7 +524,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     {
         FlipAfterimageEffect effect = gameObject.AddComponent<FlipAfterimageEffect>();
 
-        float duration = flipMove.animationClip != null ? flipMove.animationClip.length : specialMoveDuration;
+        float duration = flipMove.animationClip != null ? flipMove.animationClip.length * 0.8f : specialMoveDuration;
         yield return new WaitForSeconds(duration);
 
         Destroy(effect);

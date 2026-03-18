@@ -13,16 +13,24 @@ public class CharacterEffects : ScriptableObject
     // AUDIO EFFECTS (SFX)
     // ?????????????????????????????????????????????????????????????????????????????????????????????
     
-    [Header("--- DAMAGE REACTIONS ---")]
+    [Header("--- ATTACK CRIES/DAMAGE REACTIONS ---")]
+
+    [Tooltip("Light attack sound (random)")]
+    public SoundFileObject sfxLightAttackCry;
     [Tooltip("Light hit reaction sound (small grunt/gasp)")]
     public SoundFileObject sfxLightHit;
     
+    [Tooltip("Medium attack sound (random)")]
+    public SoundFileObject sfxMediumAttackCry;
     [Tooltip("Medium hit reaction sound (moderate grunt/pain)")]
     public SoundFileObject sfxMediumHit;
-    
+
+    [Tooltip("Heavy attack sound (random - more common)")]
+    public SoundFileObject sfxHeavyAttackCry;
     [Tooltip("Heavy hit reaction sound (large grunt/pain)")]
     public SoundFileObject sfxHeavyHit;
-    
+
+
     [Tooltip("Critical hit reaction sound (extreme pain/dramatic)")]
     public SoundFileObject sfxCriticalHit;
 

@@ -279,6 +279,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: '::'
   PhantomMaterial: {fileID: 2100000, guid: 76ecaadddd04b3f4f8a75e200d261360, type: 2}
   GhostTrailsMat: {fileID: 2100000, guid: d7920a276ae40c64ca863ace36ed1fd9, type: 2}
+  GhostTrailsMatAdditive: {fileID: 2100000, guid: f023f7ad8970449419c8b26a2851ea7d,
+    type: 2}
   Tier_One_Drive_Strike: {fileID: 11400000, guid: f9a36207019a5404ead3cfd257d1382f,
     type: 2}
   Charge_Drive_Strike_Tier_Complete: {fileID: 11400000, guid: 31acd13e4d8b1fa43aa1a87bbb8c414d,
@@ -456,8 +458,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3148289131340771517}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.27984518, y: 0.3647056, z: -0.11591566, w: 0.88047725}
-  m_LocalPosition: {x: 374.21234, y: 30.490673, z: 592.954}
+  m_LocalRotation: {x: 0.20624357, y: 0.78083605, z: -0.3291045, w: 0.48933515}
+  m_LocalPosition: {x: 396.7957, y: 7.1579833, z: 624.9048}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -494,9 +496,9 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.1
+  near clip plane: 0.3
   far clip plane: 1000
-  field of view: 10
+  field of view: 60
   orthographic: 0
   orthographic size: 6
   m_Depth: 0

@@ -1,159 +1,225 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// White, semi-transparent ghost trail spawned during the acrobatic flip.
-/// Similar to <see cref="AfterimageEffect"/> but with a wider spawn interval
-/// and longer lifetime so the images are more spread out.
+/// Spawns a white, semi-transparent ghost trail during the acrobatic flip.
+/// Similar to <see cref="AfterimageEffect"/> but tuned for a wider spread:
+/// larger spawn interval and longer lifetime so silhouettes linger further apart.
+/// No sound is played on activation (unlike the charged-attack afterimage).
 /// </summary>
 public class FlipAfterimageEffect : MonoBehaviour
 {
+    // -------------------------------------------------------------------------
+    // Tuning
+    // -------------------------------------------------------------------------
     [Header("Flip Afterimage Settings")]
-    public Material afterimageMaterial;
-    public Color afterimageColor = new Color(1f, 1f, 1f, 1f);
-    public float lifetime = 0.8f;
-    public float spawnInterval = 0.08f;
-    public float startAlpha = 0.4f;
+    [Tooltip("Tint applied to each ghost silhouette (RGB). Alpha channel is unused — see startAlpha.")]
+    public Color afterimageColor = new(0.3f, 0.3f, 0.3f, 0f);
+
+    [Tooltip("Seconds before a ghost silhouette fully fades out and is destroyed.")]
+    public float lifetime = 0.1f;
+
+    [Tooltip("Seconds between consecutive ghost spawns. Larger = more spread out.")]
+    public float spawnInterval = 0.05f;
+
+    [Tooltip("Initial opacity of each ghost (0 = invisible, 1 = fully opaque).")]
+    public float startAlpha = 0.5f;
 
     [Header("Optimization")]
-    public int maxAfterimages = 20;
+    [Tooltip("Hard cap on simultaneous ghost meshes to bound memory/draw calls.")]
+    public int maxAfterimages = 5;
 
-    private SkinnedMeshRenderer[] skinnedMeshRenderers;
-    private float spawnTimer = 0f;
-    private List<AfterimageInstance> activeAfterimages = new List<AfterimageInstance>();
+    // -------------------------------------------------------------------------
+    // Cached shader property IDs (avoids per-frame string hashing)
+    // -------------------------------------------------------------------------
+    private static readonly int PropColor = Shader.PropertyToID("_Color");
+    private static readonly int PropAlpha = Shader.PropertyToID("_Alpha");
 
-    void OnEnable()
+    // -------------------------------------------------------------------------
+    // Runtime state
+    // -------------------------------------------------------------------------
+
+    /// <summary>Template material cloned once on enable; each ghost gets its own copy so alpha fades independently.</summary>
+    private Material _baseMaterial;
+
+    /// <summary>All skinned renderers on the character, cached on enable.</summary>
+    private SkinnedMeshRenderer[] _skinnedRenderers;
+
+    /// <summary>Accumulator for spawn timing.</summary>
+    private float _spawnTimer;
+
+    /// <summary>Cached <c>1 / lifetime</c> to replace per-frame division with multiplication.</summary>
+    private float _lifetimeInv;
+
+    /// <summary>Active ghost instances. Pre-allocated to <see cref="maxAfterimages"/> capacity.</summary>
+    private readonly List<AfterimageInstance> _activeAfterimages = new List<AfterimageInstance>();
+
+    // -------------------------------------------------------------------------
+    // Unity lifecycle
+    // -------------------------------------------------------------------------
+
+    private void OnEnable()
     {
-        skinnedMeshRenderers = GetComponentsInChildren<SkinnedMeshRenderer>();
+        _skinnedRenderers = GetComponentsInChildren<SkinnedMeshRenderer>();
 
-        if (afterimageMaterial == null)
-        {
-            afterimageMaterial = MasterSingleton.Instance.PrefabBankManager.GhostTrailsMat;
-        }
+        // Clone the shared ghost-trails material and stamp it white.
+        // The GhostTrailsShader defaults _MainTex to a built-in white texture,
+        // so we intentionally skip setting _MainTex — the silhouette will be a
+        // solid white shape tinted by _Color, which is exactly what we want.
+        _baseMaterial = new Material(MasterSingleton.Instance.PrefabBankManager.GhostTrailsMat);
+        _baseMaterial.SetColor(PropColor, afterimageColor);
+        _baseMaterial.SetFloat(PropAlpha, startAlpha);
 
-        spawnTimer = spawnInterval;
+        _lifetimeInv = 1f / lifetime;
+        _spawnTimer = spawnInterval; // Spawn the first ghost immediately
+        _activeAfterimages.Capacity = Mathf.Max(_activeAfterimages.Capacity, maxAfterimages);
     }
 
-    void Update()
+    private void Update()
     {
-        spawnTimer += Time.deltaTime;
+        _spawnTimer += Time.deltaTime;
 
-        if (spawnTimer >= spawnInterval)
+        if (_spawnTimer >= spawnInterval)
         {
             SpawnAfterimage();
-            spawnTimer = 0f;
+            _spawnTimer = 0f;
         }
 
-        UpdateAfterimages();
+        FadeAndCullAfterimages();
     }
 
-    void SpawnAfterimage()
+    private void OnDisable()
     {
-        if (activeAfterimages.Count >= maxAfterimages) return;
+        CleanupAll();
+    }
 
-        foreach (SkinnedMeshRenderer smr in skinnedMeshRenderers)
+    private void OnDestroy()
+    {
+        CleanupAll();
+    }
+
+    // -------------------------------------------------------------------------
+    // Spawn
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Bakes the current pose of every <see cref="SkinnedMeshRenderer"/> into a
+    /// static mesh, wraps it in a new GameObject with the white ghost material,
+    /// and registers it for fade-out tracking.
+    /// </summary>
+    private void SpawnAfterimage()
+    {
+        if (_activeAfterimages.Count >= maxAfterimages) return;
+
+        float now = Time.time;
+
+        for (int r = 0; r < _skinnedRenderers.Length; r++)
         {
+            SkinnedMeshRenderer smr = _skinnedRenderers[r];
             if (smr == null) continue;
 
-            GameObject afterimageObj = new GameObject("FlipAfterimage");
-            afterimageObj.transform.position = smr.transform.position;
-            afterimageObj.transform.rotation = smr.transform.rotation;
-            afterimageObj.transform.localScale = smr.transform.lossyScale;
+            // --- GameObject & transform ---
+            GameObject ghost = new GameObject("FlipAfterimage");
+            Transform ghostT = ghost.transform;
+            Transform smrT = smr.transform;
+            ghostT.position = smrT.position;
+            ghostT.rotation = smrT.rotation;
+            ghostT.localScale = smrT.lossyScale;
 
+            // --- Baked mesh snapshot ---
             Mesh bakedMesh = new Mesh();
             smr.BakeMesh(bakedMesh);
 
-            MeshFilter mf = afterimageObj.AddComponent<MeshFilter>();
-            mf.mesh = bakedMesh;
+            ghost.AddComponent<MeshFilter>().mesh = bakedMesh;
 
-            MeshRenderer mr = afterimageObj.AddComponent<MeshRenderer>();
+            MeshRenderer mr = ghost.AddComponent<MeshRenderer>();
             mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             mr.receiveShadows = false;
 
-            Material matInstance = new Material(afterimageMaterial);
-            matInstance.SetColor("_Color", afterimageColor);
-            matInstance.SetFloat("_Alpha", startAlpha);
-
-            if (smr.sharedMaterial != null && smr.sharedMaterial.HasProperty("_MainTex"))
-            {
-                matInstance.SetTexture("_MainTex", smr.sharedMaterial.mainTexture);
-            }
-
+            // Each ghost needs its own material instance so alpha fades independently
+            Material matInstance = new Material(_baseMaterial);
             mr.material = matInstance;
 
-            AfterimageInstance instance = new AfterimageInstance
+            _activeAfterimages.Add(new AfterimageInstance
             {
-                gameObject = afterimageObj,
+                gameObject = ghost,
                 mesh = bakedMesh,
                 material = matInstance,
-                renderer = mr,
-                spawnTime = Time.time,
-                startAlpha = startAlpha
-            };
-
-            activeAfterimages.Add(instance);
+                spawnTime = now
+            });
         }
     }
 
-    void UpdateAfterimages()
+    // -------------------------------------------------------------------------
+    // Fade & cull
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Iterates all active ghosts in reverse, fading their alpha linearly toward
+    /// zero. Expired ghosts are destroyed and removed from the list.
+    /// </summary>
+    private void FadeAndCullAfterimages()
     {
-        for (int i = activeAfterimages.Count - 1; i >= 0; i--)
+        float now = Time.time;
+
+        for (int i = _activeAfterimages.Count - 1; i >= 0; i--)
         {
-            AfterimageInstance instance = activeAfterimages[i];
-            float age = Time.time - instance.spawnTime;
+            AfterimageInstance inst = _activeAfterimages[i];
+            float age = now - inst.spawnTime;
 
             if (age >= lifetime)
             {
-                if (instance.gameObject != null)
-                    Destroy(instance.gameObject);
-                if (instance.mesh != null)
-                    Destroy(instance.mesh);
-                if (instance.material != null)
-                    Destroy(instance.material);
+                // Expired — destroy Unity objects and remove from tracking
+                if (inst.gameObject != null) Destroy(inst.gameObject);
+                if (inst.mesh != null) Destroy(inst.mesh);
+                if (inst.material != null) Destroy(inst.material);
 
-                activeAfterimages.RemoveAt(i);
+                _activeAfterimages.RemoveAt(i);
             }
-            else
+            else if (inst.material != null)
             {
-                float t = age / lifetime;
-                float alpha = Mathf.Lerp(startAlpha, 0f, t);
-
-                if (instance.material != null)
-                {
-                    instance.material.SetFloat("_Alpha", alpha);
-                }
+                // Fade: lerp alpha from startAlpha → 0 over the lifetime
+                float alpha = startAlpha * (1f - age * _lifetimeInv);
+                inst.material.SetFloat(PropAlpha, alpha);
             }
         }
     }
 
-    void OnDisable()
-    {
-        CleanupAfterimages();
-    }
+    // -------------------------------------------------------------------------
+    // Cleanup
+    // -------------------------------------------------------------------------
 
-    void OnDestroy()
+    /// <summary>
+    /// Destroys every active ghost and the shared base material.
+    /// Called on disable and destroy to prevent leaked meshes/materials.
+    /// </summary>
+    private void CleanupAll()
     {
-        CleanupAfterimages();
-    }
-
-    void CleanupAfterimages()
-    {
-        foreach (var instance in activeAfterimages)
+        for (int i = 0; i < _activeAfterimages.Count; i++)
         {
-            if (instance.gameObject != null) Destroy(instance.gameObject);
-            if (instance.mesh != null) Destroy(instance.mesh);
-            if (instance.material != null) Destroy(instance.material);
+            AfterimageInstance inst = _activeAfterimages[i];
+            if (inst.gameObject != null) Destroy(inst.gameObject);
+            if (inst.mesh != null) Destroy(inst.mesh);
+            if (inst.material != null) Destroy(inst.material);
         }
-        activeAfterimages.Clear();
+        _activeAfterimages.Clear();
+
+        if (_baseMaterial != null)
+        {
+            Destroy(_baseMaterial);
+            _baseMaterial = null;
+        }
     }
 
-    private class AfterimageInstance
+    // -------------------------------------------------------------------------
+    // Per-ghost data (struct to avoid per-instance heap allocation / GC pressure)
+    // -------------------------------------------------------------------------
+
+    private struct AfterimageInstance
     {
         public GameObject gameObject;
         public Mesh mesh;
         public Material material;
-        public MeshRenderer renderer;
         public float spawnTime;
-        public float startAlpha;
     }
 }

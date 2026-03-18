@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0d15ae218647a2d4f85e14306846c10c, type: 3}
-  m_Name: throwVocal1
+  m_Name: lightCry
   m_EditorClassIdentifier: 
   safeName: SpatialSound
   presetDescription: '<Default Preset>
@@ -22,8 +22,8 @@ MonoBehaviour:
 
     - Minor pitch shift is applied'
   files:
-  - {fileID: 8300000, guid: 578358b9dbd2d90479d2c7e8fee17ea2, type: 3}
-  - {fileID: 8300000, guid: 04f97790ceefda24f8999e721445ebcc, type: 3}
+  - {fileID: 8300000, guid: 7630f20c4c0ba8e4e8d5e7aabe9dfb96, type: 3}
+  - {fileID: 8300000, guid: a3db1e0f876f9d34d927033a23cf50e9, type: 3}
   neverRepeat: 0
   loopStart: 0
   loopEnd: 0
@@ -35,7 +35,7 @@ MonoBehaviour:
   startingPitch: 1
   pitchShift: 0.05
   loopMode: 0
-  delay: 0.25
+  delay: 0
   ignoreTimeScale: 0
   maxPlayingInstances: 10
   channelOverride: 0

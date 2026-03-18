@@ -12,8 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce01191299a3cfc4d8181ca272d7b980, type: 3}
   m_Name: Arumakuni
   m_EditorClassIdentifier: GameScripts::CharacterEffects
+  sfxLightAttackCry: {fileID: 11400000, guid: f84eae797c8ae2c4d9c6df0e0630a94d, type: 2}
   sfxLightHit: {fileID: 11400000, guid: dc879221f89ac994ab49e8d4750ce6b2, type: 2}
+  sfxMediumAttackCry: {fileID: 0}
   sfxMediumHit: {fileID: 0}
+  sfxHeavyAttackCry: {fileID: 0}
   sfxHeavyHit: {fileID: 0}
   sfxCriticalHit: {fileID: 0}
   sfxBeingThrown: {fileID: 11400000, guid: 85b5d55a51ea55f46a844fdb53083dca, type: 2}
@@ -21,6 +24,7 @@ MonoBehaviour:
   sfxLightPainVocal: {fileID: 11400000, guid: 00fd5b2fc9e0f024fbc914b771bbf7a5, type: 2}
   sfxHeavyPainVocal: {fileID: 11400000, guid: 155101a4ffdcd934ea33694d95450812, type: 2}
   sfxDeathVocal: {fileID: 11400000, guid: 93d98c2b2bc89974d9ab96a39ae526dd, type: 2}
+  sfxClinchStruggleVocal: {fileID: 0}
   sfxThrowVocal: {fileID: 11400000, guid: e114af4e725576146973dc533890fb08, type: 2}
   speechSFX: {fileID: 11400000, guid: 3da7344fb14547a44ab924f9993f05a6, type: 2}
   sfxBlock: {fileID: 0}
@@ -31,6 +35,8 @@ MonoBehaviour:
   sfxThrown: {fileID: 0}
   sfxDeath: {fileID: 0}
   sfxBodyCollapse: {fileID: 0}
+  sfxFootstepWalk: {fileID: 0}
+  sfxFootstepRun: {fileID: 0}
   sfxJump: {fileID: 0}
   sfxLand: {fileID: 0}
   sfxDash: {fileID: 0}
