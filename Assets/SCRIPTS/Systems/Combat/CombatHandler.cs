@@ -76,7 +76,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     private CombatHitbox[] _allHitboxes;            // All child hitboxes, cached in Awake
     private bool _hitboxActive;                     // Whether a hitbox is currently open this frame
     private bool _canAcceptComboInput;              // True during the combo window so the next attack can chain seamlessly
-    private bool _isAcrobaticMove;                  // Flags the active move as an acrobatic action (used by MovementComponent for special handling)
+    public bool _isAcrobaticMove;                  // Flags the active move as an acrobatic action (used by MovementComponent for special handling)
 
     // -------------------------------------------------------------------------
     // KI / Defensive Settings
@@ -94,8 +94,9 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     private const string CLIP_SLOT_KEY = "Replaceable_Motion_Base"; // Name of the placeholder clip inside the AnimatorController that gets swapped at runtime
     private const string BLOCK_CLIP_SLOT_KEY = "ReplaceableBlock";   // Placeholder clip slot for the block animation
+    private const string ACROBATICS_CLIP_SLOT_KEY = "Replaceable_Base_Flip"; // Placeholder clip slot for the acrobatics animation
     private readonly int HashIsAction = Animator.StringToHash("isAction"); // Pre-hashed Animator parameter for performance
-
+    private readonly int HashIsGrounded = Animator.StringToHash("b_isGrounded"); // Used to maintain grounded state during acrobatics
     // -------------------------------------------------------------------------
     // Motion / Root-Motion State
     // -------------------------------------------------------------------------
@@ -244,7 +245,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         if (_activeMove == null) return;
 
         var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-        if (!stateInfo.IsName("ReplaceableAttack")) return; // Only process while the attack state is active
+        bool inAttackState = stateInfo.IsName("ReplaceableAttack") || stateInfo.IsName("ReplaceableAcrobatics");
+        if (!inAttackState) return; // Only process while an active move state is playing
 
         float currentTime = stateInfo.normalizedTime;
 
@@ -261,7 +263,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         if (_activeMove == null) return;
 
         var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
-        if (stateInfo.IsName("ReplaceableAttack"))
+        if (stateInfo.IsName("ReplaceableAttack") || stateInfo.IsName("ReplaceableAcrobatics"))
         {
             float currentTime = stateInfo.normalizedTime;
 
@@ -511,8 +513,9 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
         _isAcrobaticMove = true;
         StartCoroutine(FlipWithAfterimage(flipMove));
-        PlayMove(flipMove);
+        PlayMove(flipMove, isAcrobatic: true);
         _animator.SetBool(HashIsAction, true);
+       // _animator.SetBool(HashIsGrounded,false);
     }
 
     /// <summary>
@@ -536,10 +539,13 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     /// <summary>
     /// Swaps the placeholder animation clip in the override controller and triggers
-    /// the <c>ReplaceableAttack</c> Animator state from the beginning.
+    /// the appropriate Animator state from the beginning.
+    /// Uses <c>ReplaceableAcrobatics</c> and <see cref="ACROBATICS_CLIP_SLOT_KEY"/> when
+    /// <paramref name="isAcrobatic"/> is <c>true</c>; otherwise uses <c>ReplaceableAttack</c>
+    /// and <see cref="CLIP_SLOT_KEY"/>.
     /// Resets all per-move transient state (hitbox, hit cache, audio events).
     /// </summary>
-    private void PlayMove(CombatMove move)
+    private void PlayMove(CombatMove move, bool isAcrobatic = false)
     {
         if (move.animationClip == null) return;
 
@@ -554,9 +560,17 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         // Grant or deny rotation at the start of the move based on the move's settings
         _movement.canRotate = move.rotationAllowanceEnd > 0f;
 
-        // Hot-swap the clip and restart the Animator state
-        _overrideController[CLIP_SLOT_KEY] = move.animationClip;
-        _animator.Play("ReplaceableAttack", 0, 0f);
+        // Hot-swap the clip and restart the correct Animator state
+        if (isAcrobatic)
+        {
+            _overrideController[ACROBATICS_CLIP_SLOT_KEY] = move.animationClip;
+            _animator.Play("ReplaceableAcrobatics", 0, 0f);
+        }
+        else
+        {
+            _overrideController[CLIP_SLOT_KEY] = move.animationClip;
+            _animator.Play("ReplaceableAttack", 0, 0f);
+        }
         _animator.Update(0f); // Force an immediate evaluation so state data is fresh this frame
     }
 
@@ -849,7 +863,20 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             if (_movement != null)
                 _movement.isMovementLocked = false;
         }
+        else if(exitEvent == AnimationExitEvent.EndAcrobatics)
+        {
+            _isAcrobaticMove = false;
+            _animator.SetBool(HashIsGrounded, true); // Ensure grounded state is restored after the flip
+               ResetCombatState();
+        }
     }
 
-   
+    public void NotifyDust()
+    {
+        //probably just temporary until we have a better system for mid-animation events,
+        //but for now this lets us trigger the dust effect at the right time during the
+        //attack animation without needing to create a separate state or animation event for it.  
+        _movement.dustParticles.Play(); // Add a dust effect when landing from the flip
+
+    }
 }

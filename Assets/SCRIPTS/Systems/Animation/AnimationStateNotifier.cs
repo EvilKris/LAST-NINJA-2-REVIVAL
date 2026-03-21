@@ -70,6 +70,21 @@ public class AnimationStateNotifier : StateMachineBehaviour
     {
         // Drive the pickup collect window from here so it fires even if the state
         // never fully completes (normalizedTime never reaches 1.0 before cleanup).
+
+
+        //This is just temporary until we have a better system for
+        //handling mid-animation events.
+        //For now, we can use the state update to trigger the dust
+        //effect at the right time during the attack animation,
+        //without needing to create a separate state or animation event for it.
+        if (_combatHandler != null && _combatHandler._isAcrobaticMove
+            && stateInfo.normalizedTime >= 0.7f)
+        {
+            _combatHandler.NotifyDust();
+        }
+
+
+        //pickupDetector only applicable to Player
         if (_pickupDetector != null
             && pickupDetectorEvent != AnimationExitEvent.None
             && stateInfo.normalizedTime >= 0.5f)

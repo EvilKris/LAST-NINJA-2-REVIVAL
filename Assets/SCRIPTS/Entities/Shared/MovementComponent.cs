@@ -27,6 +27,9 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     [Tooltip("Additional scaling applied to root motion movement")]
     public float rootMotionScale = 1f;
 
+    [Tooltip("Dust Particles")]
+    public ParticleSystem dustParticles;
+
     private Rigidbody _rb;
     private Animator _animator;
     private CombatHandler _combatHandler;
