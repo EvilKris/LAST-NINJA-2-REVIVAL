@@ -6,9 +6,13 @@ Shader "UI/UlamSpiralShader"
         _FilledColor ("Filled Color", Color) = (0,1,0,1)
         _EmptyColor ("Empty Color", Color) = (0.3,0.3,0.3,1)
         _BackgroundColor ("Background Color", Color) = (0,0,0,0)
+        _EdgeColor ("Edge Color", Color) = (1,1,0,1)
+        _EdgeWidth ("Edge Width", Range(0, 0.5)) = 0.08
         _FillAmount ("Fill Amount", Range(0, 1)) = 1
         _GridSize ("Grid Size", Int) = 11
         _LineThickness ("Line Thickness", Range(0, 1)) = 0.6
+        [Toggle] _FlipH ("Flip Horizontal", Float) = 0
+        [Toggle] _FlipV ("Flip Vertical", Float) = 0
         
         _StencilComp ("Stencil Comparison", Float) = 8
         _Stencil ("Stencil ID", Float) = 0
@@ -70,9 +74,13 @@ Shader "UI/UlamSpiralShader"
             float4 _FilledColor;
             float4 _EmptyColor;
             float4 _BackgroundColor;
+            float4 _EdgeColor;
+            float _EdgeWidth;
             float _FillAmount;
             int _GridSize;
             float _LineThickness;
+            float _FlipH;
+            float _FlipV;
 
             v2f vert (appdata v)
             {
@@ -145,8 +153,13 @@ Shader "UI/UlamSpiralShader"
                 float gridF = (float)_GridSize;
                 float totalCells = gridF * gridF;
 
+                // Apply flip
+                float2 uv = i.uv;
+                uv.x = lerp(uv.x, 1.0 - uv.x, _FlipH);
+                uv.y = lerp(uv.y, 1.0 - uv.y, _FlipV);
+
                 // Map UV to grid space
-                float2 gridPos = i.uv * gridF;
+                float2 gridPos = uv * gridF;
 
                 // Cell indices
                 int cellX = (int)floor(gridPos.x);
@@ -177,17 +190,22 @@ Shader "UI/UlamSpiralShader"
                 // (all cells within the grid are on the path)
                 float isOnPath = step(spiralNum, totalCells);
 
-                // Now draw the cell body and connecting lines to neighbors
-                // Cell body: a square in the center of the cell
-                float halfThick = _LineThickness * 0.5;
+                // Outer and inner half-thicknesses for stroke effect
+                float halfOuter = _LineThickness * 0.5;
+                float halfInner = max(0.0, halfOuter - _EdgeWidth);
                 float cellCenter = 0.5;
 
-                // Check if pixel is within the cell's dot/node
-                float inCellX = step(cellCenter - halfThick, cellUV.x) * step(cellUV.x, cellCenter + halfThick);
-                float inCellY = step(cellCenter - halfThick, cellUV.y) * step(cellUV.y, cellCenter + halfThick);
-                float inCell = inCellX * inCellY;
+                // --- Cell node (square at cell center) ---
+                // Outer rect (includes edge border)
+                float inCellOuterX = step(cellCenter - halfOuter, cellUV.x) * step(cellUV.x, cellCenter + halfOuter);
+                float inCellOuterY = step(cellCenter - halfOuter, cellUV.y) * step(cellUV.y, cellCenter + halfOuter);
+                float inCellOuter = inCellOuterX * inCellOuterY;
+                // Inner rect (fill/empty core)
+                float inCellInnerX = step(cellCenter - halfInner, cellUV.x) * step(cellUV.x, cellCenter + halfInner);
+                float inCellInnerY = step(cellCenter - halfInner, cellUV.y) * step(cellUV.y, cellCenter + halfInner);
+                float inCellInner = inCellInnerX * inCellInnerY;
 
-                // Check connections to right neighbor
+                // --- Right neighbor connection ---
                 int rx = cx + 1;
                 int ry = cy;
                 float rightN = GetSpiralNumber(rx, ry);
@@ -195,14 +213,14 @@ Shader "UI/UlamSpiralShader"
                 float rightBothOnPath = step(spiralNum, totalCells) * step(rightN, totalCells);
                 float rightConnected = rightConsecutive * rightBothOnPath;
                 float rightFilled = rightConnected * step(max(spiralNum, rightN), maxFilledNum);
-                // Draw horizontal line to right: right half of cell
-                float inRightLine = step(cellCenter, cellUV.x) *
-                                    step(cellCenter - halfThick, cellUV.y) *
-                                    step(cellUV.y, cellCenter + halfThick) *
-                                    rightConnected;
-                float rightLineFilled = inRightLine * rightFilled;
+                float inRightOuter = step(cellCenter, cellUV.x) *
+                                     step(cellCenter - halfOuter, cellUV.y) *
+                                     step(cellUV.y, cellCenter + halfOuter) * rightConnected;
+                float inRightInner = step(cellCenter, cellUV.x) *
+                                     step(cellCenter - halfInner, cellUV.y) *
+                                     step(cellUV.y, cellCenter + halfInner) * rightConnected;
 
-                // Check connections to left neighbor
+                // --- Left neighbor connection ---
                 int lx = cx - 1;
                 int ly = cy;
                 float leftN = GetSpiralNumber(lx, ly);
@@ -210,14 +228,14 @@ Shader "UI/UlamSpiralShader"
                 float leftBothOnPath = step(spiralNum, totalCells) * step(leftN, totalCells);
                 float leftConnected = leftConsecutive * leftBothOnPath;
                 float leftFilled = leftConnected * step(max(spiralNum, leftN), maxFilledNum);
-                // Draw horizontal line to left: left half of cell
-                float inLeftLine = step(cellUV.x, cellCenter) *
-                                   step(cellCenter - halfThick, cellUV.y) *
-                                   step(cellUV.y, cellCenter + halfThick) *
-                                   leftConnected;
-                float leftLineFilled = inLeftLine * leftFilled;
+                float inLeftOuter = step(cellUV.x, cellCenter) *
+                                    step(cellCenter - halfOuter, cellUV.y) *
+                                    step(cellUV.y, cellCenter + halfOuter) * leftConnected;
+                float inLeftInner = step(cellUV.x, cellCenter) *
+                                    step(cellCenter - halfInner, cellUV.y) *
+                                    step(cellUV.y, cellCenter + halfInner) * leftConnected;
 
-                // Check connections to top neighbor
+                // --- Top neighbor connection ---
                 int tx = cx;
                 int ty = cy + 1;
                 float topN = GetSpiralNumber(tx, ty);
@@ -225,14 +243,14 @@ Shader "UI/UlamSpiralShader"
                 float topBothOnPath = step(spiralNum, totalCells) * step(topN, totalCells);
                 float topConnected = topConsecutive * topBothOnPath;
                 float topFilled = topConnected * step(max(spiralNum, topN), maxFilledNum);
-                // Draw vertical line to top: top half of cell
-                float inTopLine = step(cellCenter, cellUV.y) *
-                                  step(cellCenter - halfThick, cellUV.x) *
-                                  step(cellUV.x, cellCenter + halfThick) *
-                                  topConnected;
-                float topLineFilled = inTopLine * topFilled;
+                float inTopOuter = step(cellCenter, cellUV.y) *
+                                   step(cellCenter - halfOuter, cellUV.x) *
+                                   step(cellUV.x, cellCenter + halfOuter) * topConnected;
+                float inTopInner = step(cellCenter, cellUV.y) *
+                                   step(cellCenter - halfInner, cellUV.x) *
+                                   step(cellUV.x, cellCenter + halfInner) * topConnected;
 
-                // Check connections to bottom neighbor
+                // --- Bottom neighbor connection ---
                 int bx = cx;
                 int by = cy - 1;
                 float bottomN = GetSpiralNumber(bx, by);
@@ -240,26 +258,37 @@ Shader "UI/UlamSpiralShader"
                 float bottomBothOnPath = step(spiralNum, totalCells) * step(bottomN, totalCells);
                 float bottomConnected = bottomConsecutive * bottomBothOnPath;
                 float bottomFilled = bottomConnected * step(max(spiralNum, bottomN), maxFilledNum);
-                // Draw vertical line to bottom: bottom half of cell
-                float inBottomLine = step(cellUV.y, cellCenter) *
-                                     step(cellCenter - halfThick, cellUV.x) *
-                                     step(cellUV.x, cellCenter + halfThick) *
-                                     bottomConnected;
-                float bottomLineFilled = inBottomLine * bottomFilled;
+                float inBottomOuter = step(cellUV.y, cellCenter) *
+                                      step(cellCenter - halfOuter, cellUV.x) *
+                                      step(cellUV.x, cellCenter + halfOuter) * bottomConnected;
+                float inBottomInner = step(cellUV.y, cellCenter) *
+                                      step(cellCenter - halfInner, cellUV.x) *
+                                      step(cellUV.x, cellCenter + halfInner) * bottomConnected;
 
-                // Combine: is the pixel on any part of the spiral line?
-                float inAnyLine = saturate(inRightLine + inLeftLine + inTopLine + inBottomLine);
-                float onSpiral = saturate(inCell * isOnPath + inAnyLine);
+                // Combine outer band (on spiral at all?)
+                float inAnyOuter = saturate(inRightOuter + inLeftOuter + inTopOuter + inBottomOuter);
+                float onSpiral = saturate(inCellOuter * isOnPath + inAnyOuter);
 
-                // Is the pixel filled?
-                float anyLineFilled = saturate(rightLineFilled + leftLineFilled + topLineFilled + bottomLineFilled);
-                float pixelFilled = saturate(inCell * isFilled + anyLineFilled);
+                // Combine inner band
+                float inAnyInner = saturate(inRightInner + inLeftInner + inTopInner + inBottomInner);
+                float onInner = saturate(inCellInner * isOnPath + inAnyInner);
+
+                // Is the pixel in the border (outer but not inner)?
+                float onBorder = onSpiral * (1.0 - onInner);
+
+                // Filled status for outer lines
+                float anyOuterFilled = saturate(inRightOuter * rightFilled +
+                                                inLeftOuter * leftFilled +
+                                                inTopOuter * topFilled +
+                                                inBottomOuter * bottomFilled);
+                float pixelFilled = saturate(inCellOuter * isFilled + anyOuterFilled);
 
                 // Determine color
-                // If on spiral and filled -> filled color
-                // If on spiral and not filled -> empty color
-                // Otherwise -> background (transparent)
-                fixed4 spiralColor = lerp(_EmptyColor, _FilledColor, step(0.5, pixelFilled));
+                // Inner pixels: filled or empty color based on fill state
+                // Border pixels: edge color
+                // Background: background color
+                fixed4 coreColor = lerp(_EmptyColor, _FilledColor, step(0.5, pixelFilled));
+                fixed4 spiralColor = lerp(coreColor, _EdgeColor, step(0.5, onBorder));
                 fixed4 finalColor = lerp(_BackgroundColor, spiralColor, step(0.5, onSpiral));
 
                 finalColor *= i.color;

@@ -21,6 +21,8 @@ public class MainMenuManager : MonoBehaviour
     // UI transition settings
     [Header("UI Transition")]
     [SerializeField] private CanvasGroup mainMenuCanvasGroup; // Canvas group for fading the entire menu
+    [SerializeField] private RectTransform bgBlackUI; // Background black image for flash effect at video end
+    [SerializeField] private Ease bgBlackFadeEase;
     [SerializeField] private float fadeOutDuration = 1f; // Duration of the fade out animation when starting the game
     [SerializeField] private AnimationCurve fadeOutCurve = AnimationCurve.EaseInOut(0, 0, 1, 1); // Custom easing curve for fade animation
     [SerializeField] private RectTransform uiCanvasRect; // UI canvas rect for shake animation
@@ -28,16 +30,15 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private RectTransform uiTextButton; // Reference to the UI canvas RectTransform for shake effects    
 
     [SerializeField] private VideoPlayer videoPlayer; // Reference to the VideoPlayer component for playing menu videos
-    [SerializeField] private RawImage displayImage; // RawImage displaying the video — faded out before playback ends
-    [SerializeField] private float videoFadeLeadTime = 1f; // Seconds before video end to start fading the RawImage out
+    [SerializeField] private RawImage displayImage; // RawImage displaying the video — hidden when playback ends
     [SerializeField] private float flashLeadTime = 0.5f; // Seconds before video end to start the white flash (peaks at video end)
 
     // Runtime state
-    private Tween fadeTween;          // Active fade animation tween
-    private bool _videoFadeTriggered; // True once the video RawImage fade-out has been started
-    private bool _flashTriggered;     // True once the white flash coroutine has been started
+    private Tween fadeTween;      // Active fade animation tween
+    private bool _flashTriggered; // True once the white flash coroutine has been started
     private UIManager uiManager;             // Cached reference to UIManager singleton
     private GameDataManager gameDataManager; // Cached reference to GameDataManager singleton
+    
 
     /// <summary>
     /// Plays the UI hover sound effect.
@@ -75,112 +76,15 @@ public class MainMenuManager : MonoBehaviour
         if (videoPlayer != null)
         {
             videoPlayer.loopPointReached += OnVideoFinished;
-            videoPlayer.Play();
+           //videoPlayer.Play();
         }
 
         // Disable pause menu functionality while in main menu
         gameDataManager.IsPauseAllowed = false;
     }
+   
 
-    private void Update()
-    {
-        if (videoPlayer == null || videoPlayer.clip == null || !videoPlayer.isPlaying)
-            return;
-
-        double timeRemaining = videoPlayer.clip.length - videoPlayer.time;
-
-        if (!_videoFadeTriggered && timeRemaining <= videoFadeLeadTime)
-        {
-            _videoFadeTriggered = true;
-            if (displayImage != null)
-                StartCoroutine(FadeOutImage(videoFadeLeadTime));
-        }
-
-        if (!_flashTriggered && timeRemaining <= flashLeadTime)
-        {
-            AudioManager.PlayMusic(myMusic, true);
-            _flashTriggered = true;
-            StartCoroutine(WhiteFlash(flashLeadTime));
-        }
-
-        // Both effects have fired — no need to poll every frame any more
-        if (_videoFadeTriggered && _flashTriggered)
-            enabled = false;
-    }
-
-    /// <summary>
-    /// Fades out the RawImage displaying the video over the given duration.
-    /// </summary>
-    private IEnumerator FadeOutImage(float duration)
-    {
-        // Cache colour components — avoids repeated property lookups inside the loop
-        Color c = displayImage.color;
-        float r = c.r, g = c.g, b = c.b;
-        float time = 0f;
-
-        while (time < duration)
-        {
-            time += Time.deltaTime;
-            displayImage.color = new Color(r, g, b, Mathf.Lerp(1f, 0f, time / duration));
-            yield return null;
-        }
-
-        displayImage.color = new Color(r, g, b, 0f);
-        displayImage.gameObject.SetActive(false);
-    }
-
-    /// <summary>
-    /// Linearly tweens <paramref name="image"/> alpha from <paramref name="from"/> to
-    /// <paramref name="to"/> over <paramref name="duration"/> seconds.
-    /// </summary>
-    private IEnumerator FadeImageAlpha(Image image, float from, float to, float duration)
-    {
-        float time = 0f;
-        while (time < duration)
-        {
-            time += Time.deltaTime;
-            image.color = new Color(1f, 1f, 1f, Mathf.Lerp(from, to, time / duration));
-            yield return null;
-        }
-        image.color = new Color(1f, 1f, 1f, to);
-    }
-
-    /// <summary>
-    /// Builds a full-screen white overlay, fades it in over <paramref name="fadeInDuration"/>
-    /// so it peaks at pure white when the video ends, then fades it back out and destroys it.
-    /// </summary>
-    private IEnumerator WhiteFlash(float fadeInDuration)
-    {
-        // Build the overlay entirely in code — no prefab required
-        GameObject overlayGO = new GameObject("WhiteFlashOverlay");
-        DontDestroyOnLoad(overlayGO);
-
-        Canvas canvas = overlayGO.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = short.MaxValue; // Always on top of every other canvas
-        overlayGO.AddComponent<CanvasScaler>();
-
-        GameObject imageGO = new GameObject("WhiteImage");
-        imageGO.transform.SetParent(overlayGO.transform, false);
-
-        Image image = imageGO.AddComponent<Image>();
-        image.color = new Color(1f, 1f, 1f, 0f);
-
-        // Stretch to fill the entire screen
-        RectTransform rt = imageGO.GetComponent<RectTransform>();
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = Vector2.zero;
-        rt.offsetMax = Vector2.zero;
-
-        // Fade in — reaches pure white exactly as the video ends
-        yield return StartCoroutine(FadeImageAlpha(image, 0f, 1f, fadeInDuration));
-
-        // Fade out — white recedes as the menu background appears
-        yield return StartCoroutine(FadeImageAlpha(image, 1f, 0f, fadeInDuration));
-
-        Destroy(overlayGO);
-    }
+   
 
     /// <summary>
     /// Called when the component is disabled.
@@ -209,10 +113,20 @@ public class MainMenuManager : MonoBehaviour
     /// </summary>
     private void OnVideoFinished(VideoPlayer vp)
     {
-        
+        if (displayImage != null)
+            displayImage.gameObject.SetActive(false);
+
+        if (bgBlackUI != null)
+        {
+            Image bgImage = bgBlackUI.GetComponent<Image>();
+            if (bgImage != null)
+                bgImage.DOFade(0f, 8f).SetEase(bgBlackFadeEase);
+        }
 
         if (uiTextButton != null)
             uiTextButton.gameObject.SetActive(true);
+
+        AudioManager.PlayMusic(myMusic, null);
     }
 
     /// <summary>

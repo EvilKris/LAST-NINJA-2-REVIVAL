@@ -3134,7 +3134,7 @@ BlendTree:
   m_Name: UnarmedTree
   m_Childs:
   - serializedVersion: 2
-    m_Motion: {fileID: 7400000, guid: 63c1f552bc9f6e6488050706b80d2fd4, type: 2}
+    m_Motion: {fileID: 7400000, guid: 79ab930bd3ec4b24bb354b5cb30617ce, type: 2}
     m_Threshold: 0
     m_Position: {x: 0, y: 1}
     m_TimeScale: 1
@@ -3142,7 +3142,7 @@ BlendTree:
     m_DirectBlendParameter: Input_X
     m_Mirror: 0
   - serializedVersion: 2
-    m_Motion: {fileID: 7400000, guid: 63c1f552bc9f6e6488050706b80d2fd4, type: 2}
+    m_Motion: {fileID: 7400000, guid: 79ab930bd3ec4b24bb354b5cb30617ce, type: 2}
     m_Threshold: 0.125
     m_Position: {x: -1, y: 1}
     m_TimeScale: 1
@@ -3150,7 +3150,7 @@ BlendTree:
     m_DirectBlendParameter: Input_X
     m_Mirror: 0
   - serializedVersion: 2
-    m_Motion: {fileID: 7400000, guid: 115586abae88f9d418181828ec0b3429, type: 2}
+    m_Motion: {fileID: 7400000, guid: 79ab930bd3ec4b24bb354b5cb30617ce, type: 2}
     m_Threshold: 0.25
     m_Position: {x: 1, y: 1}
     m_TimeScale: 1

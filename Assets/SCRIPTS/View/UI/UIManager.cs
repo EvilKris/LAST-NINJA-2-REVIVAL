@@ -1,149 +1,131 @@
-using DG.Tweening;
+﻿using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// Central UI manager. Owns the in-game overlay, health bars, and charge meter.
+/// Subscribes to <see cref="HealthComponent.OnHealthChanged"/> events from all entities
+/// in the scene and routes updates to the correct UI widgets.
+/// </summary>
 public class UIManager : MonoBehaviour
 {
-    [SerializeField] private GameObject gameUIOverlay; //the main game UI overlay   
-    [SerializeField] private GameObject oldUIOverlay; //the main in-game UI overlay
+    [Tooltip("Root GameObject for the main in-game UI overlay.")]
+    [SerializeField] private GameObject gameUIOverlay;
 
-    [Tooltip("The health overlay UI element")]
+    [Tooltip("The health overlay UI element.")]
     [SerializeField] private GameObject healthOverlay;
-    [SerializeField] private Image playerHealthUI;
-    [SerializeField] private Image enemyHealthUI;
-    public UIChargeDisplay chargeMeter; //the charge meter UI element  
-    [SerializeField] private GameObject chargeMeterRadialSliderPrefab; //the charge meter UI element  
 
-    private Material playerHealthMaterial;
-    private Material enemyHealthMaterial;
+    [Tooltip("Image component used to drive the player health shader's _FillAmount property.")]
+    [SerializeField] private Image playerHealthUI;
+
+    [Tooltip("GameObject that holds the EnemyHealthBarScript component.")]
+    [SerializeField] private GameObject enemyHealthUI;
+
+    [Tooltip("Charge meter display component.")]
+    public UIChargeDisplay chargeMeter;
+
+    // ── Private state ────────────────────────────────────────────────────────
+
+    /// <summary>Per-instance material so the player health shader doesn't affect other users of the same asset.</summary>
+    private Material _playerHealthMaterial;
+
+    private EnemyHealthBarScript _enemyHealthBarScript;
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Unity Lifecycle
+    // ═══════════════════════════════════════════════════════════════════
 
     private void Awake()
     {
-        // Create material instances to avoid shared material issues
+        // Instantiate a private material copy so we never mutate the shared asset
         if (playerHealthUI != null && playerHealthUI.material != null)
         {
-            playerHealthMaterial = new Material(playerHealthUI.material);
-            playerHealthUI.material = playerHealthMaterial;
+            _playerHealthMaterial = new Material(playerHealthUI.material);
+            playerHealthUI.material = _playerHealthMaterial;
         }
 
-        if (enemyHealthUI != null && enemyHealthUI.material != null)
-        {
-            enemyHealthMaterial = new Material(enemyHealthUI.material);
-            enemyHealthUI.material = enemyHealthMaterial;
-        }
+        if (enemyHealthUI != null)
+            _enemyHealthBarScript = enemyHealthUI.GetComponent<EnemyHealthBarScript>();
     }
 
     private void Start()
     {
-        //ActivateInGameOverlay();
         SubscribeToAllHealthComponents();
-    }
-
-    /*
-    public void SetupChargeMeter(HealthComponent healthComponent)
-    {
-        if (healthComponent == null)
-        {
-            Debug.LogWarning("HealthComponent is null, cannot setup charge meter.");
-            return;
-        }
-
-        if (healthComponent.faction != Faction.Player)
-        {
-            return;
-        }
-
-        if (chargeMeter == null)
-        {
-            Debug.LogWarning("Charge meter is not assigned in UIManager.");
-            return;
-        }
-
-        if (chargeMeterRadialSliderPrefab == null)
-        {
-            Debug.LogWarning("Charge meter radial slider prefab is not assigned in UIManager.");
-            return;
-        }
-
-        // Clear existing charge meter children
-        foreach (Transform child in chargeMeter.transform)
-        {
-            Destroy(child.gameObject);
-        }
-
-        // Create charge meter instances based on charges
-        for (int i = 0; i < healthComponent.charges; i++)
-        {
-            GameObject chargeSlider = Instantiate(chargeMeterRadialSliderPrefab, chargeMeter.transform);
-            chargeSlider.name = $"ChargeSlider_{i}";
-        }
-    }*/
-
-    public void ToggleInGameOverlay(bool v)
-    {   
-        if (gameUIOverlay != null)
-            gameUIOverlay.SetActive(v);
-    }
-
-    private void ActivateInGameOverlay()
-    {
-        //   if(inGameUIOverlay != null)
-        //inGameUIOverlay.SetActive(true);
-
-        if (healthOverlay != null)
-            healthOverlay.SetActive(true);
-    }
-
-    private void SubscribeToAllHealthComponents()
-    {
-        HealthComponent[] allHealthComponents = Object.FindObjectsByType<HealthComponent>(FindObjectsSortMode.None);
-        foreach (HealthComponent health in allHealthComponents)
-        {
-            health.OnHealthChanged += OnHealthChanged;
-        }
-    }
-
-    private void OnHealthChanged(float currentHealth, float maxHealth, Faction faction)
-    {
-        float normalizedHealth = maxHealth > 0 ? currentHealth / maxHealth : 0;
-
-        if (faction == Faction.Player && playerHealthMaterial != null)
-        {
-            playerHealthMaterial.SetFloat("_FillAmount", normalizedHealth);
-        }
-        else if (faction == Faction.Enemy && enemyHealthMaterial != null)
-        {
-            //Debug.Log($"Updating enemy health UI: {normalizedHealth}");
-            enemyHealthMaterial.SetFloat("_FillAmount", normalizedHealth);
-        }
     }
 
     private void OnDestroy()
     {
-        // Clean up material instances
-        if (playerHealthMaterial != null)
-        {
-            Destroy(playerHealthMaterial);
-        }
-        if (enemyHealthMaterial != null)
-        {
-            Destroy(enemyHealthMaterial);
-        }
+        UnsubscribeFromAllHealthComponents();
 
-        HealthComponent[] allHealthComponents = Object.FindObjectsByType<HealthComponent>(FindObjectsSortMode.None);
-        foreach (HealthComponent health in allHealthComponents)
-        {
-            health.OnHealthChanged -= OnHealthChanged;
-        }
+        if (_playerHealthMaterial != null)
+            Destroy(_playerHealthMaterial);
     }
 
+    // ═══════════════════════════════════════════════════════════════════
+    // Public API
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Shows or hides the main in-game UI overlay.
+    /// </summary>
+    /// <param name="visible">True to show, false to hide.</param>
+    public void ToggleInGameOverlay(bool visible)
+    {
+        if (gameUIOverlay != null)
+            gameUIOverlay.SetActive(visible);
+    }
+
+    /// <summary>
+    /// Triggers a DOTween anchor-position shake on the supplied <see cref="RectTransform"/>.
+    /// Any in-progress shake is cancelled first to prevent compounding offsets.
+    /// </summary>
+    /// <param name="canvasRect">The RectTransform to shake.</param>
+    /// <param name="duration">Total shake duration in seconds.</param>
+    /// <param name="strength">Maximum displacement in pixels.</param>
+    /// <param name="vibrato">Number of oscillations per second.</param>
     public void UICamShake(RectTransform canvasRect, float duration = 0.3f, float strength = 30f, int vibrato = 10)
     {
-        // Kill any existing shake to prevent overlapping
         canvasRect.DOKill();
-
-        // Shake it!
         canvasRect.DOShakeAnchorPos(duration, strength, vibrato);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Health Event Handling
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Finds every <see cref="HealthComponent"/> in the scene and subscribes to its
+    /// <see cref="HealthComponent.OnHealthChanged"/> event.
+    /// Call once on Start; for dynamically spawned entities call this again or
+    /// subscribe directly from the spawner.
+    /// </summary>
+    private void SubscribeToAllHealthComponents()
+    {
+        foreach (HealthComponent health in Object.FindObjectsByType<HealthComponent>(FindObjectsSortMode.None))
+            health.OnHealthChanged += OnHealthChanged;
+    }
+
+    /// <summary>Unsubscribes from all <see cref="HealthComponent"/> events still present in the scene.</summary>
+    private void UnsubscribeFromAllHealthComponents()
+    {
+        foreach (HealthComponent health in Object.FindObjectsByType<HealthComponent>(FindObjectsSortMode.None))
+            health.OnHealthChanged -= OnHealthChanged;
+    }
+
+    /// <summary>
+    /// Routes a health-change notification to the correct UI widget based on faction.
+    /// </summary>
+    /// <param name="currentHealth">Entity's current health value.</param>
+    /// <param name="maxHealth">Entity's maximum health value.</param>
+    /// <param name="faction">Faction of the entity that changed health.</param>
+    private void OnHealthChanged(float currentHealth, float maxHealth, Faction faction)
+    {
+        float normalized = maxHealth > 0f ? currentHealth / maxHealth : 0f;
+
+        if (faction == Faction.Player && _playerHealthMaterial != null)
+            _playerHealthMaterial.SetFloat("_FillAmount", normalized);
+        else if (faction == Faction.Enemy && _enemyHealthBarScript != null)
+            _enemyHealthBarScript.UpdateHealthBar(normalized);
     }
 }
 

@@ -35,11 +35,27 @@ ShaderVariantCollection:
         passType: 0
       - keywords: COLOR_FILTER SAMPLING_EDGE_ALPHA
         passType: 0
+      - keywords: COLOR_FILTER SAMPLING_EDGE_ALPHA TONE_GRAYSCALE
+        passType: 0
+      - keywords: COLOR_FILTER SAMPLING_EDGE_ALPHA TONE_SEPIA
+        passType: 0
       - keywords: COLOR_FILTER SAMPLING_EDGE_LUMINANCE
         passType: 0
       - keywords: COLOR_FILTER SAMPLING_PIXELATION
         passType: 0
       - keywords: COLOR_FILTER SAMPLING_RGB_SHIFT
+        passType: 0
+      - keywords: COLOR_FILTER TONE_GRAYSCALE
+        passType: 0
+      - keywords: COLOR_FILTER TONE_NEGATIVE
+        passType: 0
+      - keywords: COLOR_FILTER TONE_POSTERIZE
+        passType: 0
+      - keywords: COLOR_FILTER TONE_RETRO
+        passType: 0
+      - keywords: COLOR_FILTER TONE_SEPIA
+        passType: 0
+      - keywords: DETAIL_MASKING
         passType: 0
       - keywords: DETAIL_MULTIPLY
         passType: 0
@@ -52,6 +68,10 @@ ShaderVariantCollection:
       - keywords: EDGE_PLAIN TONE_SEPIA
         passType: 0
       - keywords: EDGE_SHINY
+        passType: 0
+      - keywords: GRADATION_COLOR2
+        passType: 0
+      - keywords: GRADATION_COLOR4
         passType: 0
       - keywords: GRADATION_GRADIENT
         passType: 0
@@ -108,6 +128,8 @@ ShaderVariantCollection:
     second:
       variants:
       - keywords: COLOR_FILTER EDGE_PLAIN
+        passType: 0
+      - keywords: COLOR_FILTER EDGE_SHINY
         passType: 0
       - keywords: EDGE_PLAIN
         passType: 0
