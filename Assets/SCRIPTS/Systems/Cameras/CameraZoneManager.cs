@@ -55,6 +55,30 @@ public class CameraZoneManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Returns the effective camera yaw for movement calculations.
+    /// During a Cinemachine blend the brain smoothly interpolates between
+    /// the outgoing and incoming cameras, so we return the brain's
+    /// (main-camera) yaw which tracks the blend progress exactly.
+    /// Outside of a blend we fall back to the virtual camera's yaw.
+    /// </summary>
+    public float GetBlendedCameraYaw()
+    {
+        // While the brain is blending, its output (the main camera) already
+        // interpolates the rotation at the same speed as the visual blend.
+        if (_brain != null && _brain.IsBlending)
+        {
+            return _brain.transform.eulerAngles.y;
+        }
+
+        if (currentCamera != null)
+        {
+            return currentCamera.transform.eulerAngles.y;
+        }
+
+        return _brain != null ? _brain.transform.eulerAngles.y : 0f;
+    }
+
+    /// <summary>
     /// Requests a camera activation. If the brain is currently blending,
     /// the request is queued and will be applied once the blend finishes.
     /// Only the most recent queued request is kept (last-writer-wins).

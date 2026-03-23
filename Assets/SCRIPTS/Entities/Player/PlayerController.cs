@@ -287,9 +287,9 @@ public class PlayerController : MonoBehaviour
 
     private float GetCurrentCameraYaw()
     {
-        if (CameraZoneManager.Instance != null && CameraZoneManager.Instance.GetCurrentCamera() != null)
+        if (CameraZoneManager.Instance != null)
         {
-            return CameraZoneManager.Instance.GetCurrentCamera().transform.eulerAngles.y;
+            return CameraZoneManager.Instance.GetBlendedCameraYaw();
         }
         return _cameraTransform.eulerAngles.y;
     }
