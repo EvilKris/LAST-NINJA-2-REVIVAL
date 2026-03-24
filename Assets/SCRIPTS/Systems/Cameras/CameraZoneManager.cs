@@ -34,7 +34,9 @@ public class CameraZoneManager : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        _brain = FindAnyObjectByType<CinemachineBrain>();
+        _brain = MasterCameraAndAudioManager.MasterBrain != null
+            ? MasterCameraAndAudioManager.MasterBrain
+            : FindAnyObjectByType<CinemachineBrain>();
     }
 
     private void LateUpdate()

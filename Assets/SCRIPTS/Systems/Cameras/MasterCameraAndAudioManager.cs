@@ -12,6 +12,12 @@ public class MasterCameraAndAudioManager : MonoBehaviour
     [Tooltip("If true, destroys GameObjects with duplicate CinemachineBrain components and AudioListeners. If false, only disables them.")]
     [SerializeField] private bool destroyOthers = false;
 
+    /// <summary>The single authoritative Camera driven by the master CinemachineBrain.</summary>
+    public static Camera MasterCamera { get; private set; }
+
+    /// <summary>The single authoritative CinemachineBrain on the master camera.</summary>
+    public static CinemachineBrain MasterBrain { get; private set; }
+
     /// <summary>
     /// Called automatically after scene load to ensure the master components are prioritized.
     /// </summary>
@@ -31,6 +37,10 @@ public class MasterCameraAndAudioManager : MonoBehaviour
 
     private void Awake()
     {
+        // Cache the master camera and brain on this GameObject
+        MasterBrain = GetComponent<CinemachineBrain>();
+        MasterCamera = GetComponent<Camera>();
+
         // Subscribe to scene loaded event
         SceneManager.sceneLoaded += OnSceneLoaded;
 

@@ -57,21 +57,9 @@ public class CombatMoveEditor : Editor
         EditorGUILayout.Space(10);
         EditorGUILayout.LabelField("Motion", EditorStyles.boldLabel);
 
-        /*
-        // Draw the curve field explicitly
-        move.motionCurve = EditorGUILayout.CurveField(
-            "Forward Motion Curve",
-            move.motionCurve
-        );
-
-        move.motionScale = EditorGUILayout.FloatField(
-            "Motion Scale",
-            move.motionScale
-        );*/
-
         EditorGUILayout.Space(5);
 
-        if (GUILayout.Button("Extract Forward Motion From Animation"))
+        if (GUILayout.Button("Extract Motion From Animation"))
         {
             if (move.animationClip == null)
             {
@@ -79,14 +67,19 @@ public class CombatMoveEditor : Editor
                 return;
             }
 
-            Undo.RecordObject(move, "Extract Motion Curve");
+            Undo.RecordObject(move, "Extract Motion Curves");
 
             move.motionCurve =
                 RootMotionExtractor.ExtractForwardMotion(move.animationClip);
 
+            move.verticalMotionCurve =
+                RootMotionExtractor.ExtractVerticalMotion(move.animationClip);
+
             EditorUtility.SetDirty(move);
 
-            Debug.Log("Motion curve extracted and stored in CombatMove.");
+            bool hasForward = move.motionCurve != null && move.motionCurve.length > 0;
+            bool hasVertical = move.verticalMotionCurve != null && move.verticalMotionCurve.length > 0;
+            Debug.Log($"Motion curves extracted — Forward: {(hasForward ? move.motionCurve.length + " keys" : "empty")}, Vertical: {(hasVertical ? move.verticalMotionCurve.length + " keys" : "empty")}");
         }
     }
 

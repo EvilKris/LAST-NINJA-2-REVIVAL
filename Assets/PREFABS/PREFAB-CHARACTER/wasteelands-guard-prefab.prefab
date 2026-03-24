@@ -42,7 +42,7 @@ GameObject:
   - component: {fileID: 2599361724200981431}
   - component: {fileID: 1804354156930032480}
   - component: {fileID: 1026075506601284327}
-  m_Layer: 6
+  m_Layer: 12
   m_Name: HitBox(RIGHT-FIST)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -113,7 +113,7 @@ GameObject:
   - component: {fileID: 7155065544395826193}
   - component: {fileID: 8677339179382504535}
   - component: {fileID: 7668023711039488640}
-  m_Layer: 6
+  m_Layer: 12
   m_Name: HitBox(LEFT-FIST)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -184,7 +184,7 @@ GameObject:
   - component: {fileID: 3994539369859259395}
   - component: {fileID: 6740360420015026090}
   - component: {fileID: 4690980844500323357}
-  m_Layer: 6
+  m_Layer: 12
   m_Name: HitBox(LEFT-FOOT)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -255,7 +255,7 @@ GameObject:
   - component: {fileID: 2669901984668581741}
   - component: {fileID: 3849250975954034362}
   - component: {fileID: 2269314899520262645}
-  m_Layer: 6
+  m_Layer: 12
   m_Name: HitBox(RIGHT-FOOT)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -733,12 +733,14 @@ MonoBehaviour:
   rotationSpeed: 60
   useRootMotion: 1
   rootMotionScale: 1
+  dustParticles: {fileID: 0}
   canRotate: 1
   currentMoveDir: {x: 0, y: 0, z: 0}
   isMovementLocked: 0
   isImmobilized: 0
   isInFlight: 0
   isClinchActive: 0
+  CanBeClinched: 1
   syncAnimationSource: {fileID: 0}
   syncAnimatorSpeed: 0
 --- !u!114 &1375097959745992342
@@ -755,6 +757,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CombatHandler
   ChargeCount: 1
   currentStyle: {fileID: 11400000, guid: f0d2b02056d92274ca48f8a72c895230, type: 2}
+  _isAcrobaticMove: 0
   specialMoveDuration: 1
 --- !u!114 &8699775234062316184
 MonoBehaviour:

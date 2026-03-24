@@ -77,6 +77,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     private bool _hitboxActive;                     // Whether a hitbox is currently open this frame
     private bool _canAcceptComboInput;              // True during the combo window so the next attack can chain seamlessly
     public bool _isAcrobaticMove;                  // Flags the active move as an acrobatic action (used by MovementComponent for special handling)
+    private float _acrobaticBaseY;                   // World Y at flip start; vertical curve is applied as an offset from this
 
     // -------------------------------------------------------------------------
     // KI / Defensive Settings
@@ -278,6 +279,16 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
                         transform.position += transform.forward * deltaDistance;
                 }
             }
+
+            // For acrobatic moves, apply the vertical Y offset from the animation curve
+            if (_isAcrobaticMove && _activeMove is CombatMove acroMove)
+            {
+                float yOffset = acroMove.EvaluateVerticalPosition(currentTime);
+                Vector3 pos = transform.position;
+                pos.y = _acrobaticBaseY + yOffset;
+                transform.position = pos;
+            }
+
             _lastNormalizedTime = currentTime;
         }
     }
@@ -512,6 +523,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         if (flipMove == null) return;
 
         _isAcrobaticMove = true;
+        _acrobaticBaseY = transform.position.y;
+        _animator.applyRootMotion = false;
         StartCoroutine(FlipWithAfterimage(flipMove));
         PlayMove(flipMove, isAcrobatic: true);
         _animator.SetBool(HashIsAction, true);
@@ -596,6 +609,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         _canRotateDuringAttack = false;
         _isAcrobaticMove = false;
         _movement.canRotate = true;
+        _animator.applyRootMotion = true;
         _animator.SetFloat("animatorSpeed", 1f);
         _animator.SetBool(HashIsAction, false);
     }
@@ -866,6 +880,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         else if(exitEvent == AnimationExitEvent.EndAcrobatics)
         {
             _isAcrobaticMove = false;
+            _animator.applyRootMotion = true;
             _animator.SetBool(HashIsGrounded, true); // Ensure grounded state is restored after the flip
                ResetCombatState();
         }

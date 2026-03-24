@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3598631180473217490}
   - component: {fileID: 4104294947352055741}
   - component: {fileID: 6926639168209202920}
-  m_Layer: 7
+  m_Layer: 11
   m_Name: HitBox(RIGHT-FOOT)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -224,7 +224,7 @@ GameObject:
   - component: {fileID: 5588346760392281993}
   - component: {fileID: 2369470326392948816}
   - component: {fileID: 1552403461438629062}
-  m_Layer: 7
+  m_Layer: 11
   m_Name: HitBox(LEFT-FOOT)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -295,7 +295,7 @@ GameObject:
   - component: {fileID: 5075297286445599750}
   - component: {fileID: 1257945682072249878}
   - component: {fileID: 7523605971078311667}
-  m_Layer: 7
+  m_Layer: 11
   m_Name: HitBox(RIGHT-FIST)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -508,7 +508,7 @@ GameObject:
   - component: {fileID: 1119171044899613397}
   - component: {fileID: 614284011734019773}
   - component: {fileID: 1845901094706140896}
-  m_Layer: 7
+  m_Layer: 11
   m_Name: HitBox(LEFT-FIST)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1214,6 +1214,7 @@ MonoBehaviour:
   rotationSpeed: 15
   useRootMotion: 1
   rootMotionScale: 1
+  dustParticles: {fileID: 0}
   canRotate: 1
   currentMoveDir: {x: 0, y: 0, z: 0}
   isMovementLocked: 0
@@ -1237,6 +1238,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CombatHandler
   ChargeCount: 2
   currentStyle: {fileID: 11400000, guid: f0d2b02056d92274ca48f8a72c895230, type: 2}
+  _isAcrobaticMove: 0
   specialMoveDuration: 1
 --- !u!114 &4110659670583158939
 MonoBehaviour:

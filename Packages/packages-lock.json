@@ -23,7 +23,7 @@
       "dependencies": {}
     },
     "com.unity.ai.navigation": {
-      "version": "2.0.11",
+      "version": "2.0.12",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -70,7 +70,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.cinemachine": {
-      "version": "3.1.5",
+      "version": "3.1.6",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -140,19 +140,12 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "2.0.26",
+      "version": "2.0.27",
       "depth": 0,
       "source": "registry",
       "dependencies": {
         "com.unity.test-framework": "1.1.33"
       },
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.ide.vscode": {
-      "version": "1.2.4",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {},
       "url": "https://packages.unity.com"
     },
     "com.unity.inputsystem": {

@@ -104,9 +104,11 @@ public class PlayerController : MonoBehaviour
         _clinchHandler = GetComponent<ClinchHandler>();
         _pickupDetector = GetComponent<PickupDetector>();
         
-        // Cache camera references for input direction calculations
-        _mainCamera = Camera.main;
-        _cameraTransform = _mainCamera.transform;
+        // Cache master camera reference for input direction calculations
+        _mainCamera = MasterCameraAndAudioManager.MasterCamera != null
+            ? MasterCameraAndAudioManager.MasterCamera
+            : Camera.main;
+        _cameraTransform = _mainCamera != null ? _mainCamera.transform : null;
         
         // Set up layer mask for floor detection
         _floorLayerMask = LayerMask.GetMask("Floor");
@@ -125,6 +127,7 @@ public class PlayerController : MonoBehaviour
     {
         // Enable both the Player and UI action maps
         _controls.Player.Enable();
+        _controls.UI.Enable();
         _controls.UI.Enable();
 
         // Cache InventoryManager reference

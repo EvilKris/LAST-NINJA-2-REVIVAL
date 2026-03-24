@@ -18,7 +18,7 @@ MonoBehaviour:
     m_Value: {x: 1, y: 0.97652364, z: 0.9158404, w: 0}
   midtones:
     m_OverrideState: 1
-    m_Value: {x: 1, y: 0.9623177, z: 0.9519017, w: 0.18121895}
+    m_Value: {x: 1, y: 0.9623177, z: 0.9519017, w: 0.40691933}
   highlights:
     m_OverrideState: 1
     m_Value: {x: 1, y: 0.83010864, z: 0.87904274, w: 0.6919274}
@@ -55,7 +55,7 @@ MonoBehaviour:
     m_Value: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   balance:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: -46
 --- !u!114 &-4142603468519160915
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -68,13 +68,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e021b4c809a781e468c2988c016ebbea, type: 3}
   m_Name: ColorLookup
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.ColorLookup
-  active: 1
+  active: 0
   texture:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: {fileID: 0}
     dimension: 1
   contribution:
-    m_OverrideState: 1
+    m_OverrideState: 0
     m_Value: 0
 --- !u!114 &-3270784968149489567
 MonoBehaviour:
@@ -129,13 +129,13 @@ MonoBehaviour:
   active: 0
   lift:
     m_OverrideState: 1
-    m_Value: {x: 1, y: 1, z: 1, w: 0}
+    m_Value: {x: 1, y: 0.8102706, z: 0.93305635, w: 0}
   gamma:
     m_OverrideState: 1
-    m_Value: {x: 1, y: 1, z: 1, w: 0}
+    m_Value: {x: 1, y: 0.96888185, z: 0.8852637, w: 0}
   gain:
     m_OverrideState: 1
-    m_Value: {x: 1, y: 1, z: 1, w: 0}
+    m_Value: {x: 1, y: 0.981975, z: 0.9930515, w: 0}
 --- !u!114 &-1979254020508249788
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -151,7 +151,7 @@ MonoBehaviour:
   active: 0
   intensity:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 4.62
   tintColor:
     m_OverrideState: 1
     m_Value: {r: 1, g: 1, b: 1, a: 1}
@@ -433,10 +433,10 @@ MonoBehaviour:
   active: 0
   normalBias:
     m_OverrideState: 1
-    m_Value: 0.05
+    m_Value: 0.32
   viewBias:
     m_OverrideState: 1
-    m_Value: 0.1
+    m_Value: 0.37
   scaleBiasWithMinProbeDistance:
     m_OverrideState: 1
     m_Value: 0
@@ -481,17 +481,17 @@ MonoBehaviour:
     m_OverrideState: 1
     m_Value: 0
   contrast:
-    m_OverrideState: 1
-    m_Value: 0
+    m_OverrideState: 0
+    m_Value: -4
   colorFilter:
-    m_OverrideState: 1
-    m_Value: {r: 1, g: 1, b: 1, a: 1}
+    m_OverrideState: 0
+    m_Value: {r: 0.3501615, g: 1, b: 0.051886797, a: 1}
   hueShift:
-    m_OverrideState: 1
-    m_Value: 0
+    m_OverrideState: 0
+    m_Value: -2
   saturation:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 50
 --- !u!114 &4269630557451483921
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -507,7 +507,7 @@ MonoBehaviour:
   active: 0
   mode:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 2
   gaussianStart:
     m_OverrideState: 1
     m_Value: 10
@@ -522,13 +522,13 @@ MonoBehaviour:
     m_Value: 0
   focusDistance:
     m_OverrideState: 1
-    m_Value: 10
+    m_Value: 9.43
   aperture:
     m_OverrideState: 1
-    m_Value: 5.6
+    m_Value: 4.8
   focalLength:
     m_OverrideState: 1
-    m_Value: 50
+    m_Value: 114
   bladeCount:
     m_OverrideState: 1
     m_Value: 5
@@ -582,7 +582,7 @@ MonoBehaviour:
   master:
     m_OverrideState: 1
     m_Value:
-      <length>k__BackingField: 2
+      <length>k__BackingField: 4
       m_Loop: 0
       m_ZeroValue: 0
       m_Range: 1
@@ -599,8 +599,26 @@ MonoBehaviour:
           inWeight: 0
           outWeight: 0
         - serializedVersion: 3
-          time: 1
-          value: 1
+          time: 0.30588236
+          value: 0.490099
+          inSlope: 1
+          outSlope: 1
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 0.68941176
+          value: 0.6831683
+          inSlope: 1.3210348
+          outSlope: 1.3210348
+          tangentMode: 0
+          weightedMode: 0
+          inWeight: 0
+          outWeight: 0
+        - serializedVersion: 3
+          time: 0.95529413
+          value: 0.10891092
           inSlope: 1
           outSlope: 1
           tangentMode: 0
@@ -770,7 +788,7 @@ MonoBehaviour:
   active: 0
   mode:
     m_OverrideState: 1
-    m_Value: 0
+    m_Value: 1
   quality:
     m_OverrideState: 1
     m_Value: 0

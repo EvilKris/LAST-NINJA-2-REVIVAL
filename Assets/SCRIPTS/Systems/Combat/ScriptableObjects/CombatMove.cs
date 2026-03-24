@@ -30,6 +30,9 @@ public class CombatMove : ScriptableObject, IActiveCombatMove
     [Tooltip("Forward displacement curve extracted from animation root motion. Captures the root motion movement of the animation for storage")]
     public AnimationCurve motionCurve;
 
+    [Tooltip("Vertical (Y) displacement curve extracted from animation root motion. Used by acrobatic moves to drive the collider up and down.")]
+    public AnimationCurve verticalMotionCurve;
+
     [Tooltip("Scales how far this move travels without touching the curve shape.")]
     public float motionScale = 1f;
 
@@ -135,6 +138,21 @@ public class CombatMove : ScriptableObject, IActiveCombatMove
 
         // Return the distance delta, scaled by motionScale
         return (toDistance - fromDistance) * motionScale;
+    }
+
+    /// <summary>
+    /// Returns the absolute vertical (Y) position at the given normalized time.
+    /// Unlike forward motion which uses deltas, vertical motion is applied as an
+    /// offset from the base Y position so the collider follows the animation arc.
+    /// </summary>
+    public float EvaluateVerticalPosition(float normalizedTime)
+    {
+        if (verticalMotionCurve == null || verticalMotionCurve.length == 0)
+            return 0f;
+
+        float clipDuration = AnimationDuration;
+        float absTime = Mathf.Clamp01(normalizedTime) * clipDuration;
+        return verticalMotionCurve.Evaluate(absTime);
     }
 
     // ─────────────────────────────────────────────

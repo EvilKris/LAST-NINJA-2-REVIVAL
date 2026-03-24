@@ -24,6 +24,9 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     [Tooltip("Transform that represents the lock-on point for camera/AI targeting. Uses this transform if null.")]
     public Transform lockOnPoint;
 
+    [Tooltip("Empty GameObject used as the Cinemachine camera tracking target (Follow / Look At). Uses this transform if null.")]
+    public Transform cameraTrackingTarget;
+
     [Tooltip("If true, this entity cannot take damage (temporary invincibility, cutscenes, etc.).")]
     public bool isInvulnerable = false;
 
@@ -242,6 +245,13 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     /// </summary>
     /// <returns>Transform representing the lock-on focus point</returns>
     public Transform GetLockOnPoint() => lockOnPoint != null ? lockOnPoint : transform;
+
+    /// <summary>
+    /// Returns the Transform used as the Cinemachine camera tracking target (Follow / Look At).
+    /// Falls back to this entity's transform if no tracking target is assigned.
+    /// </summary>
+    /// <returns>Transform for Cinemachine Follow and Look At binding</returns>
+    public Transform GetCameraTrackingTarget() => cameraTrackingTarget != null ? cameraTrackingTarget : transform;
     
     /// <summary>
     /// Checks if this entity is a valid target for lock-on systems.
