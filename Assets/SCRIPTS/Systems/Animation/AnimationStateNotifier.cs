@@ -91,15 +91,6 @@ public class AnimationStateNotifier : StateMachineBehaviour
             _combatHandler.NotifyDust();
         }*/
 
-        if (_combatHandler != null && _combatHandler._isAcrobaticMove
-            && !isGroundHitChecked && stateInfo.normalizedTime >= 0.9f)
-        {            
-            _combatHandler.ToggleAcrobaticGroundCheck(true);
-            isGroundHitChecked = true;  
-        }
-
-
-
         //pickupDetector only applicable to Player
         if (_pickupDetector != null
             && pickupDetectorEvent != AnimationExitEvent.None

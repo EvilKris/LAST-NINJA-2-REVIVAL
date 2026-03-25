@@ -70,6 +70,19 @@ public enum HitReactionType
     Launch       // Air combo starter
 }
 
+/// <summary>
+/// High-level states for the CombatHandler state machine.
+/// Only one state is active at a time; transitions are handled explicitly.
+/// </summary>
+public enum CombatState
+{
+    Idle,
+    Attacking,
+    Acrobatic,
+    Blocking,
+    Freefall
+}
+
 [System.Flags]
 public enum AnimationExitEvent
 {

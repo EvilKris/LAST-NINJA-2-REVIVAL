@@ -210,7 +210,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
         // During acrobatic moves, CombatHandler.FixedUpdate owns all positioning
         // (forward motion via motionCurve, vertical arc via verticalMotionCurve).
         // Skip root motion application here to prevent the two systems fighting.
-        if (_combatHandler != null && _combatHandler.IsAcrobatic) return;
+        if (_combatHandler != null && _combatHandler.State == CombatState.Acrobatic) return;
 
         // Strip vertical root motion so physics gravity is never overridden.
         // After MovePosition, re-apply the pre-existing Y velocity so gravity
@@ -358,7 +358,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
         }
 
         // Priority: Acrobatic > Attack > Movement
-        if (_combatHandler.IsAcrobatic)
+        if (_combatHandler.State == CombatState.Acrobatic)
             _animator.speed = acrobaticSpeed;
         else if (_combatHandler.IsAttacking)
             _animator.speed = attackSpeed;
