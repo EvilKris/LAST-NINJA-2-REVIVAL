@@ -1692,7 +1692,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 100, y: -0.5513}
+  m_AnchoredPosition: {x: 110, y: 0.00000011921}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &1620964693571126955
@@ -3058,13 +3058,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   gameUIOverlay: {fileID: 2348267645033186327}
-  oldUIOverlay: {fileID: 0}
   healthOverlay: {fileID: 3463270077514393513}
   playerHealthUI: {fileID: 5175067809062186546}
   enemyHealthUI: {fileID: 5918088704299579572}
   chargeMeter: {fileID: 9180459912798140136}
-  chargeMeterRadialSliderPrefab: {fileID: 4481046361526936861, guid: fffc41f96aabb484da7cf5fa278fbcf6,
-    type: 3}
 --- !u!1 &6795205868417481223
 GameObject:
   m_ObjectHideFlags: 0

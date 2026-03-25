@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEngine;
 
 /// <summary>
@@ -42,6 +43,8 @@ public class AnimationStateNotifier : StateMachineBehaviour
     private MovementComponent _movement;
     private ClinchHandler _clinchHandler;
     private PickupDetector _pickupDetector;
+    private bool _dustFired; // Prevents the one-shot dust notification from repeating each frame
+    private bool isGroundHitChecked;
 
     /// <summary>
     /// Called by Unity when the Animator enters this state.
@@ -61,6 +64,8 @@ public class AnimationStateNotifier : StateMachineBehaviour
             _clinchHandler = animator.GetComponent<ClinchHandler>();
         if (_pickupDetector == null)
             _pickupDetector = animator.GetComponent<PickupDetector>();
+        _dustFired = false;
+        isGroundHitChecked = false; 
     }
 
     public override void OnStateUpdate(
@@ -77,11 +82,22 @@ public class AnimationStateNotifier : StateMachineBehaviour
         //For now, we can use the state update to trigger the dust
         //effect at the right time during the attack animation,
         //without needing to create a separate state or animation event for it.
+        
+        /*
         if (_combatHandler != null && _combatHandler._isAcrobaticMove
-            && stateInfo.normalizedTime >= 0.7f)
+            && !_dustFired && stateInfo.normalizedTime >= 0.7f)
         {
+            _dustFired = true;
             _combatHandler.NotifyDust();
+        }*/
+
+        if (_combatHandler != null && _combatHandler._isAcrobaticMove
+            && !isGroundHitChecked && stateInfo.normalizedTime >= 0.9f)
+        {            
+            _combatHandler.ToggleAcrobaticGroundCheck(true);
+            isGroundHitChecked = true;  
         }
+
 
 
         //pickupDetector only applicable to Player

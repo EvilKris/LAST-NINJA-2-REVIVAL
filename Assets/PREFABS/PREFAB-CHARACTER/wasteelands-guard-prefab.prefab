@@ -733,6 +733,7 @@ MonoBehaviour:
   rotationSpeed: 60
   useRootMotion: 1
   rootMotionScale: 1
+  animatorDampSpeed: 10
   dustParticles: {fileID: 0}
   canRotate: 1
   currentMoveDir: {x: 0, y: 0, z: 0}
@@ -758,6 +759,7 @@ MonoBehaviour:
   ChargeCount: 1
   currentStyle: {fileID: 11400000, guid: f0d2b02056d92274ca48f8a72c895230, type: 2}
   _isAcrobaticMove: 0
+  acrobaticGravityScale: 1.5
   specialMoveDuration: 1
 --- !u!114 &8699775234062316184
 MonoBehaviour:
@@ -775,8 +777,15 @@ MonoBehaviour:
   currentHealth: 100
   faction: 2
   lockOnPoint: {fileID: 0}
+  cameraTrackingTarget: {fileID: 0}
   isInvulnerable: 0
   characterEffects: {fileID: 11400000, guid: 8fea334dc66e4b943a70209e5f9500c4, type: 2}
+  deadLayer:
+    serializedVersion: 2
+    m_Bits: 8192
+  floorLayer:
+    serializedVersion: 2
+    m_Bits: 8
 --- !u!114 &6703860365585140426
 MonoBehaviour:
   m_ObjectHideFlags: 0

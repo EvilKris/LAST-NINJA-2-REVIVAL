@@ -27,6 +27,11 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     [Tooltip("Additional scaling applied to root motion movement")]
     public float rootMotionScale = 1f;
 
+    [Header("Animation Smoothing")]
+    [Tooltip("How fast the animator X/Y float parameters ramp between values. Higher = snappier, lower = smoother.")]
+    [Range(1f, 20f)]
+    public float animatorDampSpeed = 10f;
+
     [Tooltip("Dust Particles")]
     public ParticleSystem dustParticles;
 
@@ -53,8 +58,9 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     private bool _lastIsRunning;
     private float _lastXAxis;
     private float _lastYAxis;
-    
+   
 
+    
     private void OnDisable()
     {
         // When MovementComponent is disabled, stop all physics movement immediately
@@ -119,7 +125,8 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
             // Root motion will handle movement in OnAnimatorMove
             if (!useRootMotion && !isClinchActive)
             {
-                _rb.linearVelocity = moveDir * movementSpeed;
+                float yVel = _rb.linearVelocity.y;
+                _rb.linearVelocity = new Vector3(moveDir.x * movementSpeed, yVel, moveDir.z * movementSpeed);
             }
 
             if (!isClinchActive)
@@ -172,7 +179,10 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
         // Only apply velocity if NOT using root motion
         // Root motion will handle movement in OnAnimatorMove
         if (!useRootMotion && !isInFlight && !isClinchActive)
-            _rb.linearVelocity = movementSpeed * moveDir;
+        {
+            float yVel = _rb.linearVelocity.y;
+            _rb.linearVelocity = new Vector3(moveDir.x * movementSpeed, yVel, moveDir.z * movementSpeed);
+        }
 
         // Always face the Target
         Vector3 dirToTarget = (lookAtPos - transform.position);
@@ -195,38 +205,29 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
 
     private void OnAnimatorMove()
     {
-       
-        /*
-        float rootMotionDistance = _animator.deltaPosition.magnitude;
-        Vector3 movement = rootMotionDistance * rootMotionScale * currentMoveDir.normalized;
+        if (isInFlight) return;
 
-        _rb.MovePosition(_rb.position + movement);
-        */
-        _rb.MovePosition(_rb.position + _animator.deltaPosition);
+        // During acrobatic moves, CombatHandler.FixedUpdate owns all positioning
+        // (forward motion via motionCurve, vertical arc via verticalMotionCurve).
+        // Skip root motion application here to prevent the two systems fighting.
+        if (_combatHandler != null && _combatHandler.IsAcrobatic) return;
+
+        // Strip vertical root motion so physics gravity is never overridden.
+        // After MovePosition, re-apply the pre-existing Y velocity so gravity
+        // continues to accumulate naturally (MovePosition would otherwise zero it).
+
+       
+
+        float yVelocity = _rb.linearVelocity.y;
+        Vector3 delta = _animator.deltaPosition;
+        delta.y = 0f;
+        _rb.MovePosition(_rb.position + delta);
         _rb.MoveRotation(_rb.rotation * _animator.deltaRotation);
+        Vector3 vel = _rb.linearVelocity;
+        vel.y = yVelocity;
+        _rb.linearVelocity = vel;
     }
 
-
-    /*
-    private void OnAnimatorMove()
-    {
-        
-        if (!useRootMotion || isImmobilized || isMovementLocked || isInFlight || isClinchActive)
-            return;
-        
-        // Don't apply root motion if not moving (prevents idle animation drift)
-       // if (currentMoveDir.sqrMagnitude < 0.0001f)
-         //   return;
-
-        // Use root motion's magnitude (animation speed) but currentMoveDir's direction
-        // This gives us animation-accurate speed without directional drift
-        float rootMotionDistance = _animator.deltaPosition.magnitude;
-        Vector3 movement = rootMotionDistance * rootMotionScale * currentMoveDir.normalized;
-
-        //_rb.MovePosition(_rb.position + movement);
-
-        _rb.MovePosition(_rb.position + _animator.deltaPosition);
-    }*/
 
     public void RotateTowardsDirection(Vector3 dir)
     {
@@ -247,24 +248,32 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
         }
     }
 
-    private void SetAnimatorFloat(int hash, float value)
+    private void SetAnimatorFloat(int hash, float target)
     {
-        // Only update if value changed significantly (prevents micro-updates)
         float current = hash == _hashXAxis ? _lastXAxis : _lastYAxis;
-        if (Mathf.Abs(current - value) > 0.001f)
+        float smoothed = Mathf.MoveTowards(current, target, animatorDampSpeed * Time.deltaTime);
+
+        // Only write to the Animator when the value has changed meaningfully
+        if (Mathf.Abs(current - smoothed) > 0.0001f)
         {
-            _animator.SetFloat(hash, value);
+            _animator.SetFloat(hash, smoothed);
             if (hash == _hashXAxis)
-                _lastXAxis = value;
+                _lastXAxis = smoothed;
             else
-                _lastYAxis = value;
+                _lastYAxis = smoothed;
         }
     }
 
     private void StopVelocity()
     {
         if (!isClinchActive && !isInFlight)
-            _rb.linearVelocity = Vector3.zero;
+        {
+            // Preserve vertical velocity so gravity continues to apply while idle
+            Vector3 vel = _rb.linearVelocity;
+            vel.x = 0f;
+            vel.z = 0f;
+            _rb.linearVelocity = vel;
+        }
         else if (isInFlight)
             return;
 

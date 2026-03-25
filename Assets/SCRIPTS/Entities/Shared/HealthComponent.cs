@@ -34,10 +34,19 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     [Tooltip("ScriptableObject containing all visual and audio effects for this character.")]
     public CharacterEffects characterEffects;
 
+    [Header("Layers")]
+    [Tooltip("Layer assigned to this entity when it dies. Corpses on this layer only collide with the Floor layer.")]
+    public LayerMask deadLayer;
+    [Tooltip("Layer used for floor collision. Dead entities remain collidable only with this layer.")]
+    public LayerMask floorLayer;
+
     [Header("Internal References")]
     private Animator _animator;
     private CombatHandler _combatHandler;
-   
+
+    // Resolved single-bit layer indices derived from the LayerMask fields in Awake
+    private int _deadLayerIndex  = -1;
+    private int _floorLayerIndex = -1;
 
     /// <summary>
     /// Returns true if the entity has 0 or less health.
@@ -60,10 +69,6 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     /// </summary>
     public event Action<float, float, Faction> OnHealthChanged;
 
-    private static bool _deadLayerConfigured = false;
-    private static int _deadLayer = -1;
-    private static int _floorLayer = -1;
-
     /// <summary>
     /// Initialize health to maximum value.
     /// </summary>
@@ -72,33 +77,47 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         currentHealth = maxHealth;
         _animator = GetComponent<Animator>();
         _combatHandler = GetComponent<CombatHandler>();
+
+        _deadLayerIndex  = LayerMaskToIndex(deadLayer);
+        _floorLayerIndex = LayerMaskToIndex(floorLayer);
+
         ConfigureDeadLayer();
     }
 
     /// <summary>
-    /// One-time static setup that configures physics layer collision rules for the 'Dead' layer.
-    /// Dead entities will only collide with the floor, preventing corpses from blocking gameplay.
+    /// Configures physics layer collision rules so dead entities only collide with the floor.
+    /// Reads <see cref="deadLayer"/> and <see cref="floorLayer"/> assigned in the Inspector.
     /// </summary>
-    private static void ConfigureDeadLayer()
+    private void ConfigureDeadLayer()
     {
-        if (_deadLayerConfigured) return;
-        _deadLayerConfigured = true;
-
-        _deadLayer = LayerMask.NameToLayer("Dead");
-        _floorLayer = LayerMask.NameToLayer("Floor");
-
-        if (_deadLayer < 0)
+        if (_deadLayerIndex < 0)
         {
-            Debug.LogWarning("HealthComponent: 'Dead' layer not found. Add it in Edit > Project Settings > Tags and Layers.");
+            Debug.LogWarning($"HealthComponent on '{gameObject.name}': Dead Layer is not set. Assign it in the Inspector.", this);
             return;
         }
 
         // Dead entities collide with nothing except the floor
         for (int i = 0; i < 32; i++)
         {
-            bool shouldCollide = (i == _floorLayer);
-            Physics.IgnoreLayerCollision(_deadLayer, i, !shouldCollide);
+            bool shouldCollide = (i == _floorLayerIndex);
+            Physics.IgnoreLayerCollision(_deadLayerIndex, i, !shouldCollide);
         }
+    }
+
+    /// <summary>
+    /// Converts a <see cref="LayerMask"/> bitmask to a single layer index.
+    /// Returns -1 if the mask is empty.
+    /// </summary>
+    private static int LayerMaskToIndex(LayerMask mask)
+    {
+        int value = mask.value;
+        if (value == 0) return -1;
+        for (int i = 0; i < 32; i++)
+        {
+            if ((value & (1 << i)) != 0)
+                return i;
+        }
+        return -1;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -166,8 +185,8 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     private void HandleDeath()
     {
         // Switch to Dead layer so the corpse only collides with the floor
-        if (_deadLayer >= 0)
-            SetLayerRecursive(gameObject, _deadLayer);
+        if (_deadLayerIndex >= 0)
+            SetLayerRecursive(gameObject, _deadLayerIndex);
 
         OnDeath?.Invoke();
         //Debug.Log($"{gameObject.name} has died. (Shibō - 死亡)");

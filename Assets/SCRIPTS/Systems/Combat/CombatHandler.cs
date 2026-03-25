@@ -13,39 +13,57 @@ using UnityEngine;
 [RequireComponent(typeof(HealthComponent))]
 public class CombatHandler : MonoBehaviour, IAnimationStateListener
 {
-    // -------------------------------------------------------------------------
-    // Components
-    // -------------------------------------------------------------------------
+    #region Components & References
+
     [Header("Components")]
     private Animator _animator;
     private AnimatorOverrideController _overrideController; // Swaps animation clips at runtime without duplicating the controller asset
     private HealthComponent _health;
     private MovementComponent _movement;
+    private Rigidbody _rb;
+    private ClinchHandler _clinchModule;
 
-
-    [Tooltip("Number of charges the entity has (for consecutively stronger special moves) - a move must also be added in the Fighting Style config")]
-    public int ChargeCount = 1; // Number of charges the entity has
-
-
-    // -------------------------------------------------------------------------
-    // Fighting Style Data
-    // -------------------------------------------------------------------------
     [Header("Data")]
     /// <summary>The active <see cref="FightingStyle"/> ScriptableObject that defines all moves for this entity.</summary>
     public FightingStyle currentStyle;
-    
-    // -------------------------------------------------------------------------
-    // Combo Settings
-    // -------------------------------------------------------------------------
+
+    // Animator clip slot keys — name of the placeholder clips inside the AnimatorController that get swapped at runtime
+    private const string CLIP_SLOT_KEY = "Replaceable_Motion_Base";
+    private const string BLOCK_CLIP_SLOT_KEY = "ReplaceableBlock";
+    private const string ACROBATICS_CLIP_SLOT_KEY = "Replaceable_Base_Flip";
+
+    // Pre-hashed Animator parameters for performance
+    private readonly int HashIsAction   = Animator.StringToHash("isAction");
+    private readonly int HashIsGrounded = Animator.StringToHash("b_isGrounded");
+    private readonly int HashIsFalling  = Animator.StringToHash("t_isFalling");
+
+    // Pre-baked animation clips shared with ClinchHandler to avoid repeated lookups
+    public AnimationClip ClinchThrowAttackerClip    { get; private set; }
+    public AnimationClip ClinchThrowVictimClip      { get; private set; }
+    public AnimationClip ClinchLightAtkAttackerClip { get; private set; }
+    public AnimationClip ClinchLightAtkDefenderClip { get; private set; }
+    public AnimationClip BlockClip                  { get; private set; }
+
+    /// <summary>Exposes the override controller so other systems (e.g. <see cref="ClinchHandler"/>) can swap clips.</summary>
+    public AnimatorOverrideController OverrideController => _overrideController;
+
+    #endregion
+
+    #region Combo State
+
     [Header("Combo Settings")]
     private int _comboIndex = 0;          // Tracks which light attack in the sequence fires next
     private float _lastAttackTime;         // Timestamp of the last executed attack, used to detect combo expiry
     private const float COMBO_RESET_TIME = 1.2f; // Seconds of inactivity before the combo resets to the first hit
 
-    // -------------------------------------------------------------------------
-    // Charge System  ("Spike Out" style hold-to-charge mechanic)
-    // -------------------------------------------------------------------------
+    #endregion
+
+    #region Charge System
+
     [Header("Charge System (Spike Out Style)")]
+    [Tooltip("Number of charges the entity has (for consecutively stronger special moves) - a move must also be added in the Fighting Style config")]
+    public int ChargeCount = 1;
+
     private float _currentChargeTimer;       // Accumulates in seconds while the player holds the attack button; integer part = current tier
     private bool _isCharging;                // True while the button is held and a charge is building
     private int _cachedMaxCharges = -1;      // Cached value to detect style changes and fire OnMaxChargesChanged only when necessary
@@ -53,13 +71,11 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     private float _cachedChargeProgress = -1f; // Last-known fractional progress within the current tier
     private int _lastPlayedTierSfx = -1;     // Prevents the tier-complete SFX from firing more than once per tier
 
-    // --- Charge Events (consumed by UIChargeDisplay and any other listeners) ---
     /// <summary>Fires when the number of available charge tiers changes, e.g. after a style swap.</summary>
     public event Action<int> OnMaxChargesChanged;
     /// <summary>Fires every frame while charging whenever the tier or fractional progress changes appreciably.</summary>
     public event Action<int, float> OnChargeStateChanged;
 
-    // --- Charge Properties ---
     /// <summary>Total number of charged attack tiers defined by the current <see cref="FightingStyle"/>.</summary>
     public int MaxCharges => currentStyle != null && currentStyle.chargedAttacks != null ? currentStyle.chargedAttacks.Count : 0;
     /// <summary>The whole-number tier reached so far (floor of <see cref="_currentChargeTimer"/>).</summary>
@@ -67,21 +83,34 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     /// <summary>Fractional progress (0–1) toward the next tier; drives the smooth UI charge bar.</summary>
     public float ChargeProgress => _currentChargeTimer % 1.0f;
 
-    // -------------------------------------------------------------------------
-    // Internal State
-    // -------------------------------------------------------------------------
-    [Header("Internal State")]
-    private IActiveCombatMove _activeMove;          // The move that is currently playing; null when idle
-    private HashSet<Transform> _hitCache = new();   // Entities already struck by the current swing; prevents multi-hit on a single swing
-    private CombatHitbox[] _allHitboxes;            // All child hitboxes, cached in Awake
-    private bool _hitboxActive;                     // Whether a hitbox is currently open this frame
-    private bool _canAcceptComboInput;              // True during the combo window so the next attack can chain seamlessly
-    public bool _isAcrobaticMove;                  // Flags the active move as an acrobatic action (used by MovementComponent for special handling)
-    private float _acrobaticBaseY;                   // World Y at flip start; vertical curve is applied as an offset from this
+    #endregion
 
-    // -------------------------------------------------------------------------
-    // KI / Defensive Settings
-    // -------------------------------------------------------------------------
+    #region Acrobatics State
+
+    [Header("Acrobatic Settings")]
+    [Tooltip("Multiplier applied to Physics.gravity.y during the descending phase of a flip. Higher = faster/heavier landing.")]
+    [Range(0.5f, 5f)]
+    public float acrobaticGravityScale = 1.5f;
+
+    public bool _isAcrobaticMove;          // Flags the active move as an acrobatic action (used by MovementComponent for special handling)
+    private float _acrobaticBaseY;          // World Y at flip start; vertical curve is applied as an offset from this
+    private float _acrobaticGravityVel;     // Simulated downward velocity accumulated during descent (m/s)
+    private float _acrobaticGravityOffset;  // Integrated displacement from gravity (metres, always <= 0)
+    private float _acrobaticPeakY;          // Highest curve Y seen so far; used to detect the descending phase
+    private int _acrobaticAirFrames;        // Counts FixedUpdate ticks since launch; reserved for future use
+    private bool _acrobaticLanded;          // True once the ground-check fires; prevents double-landing
+
+    #endregion
+
+    #region Freefall Detection
+
+    private bool _freefallGroundCheckActive;  // True while the freefall ground-check poll is running
+    private bool _isFreefalling;              // True while the entity is in confirmed freefall
+
+    #endregion
+
+    #region KI & Defensive State
+
     [Header("KI Settings")]
     private float _kiBars = 3f;                      // Current KI energy; each defensive action costs 1 bar
     private const float KI_PARRY_WINDOW = 0.2f;      // Seconds after blocking begins during which a KI parry can be triggered
@@ -93,41 +122,44 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     private bool _blockReleased;                     // True after ResetBlocking() so Update() does not re-freeze the clip
     private bool _blockHeld;                         // True while the block button is physically held down
 
-    private const string CLIP_SLOT_KEY = "Replaceable_Motion_Base"; // Name of the placeholder clip inside the AnimatorController that gets swapped at runtime
-    private const string BLOCK_CLIP_SLOT_KEY = "ReplaceableBlock";   // Placeholder clip slot for the block animation
-    private const string ACROBATICS_CLIP_SLOT_KEY = "Replaceable_Base_Flip"; // Placeholder clip slot for the acrobatics animation
-    private readonly int HashIsAction = Animator.StringToHash("isAction"); // Pre-hashed Animator parameter for performance
-    private readonly int HashIsGrounded = Animator.StringToHash("b_isGrounded"); // Used to maintain grounded state during acrobatics
-    // -------------------------------------------------------------------------
-    // Motion / Root-Motion State
-    // -------------------------------------------------------------------------
+    #endregion
+
+    #region Core Combat State
+
+    [Header("Internal State")]
+    private IActiveCombatMove _activeMove;          // The move that is currently playing; null when idle
+    private HashSet<Transform> _hitCache = new();   // Entities already struck by the current swing; prevents multi-hit on a single swing
+    private CombatHitbox[] _allHitboxes;            // All child hitboxes, cached in Awake
+    private bool _hitboxActive;                     // Whether a hitbox is currently open this frame
+    private bool _canAcceptComboInput;              // True during the combo window so the next attack can chain seamlessly
+
     [Header("Motion State")]
     private float _lastNormalizedTime;       // normalizedTime from the previous FixedUpdate tick; used to compute per-frame root-motion delta
     private bool _canRotateDuringAttack;     // Derived each frame from the active move's rotation curve; exposed to MovementComponent
 
-    // --- Public read-only state accessors consumed by movement, AI, and UI ---
+    public float specialMoveDuration = 1f;
+
+    #endregion
+
+    #region Public State Accessors
+
     public bool CanRotateDuringAttack => _canRotateDuringAttack; // True during the portion of an attack where the entity may turn
-    public bool IsAttacking => _activeMove != null;              // True whenever any move is in progress
-    public bool IsAcrobatic => _isAcrobaticMove;                 // True while an acrobatic move is executing
-    public bool IsCharging => _isCharging;                       // True while the charge button is held
-    public bool IsBlocking => _isBlocking;                       // True while the entity is in a blocking stance
+    public bool IsAttacking    => _activeMove != null;           // True whenever any move is in progress
+    public bool IsAcrobatic    => _isAcrobaticMove;              // True while an acrobatic move is executing
+    public bool IsCharging     => _isCharging;                   // True while the charge button is held
+    public bool IsBlocking     => _isBlocking;                   // True while the entity is in a blocking stance
+    public bool IsFreefalling  => _isFreefalling;                // True while the entity is in confirmed freefall
 
-    // Pre-baked animation clips shared with ClinchHandler to avoid repeated lookups
-    public AnimationClip ClinchThrowAttackerClip { get; private set; }
-    public AnimationClip ClinchThrowVictimClip { get; private set; }
-    public AnimationClip ClinchLightAtkAttackerClip { get; private set; }
-    public AnimationClip ClinchLightAtkDefenderClip { get; private set; }
-    public AnimationClip BlockClip { get; private set; }
+    #endregion
 
-    /// <summary>Exposes the override controller so other systems (e.g. <see cref="ClinchHandler"/>) can swap clips.</summary>
-    public AnimatorOverrideController OverrideController => _overrideController;
+    #region Initialisation
 
-    
     private void Awake()
     {
         _animator = GetComponent<Animator>();
         _health   = GetComponent<HealthComponent>();
         _movement = GetComponent<MovementComponent>();
+        _rb       = GetComponent<Rigidbody>();
 
         // Wrap the original controller in an override so we can hot-swap individual clips
         _overrideController = new AnimatorOverrideController(_animator.runtimeAnimatorController);
@@ -157,7 +189,6 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         // Force-release a frozen block if this entity dies while the hold is active
         _health.OnDeath += ForceReleaseBlock;
     }
-
 
     private void InitializeStyleModules()
     {
@@ -210,6 +241,9 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         
     }
 
+    #endregion
+
+    #region Unity Lifecycle (Update / FixedUpdate)
 
     /*
     private void InvokeCharges()
@@ -261,6 +295,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     private void FixedUpdate()
     {
+        TickFreefallDetection();
+
         if (_activeMove == null) return;
 
         var stateInfo = _animator.GetCurrentAnimatorStateInfo(0);
@@ -280,22 +316,175 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
                 }
             }
 
-            // For acrobatic moves, apply the vertical Y offset from the animation curve
+
+
+            // For acrobatic moves, blend the animation curve's vertical arc with
+            // simulated gravity so the descent feels natural instead of abrupt.
             if (_isAcrobaticMove && _activeMove is CombatMove acroMove)
             {
-                float yOffset = acroMove.EvaluateVerticalPosition(currentTime);
+                float curveY = acroMove.EvaluateVerticalPosition(currentTime);
+
+                // Track the highest point the curve has reached
+                if (curveY > _acrobaticPeakY)
+                    _acrobaticPeakY = curveY;
+
+                // Once past the apex, accumulate downward velocity and integrate
+                // it into a displacement offset that pulls the character down.
+                bool descending = curveY < _acrobaticPeakY - 0.01f;
+                if (descending)
+                {
+                    // v += g * scale * dt  (gravity.y is negative)
+                    _acrobaticGravityVel += Physics.gravity.y * acrobaticGravityScale * Time.fixedDeltaTime;
+                    // displacement += v * dt
+                    _acrobaticGravityOffset += _acrobaticGravityVel * Time.fixedDeltaTime;
+                }
+
+                // Combine curve offset with accumulated gravity displacement
+                float combinedY = _acrobaticBaseY + curveY + _acrobaticGravityOffset;
+
+                // Never go below the starting ground level
+                combinedY = Mathf.Max(combinedY, _acrobaticBaseY);
+
                 Vector3 pos = transform.position;
-                pos.y = _acrobaticBaseY + yOffset;
+                pos.y = combinedY;
                 transform.position = pos;
             }
+
+
+
+            /*
+
+
+            // Ground-check: only active once ToggleAcrobaticGroundCheck(true) has been called.
+            // SphereCasts downward each FixedUpdate until the floor layer is detected,
+            // at which point landing cleanup fires and the acrobatic state is cleared.
+            // If the floor is NOT detected the flip has gone over an edge — enter freefall.
+            if (_freefallGroundCheckActive && _isAcrobaticMove && !_acrobaticLanded)
+            {   
+                const float castRadius = 0.2f;
+                const float castDistance = 0.1f;
+                bool hitGround = Physics.SphereCast(
+                    transform.position + Vector3.up * castRadius,
+                    castRadius,
+                    Vector3.down,
+                    out _,
+                    castDistance,
+                    _health.floorLayer,
+                    QueryTriggerInteraction.Ignore);
+
+                if (hitGround)
+                {   
+                    OnAcrobaticLanded();
+                }
+                else if (!_isFreefalling)
+                {
+                    // Flip missed the floor — transition into confirmed freefall.
+                    // Preserve the current momentum so the character keeps moving
+                    // along the same trajectory instead of stopping dead mid-air.
+                    if (_rb != null)
+                    {
+                        // Forward velocity from the motion curve (approximate via last delta)
+                        float forwardSpeed = 0f;
+                        if (_activeMove is CombatMove fallMove && _lastNormalizedTime >= 0 && currentTime > _lastNormalizedTime)
+                        {
+                            float dt = Time.fixedDeltaTime;
+                            if (dt > 0f)
+                                forwardSpeed = fallMove.EvaluateMotionDelta(_lastNormalizedTime, currentTime) / dt;
+                        }
+
+                        // Downward velocity from the gravity simulation
+                        float downSpeed = _acrobaticGravityVel;
+
+                        _rb.linearVelocity = transform.forward * forwardSpeed + Vector3.up * downSpeed;
+                    }
+
+                    _isAcrobaticMove = false;
+                    _isFreefalling = true;
+                    _movement.isInFlight = true; // Prevent MovementComponent from zeroing velocity
+                    _animator.SetBool(HashIsGrounded, false);
+                    _animator.SetTrigger(HashIsFalling);
+                    _animator.SetBool(HashIsAction, true);
+                }
+            }
+            */
 
             _lastNormalizedTime = currentTime;
         }
     }
 
-    // =========================================================================
-    // Charge Logic
-    // =========================================================================
+    #endregion
+
+    #region Freefall Detection
+
+    /// <summary>
+    /// Runs every FixedUpdate while <see cref="_freefallGroundCheckActive"/> is true.
+    /// SphereCasts against <see cref="HealthComponent.floorLayer"/> each physics tick.
+    /// When airborne the freefall trigger fires immediately; once the floor is detected
+    /// the state is cleaned up via <see cref="OnFreefallLanded"/>.
+    /// </summary>
+    private void TickFreefallDetection()
+    {
+        if (!_freefallGroundCheckActive) return;
+        if (_health.IsDead) return;
+        // if (_isAcrobaticMove) return; // Acrobatic ground-check in FixedUpdate owns this while a flip is active
+
+        _movement.isInFlight = true;
+
+        const float castRadius = 0.2f;
+        const float castDistance = 0.6f;
+        bool onFloor = Physics.SphereCast(
+            transform.position + Vector3.up * castRadius,
+            castRadius,
+            Vector3.down,
+            out _,
+            castDistance,
+            _health.floorLayer,
+            QueryTriggerInteraction.Ignore);
+
+        
+        if (!onFloor)
+        {
+            if (!_isFreefalling)
+            {                
+                _isFreefalling = true;
+                _movement.isInFlight = true; // Prevent MovementComponent from zeroing velocity
+                _animator.SetTrigger(HashIsFalling);
+                _animator.SetBool(HashIsAction, true);
+            }
+        }
+        else if (_isFreefalling)
+        {
+            _movement.isInFlight = false;
+
+            OnFreefallLanded();
+        }
+    }
+
+    /// <summary>
+    /// Called when the floor is detected after a confirmed freefall.
+    /// Restores all freefall-related state and clears the action lock.
+    /// </summary>
+    private void OnFreefallLanded()
+    {
+        _isFreefalling = false;
+        _movement.isInFlight = false;
+
+        // Zero residual velocity so the character doesn't slide after landing
+        
+        _rb.linearVelocity = Vector3.zero;
+
+       
+
+        _animator.ResetTrigger(HashIsFalling);
+        _animator.SetBool(HashIsGrounded, true);
+        _animator.SetBool(HashIsAction, false);
+        NotifyDust(); // Land with a dust effect    
+        ResetCombatState(); 
+    }
+
+    #endregion
+
+    #region Charge Logic
 
     /// <summary>
     /// Ticked every Update. Advances the charge timer while the button is held,
@@ -421,9 +610,6 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         }
     }
 
-    public float specialMoveDuration = 1f;
-    private ClinchHandler _clinchModule;
-
     /// <summary>
     /// Attaches an <see cref="AfterimageEffect"/> component for the duration of a
     /// charged/special move, then removes it once <see cref="specialMoveDuration"/> elapses.
@@ -440,9 +626,9 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         Debug.Log("Special move finished!");
     }
 
-    // =========================================================================
-    // Basic Attacks & Combo Chain
-    // =========================================================================
+    #endregion
+
+    #region Attacks & Combo Chain
 
     /// <summary>
     /// Executes the next light attack in the combo sequence.
@@ -524,11 +710,17 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
         _isAcrobaticMove = true;
         _acrobaticBaseY = transform.position.y;
+        _acrobaticGravityVel = 0f;
+        _acrobaticGravityOffset = 0f;
+        _acrobaticPeakY = 0f;
+        _acrobaticAirFrames = 0;
+        _acrobaticLanded = false;
         _animator.applyRootMotion = false;
         StartCoroutine(FlipWithAfterimage(flipMove));
         PlayMove(flipMove, isAcrobatic: true);
         _animator.SetBool(HashIsAction, true);
-       // _animator.SetBool(HashIsGrounded,false);
+        _animator.SetBool(HashIsGrounded, false );
+        
     }
 
     /// <summary>
@@ -546,9 +738,9 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         Destroy(effect);
     }
 
-    // =========================================================================
-    // Core Combat Engine
-    // =========================================================================
+    #endregion
+
+    #region Core Combat Engine
 
     /// <summary>
     /// Swaps the placeholder animation clip in the override controller and triggers
@@ -608,15 +800,19 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         _canAcceptComboInput = false;
         _canRotateDuringAttack = false;
         _isAcrobaticMove = false;
+        _isFreefalling = false;
+        _freefallGroundCheckActive = false;
+        _movement.isInFlight = false;
         _movement.canRotate = true;
         _animator.applyRootMotion = true;
         _animator.SetFloat("animatorSpeed", 1f);
+        _animator.ResetTrigger(HashIsFalling);
         _animator.SetBool(HashIsAction, false);
     }
 
-    // =========================================================================
-    // Hitbox & Audio Helpers
-    // =========================================================================
+    #endregion
+
+    #region Hitbox & Audio
 
     /// <summary>
     /// Activates all hitboxes of the given <see cref="HitboxType"/>, stamping them
@@ -722,9 +918,9 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         }
     }
 
-    // =========================================================================
-    // Defensive & KI Logic
-    // =========================================================================
+    #endregion
+
+    #region Defensive & KI Logic
 
     /// <summary>
     /// Enters or exits the blocking stance.
@@ -853,6 +1049,27 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             _movement.isMovementLocked = false;
     }
 
+    #endregion
+
+    #region Animation State Callbacks
+
+    /// <summary>
+    /// Called when the ground-check SphereCast detects the Floor layer after a flip.
+    /// Restores physics, animator state, and combat state — replacing the old
+    /// <see cref="AnimationExitEvent.EndAcrobatics"/> path which no longer drives landing.
+    /// </summary>
+    private void OnAcrobaticLanded()
+    {
+        //seems to only be working on interrupted flip landings so far. 
+        Debug.Break();
+        _acrobaticLanded = true;
+        _isAcrobaticMove = false;
+        _animator.SetBool(HashIsGrounded, true);
+        NotifyDust(); // Play dust effect on landing    
+
+        ResetCombatState();
+    }
+
     /// <summary>
     /// Implements <see cref="IAnimationStateListener"/>. Called by <see cref="AnimationStateNotifier"/>
     /// via a StateMachineBehaviour when an Animator state exits.
@@ -879,10 +1096,14 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         }
         else if(exitEvent == AnimationExitEvent.EndAcrobatics)
         {
+            // Guard: if the ground-check already triggered a landing (OnFreefallLanded
+            // set _freefallGroundCheckActive to false via ResetCombatState), the entity
+            // has already landed cleanly — do not restart freefall state.
+            if (!_freefallGroundCheckActive)
+                return;
+
             _isAcrobaticMove = false;
-            _animator.applyRootMotion = true;
-            _animator.SetBool(HashIsGrounded, true); // Ensure grounded state is restored after the flip
-               ResetCombatState();
+            _isFreefalling = true;
         }
     }
 
@@ -894,4 +1115,23 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         _movement.dustParticles.Play(); // Add a dust effect when landing from the flip
 
     }
+
+    /// <summary>
+    /// Enables or disables the freefall ground-check poll.
+    /// Pass <c>true</c> when the entity leaves the ground (e.g. after a flip that misses the floor,
+    /// or any other airborne state); pass <c>false</c> to cancel it when grounded state is restored
+    /// by another system.
+    /// </summary>
+    public void ToggleAcrobaticGroundCheck(bool active)
+    {
+        //at 0.9 normalized time in the flip animation, the ground-check becomes active. If the SphereCast detects the floor, the landing sequence triggers; if not, the character enters freefall.
+        _freefallGroundCheckActive = active;
+        if (!active)
+        {
+            _isFreefalling = false;
+            _animator.ResetTrigger(HashIsFalling);
+        }
+    }
+
+    #endregion
 }
