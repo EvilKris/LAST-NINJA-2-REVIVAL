@@ -36,6 +36,26 @@ MonoBehaviour:
   m_Active: 1
   settings: {revealMaterial: {fileID: 2100000, guid: ede0dec8fc43c714585fa7cb54437974,
       type: 2}, renderPassEvent: 550}
+--- !u!114 &-104008740442933449
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b00045f12942b46c698459096c89274e, type: 3}
+  m_Name: FullScreenPassRendererFeature
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.FullScreenPassRendererFeature
+  m_Active: 0
+  injectionPoint: 600
+  fetchColorBuffer: 1
+  requirements: 0
+  passMaterial: {fileID: 2100000, guid: de1625b6904d456468a4612fc66666bb, type: 2}
+  passIndex: 0
+  bindDepthStencilAttachment: 0
+  m_Version: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -65,7 +85,9 @@ MonoBehaviour:
   m_RendererFeatures:
   - {fileID: 6968647871995622034}
   - {fileID: -6623318099462524821}
-  m_RendererFeatureMap: 92b2146f519cb5606bf01ec7473f15a4
+  - {fileID: 7993456312942179901}
+  - {fileID: -104008740442933449}
+  m_RendererFeatureMap: 92b2146f519cb5606bf01ec7473f15a43db6855c2a76ee6e37f75c049a7c8efe
   m_UseNativeRenderPass: 0
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -120,3 +142,23 @@ MonoBehaviour:
     BlurQuality: 0
     Falloff: 56.4
     SampleCount: -1
+--- !u!114 &7993456312942179901
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b00045f12942b46c698459096c89274e, type: 3}
+  m_Name: FullScreenPassRendererFeature
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.FullScreenPassRendererFeature
+  m_Active: 0
+  injectionPoint: 600
+  fetchColorBuffer: 1
+  requirements: 0
+  passMaterial: {fileID: 2100000, guid: e723448852d6f1348bf434459d1a104b, type: 2}
+  passIndex: 0
+  bindDepthStencilAttachment: 0
+  m_Version: 1
