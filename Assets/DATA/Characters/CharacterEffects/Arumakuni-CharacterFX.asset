@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ce01191299a3cfc4d8181ca272d7b980, type: 3}
-  m_Name: Arumakuni
+  m_Name: Arumakuni-CharacterFX
   m_EditorClassIdentifier: GameScripts::CharacterEffects
   sfxLightAttackCry: {fileID: 11400000, guid: f84eae797c8ae2c4d9c6df0e0630a94d, type: 2}
   sfxLightHit: {fileID: 11400000, guid: dc879221f89ac994ab49e8d4750ce6b2, type: 2}
@@ -44,6 +44,8 @@ MonoBehaviour:
   sfxPowerUp: {fileID: 0}
   sfxStunned: {fileID: 0}
   sfxHeal: {fileID: 0}
+  strikeTrailMelee: {fileID: 3071320603777133807, guid: fe60cc6864161ed41a9e42f3a03cf55c,
+    type: 3}
   vfxLightHit: {fileID: 0}
   vfxMediumHit: {fileID: 0}
   vfxHeavyHit: {fileID: 0}

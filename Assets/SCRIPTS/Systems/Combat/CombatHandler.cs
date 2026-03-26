@@ -90,9 +90,15 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     [Header("Acrobatic Settings")]
     [Tooltip("Vertical impulse applied when the acrobatic flip starts.")]
-    public float jumpForce = 7.5f;
+    public float jumpForce = 8.5f;
     [Tooltip("Forward impulse applied when the acrobatic flip starts.")]
-    public float forwardForce = 5.0f;
+    public float forwardForce = 6.0f;
+    [Tooltip("Extra gravity multiplier during the acrobatic arc. Higher = faster/snappier jump while keeping the same shape. 1 = normal gravity.")]
+    [Range(1f, 5f)]
+    public float acrobaticGravityScale = 1.8f;
+    [Tooltip("Playback speed of the acrobatic flip animation.")]
+    [Range(1.5f, 10f)]
+    public float acrobaticSpeed = 5f;
 
     [HideInInspector] public bool _isAcrobaticMove; // kept public for AnimationStateNotifier compatibility
 
@@ -111,6 +117,15 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     /// Updated by <see cref="OnCollisionStay"/> and <see cref="OnCollisionExit"/>.
     /// </summary>
     private bool _isTouchingFloor;
+
+    /// <summary>
+    /// Timestamp of the last confirmed floor contact. Used for coyote-time so
+    /// <see cref="ExecuteAcrobatics"/> can still fire a short window after leaving a ledge.
+    /// </summary>
+    private float _lastGroundedTime;
+
+    /// <summary>How long after leaving the ground the acrobatic jump is still permitted.</summary>
+    private const float COYOTE_TIME = 0.15f;
 
     /// <summary>
     /// Number of FixedUpdate ticks spent in Freefall without floor contact.
@@ -151,6 +166,17 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     #endregion
 
+    #region Strike Trail State
+
+    private TrailRenderer _trailRightHand;
+    private TrailRenderer _trailLeftHand;
+    private TrailRenderer _trailRightFoot;
+    private TrailRenderer _trailLeftFoot;
+
+    private StrikeLimb _activeTrailLimb = StrikeLimb.None;
+
+    #endregion
+
     #region Public State Accessors
 
     public bool CanRotateDuringAttack => _canRotateDuringAttack;
@@ -181,6 +207,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
         // Derive a single layer index from the floor LayerMask for OnCollision checks
         _floorLayerIndex = LayerMaskToIndex(_health.floorLayer);
+
+        InitializeStrikeTrails();
     }
 
     private void Start()
@@ -248,12 +276,89 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     #endregion
 
+    #region Strike Trail Initialisation
+
+    private void InitializeStrikeTrails()
+    {
+        if (_health.characterEffects == null || _health.characterEffects.strikeTrailMelee == null)
+            return;
+
+        _trailRightHand = SpawnTrailOnBone(HumanBodyBones.RightHand);
+        _trailLeftHand  = SpawnTrailOnBone(HumanBodyBones.LeftHand);
+        _trailRightFoot = SpawnTrailOnBone(HumanBodyBones.RightFoot);
+        _trailLeftFoot  = SpawnTrailOnBone(HumanBodyBones.LeftFoot);
+
+        // Guarantee all emitters are silent after spawning
+        DisableAllTrailEmitters();
+    }
+
+    private TrailRenderer SpawnTrailOnBone(HumanBodyBones bone)
+    {
+        Transform boneTransform = _animator.GetBoneTransform(bone);
+        if (boneTransform == null) return null;
+
+        GameObject instance = Instantiate(
+            _health.characterEffects.strikeTrailMelee,
+            boneTransform);
+
+        instance.transform.localPosition = Vector3.zero;
+        instance.transform.localRotation = Quaternion.identity;
+
+        if (!instance.TryGetComponent<TrailRenderer>(out var trail))
+        {
+            trail = instance.GetComponentInChildren<TrailRenderer>();
+        }
+
+        if (trail != null)
+        {
+            trail.emitting = false;
+            trail.Clear();
+        }
+
+        return trail;
+    }
+
+    private void SetTrailEmitter(StrikeLimb limb, bool enabled)
+    {
+        TrailRenderer target = limb switch
+        {
+            StrikeLimb.RightHand => _trailRightHand,
+            StrikeLimb.LeftHand  => _trailLeftHand,
+            StrikeLimb.RightFoot => _trailRightFoot,
+            StrikeLimb.LeftFoot  => _trailLeftFoot,
+            _                    => null
+        };
+
+        if (target == null) return;
+
+        target.emitting = enabled;
+
+        if (!enabled)
+        {
+            target.Clear();
+        }
+    }
+
+    private void DisableAllTrailEmitters()
+    {        
+        SetTrailEmitter(StrikeLimb.RightHand, false);
+        SetTrailEmitter(StrikeLimb.LeftHand,  false);
+        SetTrailEmitter(StrikeLimb.RightFoot, false);
+        SetTrailEmitter(StrikeLimb.LeftFoot,  false);
+        _activeTrailLimb = StrikeLimb.None;
+    }
+
+    #endregion
+
     #region Collision-Based Floor Detection
 
     private void OnCollisionStay(Collision collision)
     {
         if (_floorLayerIndex >= 0 && collision.gameObject.layer == _floorLayerIndex)
+        {
             _isTouchingFloor = true;
+            _lastGroundedTime = Time.time;
+        }
     }
 
     private void OnCollisionExit(Collision collision)
@@ -330,6 +435,13 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
                 if (deltaDistance > 0)
                     transform.position += transform.forward * deltaDistance;
             }
+        }
+
+        // Apply extra gravity while airborne to make the arc snappier.
+        if (_state == CombatState.Acrobatic)
+        {
+            float extraGravity = Physics.gravity.y * (acrobaticGravityScale - 1f);
+            _rb.linearVelocity += new Vector3(0f, extraGravity * Time.fixedDeltaTime, 0f);
         }
 
         // Acrobatic: detect when the entity starts falling and transition to freefall,
@@ -478,6 +590,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     {
         if (_activeMove != null && _hitboxActive)
             CloseHitbox(GetHitboxType(_activeMove));
+
+        DisableAllTrailEmitters();
 
         _activeMove = null;
         _hitboxActive = false;
@@ -663,6 +777,10 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         if (_health.IsDead) return;
         if (_state != CombatState.Idle) return;
 
+        // Allow the jump if grounded now OR within the coyote-time window after leaving the floor.
+        bool withinCoyoteWindow = (Time.time - _lastGroundedTime) <= COYOTE_TIME;
+        if (!_isTouchingFloor && !withinCoyoteWindow) return;
+
         CombatMove flipMove = currentStyle.acrobaticFlip;
         if (flipMove == null) return;
 
@@ -710,6 +828,15 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         ResetAudioEvents();
 
         _movement.canRotate = move.rotationAllowanceEnd > 0f;
+
+        // Activate the strike trail only for heavy moves
+        DisableAllTrailEmitters();
+        if (move.isHeavy && move.strikeLimb != StrikeLimb.None)
+        {
+            
+            _activeTrailLimb = move.strikeLimb;
+            SetTrailEmitter(move.strikeLimb, true);
+        }
 
         if (isAcrobatic)
         {

@@ -974,13 +974,22 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  verticalMotionCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   motionScale: 1
   damage: 15
   isHeavy: 1
+  reactionToTrigger: 1
   hitboxType: 1
+  strikeLimb: 4
   audioEvents: []
   hitStart: 0.434
   hitEnd: 0.535
   canCombo: 0
   comboStart: 1
   comboEnd: 1
+  rotationAllowanceEnd: 0

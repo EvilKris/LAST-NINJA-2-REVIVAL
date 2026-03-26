@@ -830,11 +830,18 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  verticalMotionCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   motionScale: 2
   damage: 5
   isHeavy: 0
   reactionToTrigger: 1
   hitboxType: 1
+  strikeLimb: 3
   audioEvents:
   - triggerTime: 0
     sound: {fileID: 11400000, guid: 9ecea84ea71caae4b9bc32c7a9c14db6, type: 2}

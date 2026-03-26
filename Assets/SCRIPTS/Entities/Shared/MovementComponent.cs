@@ -14,9 +14,6 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     [Tooltip("Controls attack animation speed (punches, kicks, etc.). 1.0 = normal, 0.5 = half speed, 2.0 = double speed.")]
     [Range(0.1f, 3f)]
     public float attackSpeed = 1f;
-    [Tooltip("Controls acrobatic animation speed (flips, climb, etc.). 1.0 = normal, 0.5 = half speed, 2.0 = double speed.")]
-    [Range(1.5f, 10f)]
-    public float acrobaticSpeed = 5f;
 
     [Header("Movement Settings")]
     public float rotationSpeed = 12f;
@@ -359,7 +356,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
 
         // Priority: Acrobatic > Attack > Movement
         if (_combatHandler.State == CombatState.Acrobatic)
-            _animator.speed = acrobaticSpeed;
+            _animator.speed = _combatHandler.acrobaticSpeed;
         else if (_combatHandler.IsAttacking)
             _animator.speed = attackSpeed;
         else

@@ -1,6 +1,18 @@
 ﻿using UnityEngine;
 using JSAM;
 
+/// <summary>
+/// Identifies which limb should have its strike trail activated during this move.
+/// </summary>
+public enum StrikeLimb
+{
+    None,
+    RightHand,
+    LeftHand,
+    RightFoot,
+    LeftFoot
+}
+
 [System.Serializable]
 public struct AnimationAudioEvent
 {
@@ -51,6 +63,9 @@ public class CombatMove : ScriptableObject, IActiveCombatMove
 
     [Header("Hitbox Logic")]
     public HitboxType hitboxType;
+
+    [Tooltip("Which limb's strike trail to activate during this move's hit window. Only used when a strikeTrailMelee prefab is assigned in CharacterEffects.")]
+    public StrikeLimb strikeLimb = StrikeLimb.None;
 
     // ─────────────────────────────────────────────
     // AUDIO
