@@ -89,14 +89,15 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     #region Acrobatics State
 
     [Header("Acrobatic Settings")]
-    [Range(0.5f, 5f)]
-    public float acrobaticGravityScale = 1.5f;
+    [Tooltip("Vertical impulse applied when the acrobatic flip starts.")]
+    public float jumpForce = 7.5f;
+    [Tooltip("Forward impulse applied when the acrobatic flip starts.")]
+    public float forwardForce = 5.0f;
 
     [HideInInspector] public bool _isAcrobaticMove; // kept public for AnimationStateNotifier compatibility
-    private float _acrobaticBaseY;
-    private float _acrobaticGravityVel;
-    private float _acrobaticGravityOffset;
-    private float _acrobaticPeakY;
+
+    /// <summary>Forward speed captured at launch so momentum can be carried into freefall.</summary>
+    private float _acrobaticForwardSpeed;
 
     #endregion
 
@@ -318,8 +319,10 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
         float currentTime = stateInfo.normalizedTime;
 
-        // Forward root-motion via animation curve
-        if (currentTime > _lastNormalizedTime && _lastNormalizedTime >= 0)
+        // Forward root-motion via animation curve (non-acrobatic moves only;
+        // acrobatic movement is fully physics-driven via Rigidbody velocity).
+        if (_state != CombatState.Acrobatic
+            && currentTime > _lastNormalizedTime && _lastNormalizedTime >= 0)
         {
             if (_activeMove is CombatMove moveCast)
             {
@@ -329,27 +332,17 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             }
         }
 
-        // Acrobatic vertical arc with gravity blend
-        if (_state == CombatState.Acrobatic && _activeMove is CombatMove acroMove)
+        // Acrobatic: detect when the entity starts falling and transition to freefall,
+        // capturing forward momentum so it carries through the descent.
+        if (_state == CombatState.Acrobatic && _rb.linearVelocity.y < 0f)
         {
-            float curveY = acroMove.EvaluateVerticalPosition(currentTime);
-
-            if (curveY > _acrobaticPeakY)
-                _acrobaticPeakY = curveY;
-
-            bool descending = curveY < _acrobaticPeakY - 0.01f;
-            if (descending)
-            {
-                _acrobaticGravityVel    += Physics.gravity.y * acrobaticGravityScale * Time.fixedDeltaTime;
-                _acrobaticGravityOffset += _acrobaticGravityVel * Time.fixedDeltaTime;
-            }
-
-            float combinedY = _acrobaticBaseY + curveY + _acrobaticGravityOffset;
-            combinedY = Mathf.Max(combinedY, _acrobaticBaseY);
-
-            Vector3 pos = transform.position;
-            pos.y = combinedY;
-            transform.position = pos;
+            Vector3 forwardVelocity = transform.forward * _acrobaticForwardSpeed;
+            _rb.linearVelocity = new Vector3(
+                forwardVelocity.x,
+                _rb.linearVelocity.y,
+                forwardVelocity.z
+            );
+            EnterFreefall();
         }
 
         _lastNormalizedTime = currentTime;
@@ -675,12 +668,17 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
         _state = CombatState.Acrobatic;
         _isAcrobaticMove = true;
-        _acrobaticBaseY  = transform.position.y;
-        _acrobaticGravityVel    = 0f;
-        _acrobaticGravityOffset = 0f;
-        _acrobaticPeakY         = 0f;
+        _acrobaticForwardSpeed = forwardForce;
 
         _animator.applyRootMotion = false;
+
+        // Physics-driven jump: apply an impulse and let gravity do the rest.
+        _movement.isInFlight = true;
+        _movement.canRotate  = false;
+        Vector3 velocity = transform.forward * forwardForce;
+        velocity.y = jumpForce;
+        _rb.linearVelocity = velocity;
+
         StartCoroutine(FlipWithAfterimage(flipMove));
         PlayMove(flipMove, isAcrobatic: true);
         _animator.SetBool(HashIsAction, true);
