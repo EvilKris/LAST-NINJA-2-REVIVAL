@@ -21,7 +21,9 @@
         fsteps_track,
         fsteps_grass,
         pickupItem,
-        lightCry
+        lightCry,
+        fsteps_water,
+        fsteps_rock
     }
     public enum MyCombatAudioLibraryMusic {
         Level1TheWastelands,
