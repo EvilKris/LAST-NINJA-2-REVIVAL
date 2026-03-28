@@ -3680,7 +3680,7 @@ AnimatorState:
   m_SpeedParameter: animatorSpeed
   m_MirrorParameter: 
   m_CycleOffsetParameter: 
-  m_TimeParameter: 
+  m_TimeParameter: Input_XFloat
 --- !u!1102 &1102739806260566702
 AnimatorState:
   serializedVersion: 6
@@ -5029,7 +5029,7 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0
+  m_TransitionDuration: 0.1
   m_TransitionOffset: 0
   m_ExitTime: 0
   m_HasExitTime: 1

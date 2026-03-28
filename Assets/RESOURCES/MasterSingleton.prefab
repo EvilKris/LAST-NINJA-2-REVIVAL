@@ -286,6 +286,9 @@ MonoBehaviour:
   Charge_Drive_Strike_Tier_Complete: {fileID: 11400000, guid: 31acd13e4d8b1fa43aa1a87bbb8c414d,
     type: 2}
   DefaultPickupSound: {fileID: 11400000, guid: f520321739d28634083f39b5e292dcfa, type: 2}
+  AreaSoundSwamp: {fileID: 11400000, guid: 41814931271fba646bd66db07bbe79b9, type: 2}
+  AreaSoundWater: {fileID: 0}
+  AreaSoundForest: {fileID: 0}
 --- !u!114 &3571197963282959883
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -475,7 +478,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0, g: 0.6037736, b: 0.6037736, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0

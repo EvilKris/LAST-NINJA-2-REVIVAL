@@ -42,6 +42,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: f84eae797c8ae2c4d9c6df0e0630a94d, type: 2}
   - {fileID: 11400000, guid: 1fb1d0b117a97ae4ba1fdea175a0cc8f, type: 2}
   - {fileID: 11400000, guid: 033b7327ea6bc0348aac40ba7b059cc0, type: 2}
+  - {fileID: 11400000, guid: 41814931271fba646bd66db07bbe79b9, type: 2}
   Music:
   - {fileID: 11400000, guid: 08661f7bde1f75e42bdad31f5747c928, type: 2}
   - {fileID: 11400000, guid: dec5a987c10e1564c81c259e7259b54f, type: 2}
@@ -83,6 +84,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: f84eae797c8ae2c4d9c6df0e0630a94d, type: 2}
     - {fileID: 11400000, guid: 1fb1d0b117a97ae4ba1fdea175a0cc8f, type: 2}
     - {fileID: 11400000, guid: 033b7327ea6bc0348aac40ba7b059cc0, type: 2}
+    - {fileID: 11400000, guid: 41814931271fba646bd66db07bbe79b9, type: 2}
     foldout: 1
   musicCategoriesToList:
   - name: LastNinja-Music

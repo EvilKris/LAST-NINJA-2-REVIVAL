@@ -22,8 +22,9 @@
         fsteps_grass,
         pickupItem,
         lightCry,
-        fsteps_water,
-        fsteps_rock
+        fsteps_sludge,
+        fsteps_rock,
+        swampambience
     }
     public enum MyCombatAudioLibraryMusic {
         Level1TheWastelands,

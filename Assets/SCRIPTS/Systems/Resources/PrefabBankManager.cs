@@ -19,6 +19,15 @@ public class PrefabBankManager : MonoBehaviour
     [Tooltip("Default sound played when any item is picked up. Can be overridden per-item in ItemData.")]
     public SoundFileObject DefaultPickupSound;
 
+    [Header("Environment AreaZone Sounds")]
+    [Tooltip("Sounds played when player enters an AreaZone")]
+    public SoundFileObject AreaSoundSwamp;
+    public SoundFileObject AreaSoundWater;
+    public SoundFileObject AreaSoundForest;
+
+
+
+
     #region Useful Universal Functions
     /// <summary>
     /// Swaps materials on all renderers in a target GameObject's hierarchy.
