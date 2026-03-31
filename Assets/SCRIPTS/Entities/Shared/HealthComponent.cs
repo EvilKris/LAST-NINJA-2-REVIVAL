@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System;
 using JSAM;
+using DG.Tweening;
 
 /// <summary>
 /// Component that manages an entity's health, damage, and death.
@@ -43,6 +44,8 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     [Header("Internal References")]
     private Animator _animator;
     private CombatHandler _combatHandler;
+    // Sequence used for incremental heal-to-full tweens
+    private Sequence _healSequence;
 
     // Resolved single-bit layer indices derived from the LayerMask fields in Awake
     private int _deadLayerIndex  = -1;
@@ -298,4 +301,74 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         foreach (Transform child in obj.GetComponentsInChildren<Transform>(true))
             child.gameObject.layer = layer;
     }
+
+    public void HealToFull()
+    {
+        //called when the player interacts with the Buddha Shrine healing trigger, or any other healing source that fully restores health.
+        // If already at or above max, do nothing
+        if (currentHealth >= maxHealth) return;
+
+        // Grab PrefabBankManager for material swaps during heal
+        PrefabBankManager _bank = MasterSingleton.Instance.PrefabBankManager;
+
+        // Kill any existing heal sequence and restore materials if a previous heal had swapped them
+        if (_healSequence != null && _healSequence.IsActive())
+        {
+            _healSequence.Kill();
+            _healSequence = null;
+            if (_bank != null)
+                _bank.RestoreSharedMaterials(gameObject);
+        }
+
+        // Calculate how many +1 steps are required
+        int steps = Mathf.CeilToInt(maxHealth - currentHealth);
+        if (steps <= 0) return;
+
+        // Swap in the healing material on all renderers for visual feedback
+        if (_bank != null && _bank.HealingMat != null)
+        {
+            _bank.SwapOutAllMaterials(gameObject, _bank.HealingMat, false);
+        }
+
+        _healSequence = DOTween.Sequence();
+
+        for (int i = 0; i < steps; i++)
+        {
+            _healSequence.AppendInterval(0.1f);
+            _healSequence.AppendCallback(() =>
+            {
+                currentHealth = Mathf.Min(currentHealth + 1f, maxHealth);
+                OnHealthChanged?.Invoke(currentHealth, maxHealth, faction);
+                // If we've reached max, stop the sequence early
+                if (currentHealth >= maxHealth && _healSequence != null && _healSequence.IsActive())
+                {
+                    // Restore original materials when healing completes
+                    if (_bank != null)
+                        _bank.RestoreSharedMaterials(gameObject);
+
+                    _healSequence.Kill();
+                    _healSequence = null;
+                }
+            });
+        }
+
+        _healSequence.Play();
+    }
+
+    /// <summary>
+    /// Sets current health to a percentage of maxHealth (0..1) and fires the OnHealthChanged event.
+    /// Useful for testing scenarios where you want to force a specific health level.
+    /// </summary>
+    /// <param name="percent">Clamped 0..1 representing fraction of max health.</param>
+    public void SetHealthPercentage(float percent)
+    {
+        float clamped = Mathf.Clamp01(percent);
+        currentHealth = maxHealth * clamped;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth, faction);
+
+        if (IsDead)
+            HandleDeath();
+    }
+
+   
 }

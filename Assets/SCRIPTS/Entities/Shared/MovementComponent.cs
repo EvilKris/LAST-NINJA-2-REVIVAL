@@ -1,7 +1,9 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using DG.Tweening;
 
 [RequireComponent(typeof(Rigidbody))]
-public class MovementComponent : MonoBehaviour, IAnimationStateListener
+public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBReceiver
 {
 
     [Header("Speed Modifiers")]
@@ -35,7 +37,9 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     private Rigidbody _rb;
     private Animator _animator;
     private CombatHandler _combatHandler;
-
+    // Cached HealthComponent reference (set in Awake) to avoid repeated TryGetComponent calls
+    private HealthComponent _healthComponent;
+    
     [HideInInspector] public bool canRotate = true;
     [HideInInspector] public Vector3 currentMoveDir;
     [HideInInspector] public bool isMovementLocked = false;
@@ -73,6 +77,9 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     {
         _rb = GetComponent<Rigidbody>();
         _animator = GetComponent<Animator>();
+
+        // Cache HealthComponent for later subscriptions
+        _healthComponent = GetComponent<HealthComponent>();
 
         // CRITICAL: Disable root motion by default - MovementComponent handles ALL movement via physics
         // We manually handle root motion in OnAnimatorMove when useRootMotion is enabled
@@ -334,8 +341,8 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
     {
         // Safety net: if this entity dies while immobilized (e.g. killed mid-throw recovery),
         // the AnimationStateExitNotifier will never fire, so clear the flag via the death event.
-        if (TryGetComponent<HealthComponent>(out var health))
-            health.OnDeath += () => isImmobilized = false;
+        if (_healthComponent != null)
+            _healthComponent.OnDeath += () => isImmobilized = false;
     }
 
     private void Update()
@@ -376,4 +383,141 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener
             CanBeClinched = true; // reset clinch vulnerability when immobilization ends    
         }
     }
+
+
+
+
+    public void OnAnimationSignal(string functionName, AnimationStateEvent.StateEvent data)
+    {
+        if (functionName == "WorshipAndRegainHealth")
+        {
+            //DONT FORGET TO INCLUDE THIS FUNCTION NAME IN THE ANIMATION EVENT! This is the link between the animation and the code that restores health during the worship sequence.
+
+            // This function is called by an Animation Event at the kneeling part of the worship animation.
+            // It restores the player's health to full as part of the worship sequence.
+
+            if (_healthComponent != null)
+            {
+                _animator.speed = 0f; // Freeze animation to hold the kneeling pose while health is restored
+                _healthComponent.OnHealthChanged += OnHealthMax; // Listen for health changes to detect when health is fully restored
+                // Start the heal-to-full sequence. HealthComponent exposes HealToFull().
+                _healthComponent.HealToFull();
+            }
+        }
+
+        if(functionName == "RestoreMovement")
+        {
+            // This function can be called by an Animation Event at the end of the any animation as a backup to ensure movement is restored.
+            // currently used at the end of the worship animation to ensure the player regains control even if something goes wrong with the health restoration.
+            RestoreMovement();
+        }
+    }
+
+    private void OnHealthMax(float hp, float maxhp, Faction faction)
+    {
+        // Only proceed if we actually hit the target
+        if (hp >= maxhp)
+        {
+            if (_animator != null)
+            {
+                _animator.speed = 1f;
+            }
+
+            // Only unsubscribe once the condition is met
+            if (_healthComponent != null)
+            {
+                _healthComponent.OnHealthChanged -= OnHealthMax;
+            }
+
+            if (_activeWorshipTrigger != null)
+            {
+                _activeWorshipTrigger.StartCooldown(20f);
+                _activeWorshipTrigger = null;
+            }
+
+            // IMPORTANT: If you want movement to work immediately, 
+            // you might need to toggle this:
+             isMovementLocked = false; 
+        }
+    }
+
+    public void RestoreMovement()
+    {        
+        // This function can be called by an Animation Event at the end of the any animation as a backup to ensure movement is restored.
+        // currently used at the end of the worship animation to ensure the player regains control even if something goes wrong with the health restoration.
+        isImmobilized = false;
+        isMovementLocked = false;
+        canRotate = true;
+        isClinchActive = false;
+        CanBeClinched = true;
+        syncAnimationSource = null;
+        syncAnimatorSpeed = false;
+        useRootMotion = false;
+        if (_animator != null)
+            _animator.applyRootMotion = false;
+    }
+
+    //Functions for worshipping at the Buddha Shrine. Called by AnimationStateEvent when the worship animation starts. This is where we set up the state for the worship sequence, which includes immobilizing the player, enabling root motion, and playing the worship animation. The actual healing will be handled by an event at the end of the animation that restores health to full.
+
+
+    // Optional source trigger that initiated worship so we can notify it when finished
+    private TriggerDetectorManager _activeWorshipTrigger;
+
+    public void BeginWorshipSequence(TriggerDetectorManager source = null, Vector3? forwardDirection = null)
+    {
+        // Immediately stop all ongoing movement/combat actions so the worship
+        // animation can play cleanly and drive motion via root motion.
+        // 1) Stop physics movement
+        ZeroVelocity();
+
+        // 2) Clear animator inputs so locomotion blend trees cannot be steered
+        ZeroAnimatorInputs();
+
+        // TESTING: set health to 20% at the start of the worship sequence
+        if (_healthComponent != null)
+        {
+            _healthComponent.SetHealthPercentage(0.2f);
+        }
+
+        // 3) Lock movement and prevent rotation/input driven changes
+        isImmobilized = true;
+        isMovementLocked = true;
+        canRotate = false;
+        isClinchActive = false;
+        CanBeClinched = false;
+        syncAnimationSource = null;
+        syncAnimatorSpeed = false;
+
+        // 4) Reset combat state to cancel any active attacks/blocks/etc.
+        if (_combatHandler != null)
+            _combatHandler.ResetCombatState();
+
+        // 5) Enable root motion and tell this component to use it
+        if (_animator != null)
+            _animator.applyRootMotion = true;
+        useRootMotion = true;
+
+        // 6) Play the worship animation by name (explicit clip expected in animator)
+        //_animator.Play("Worship-Buddha", -1, 0f);
+        _animator.CrossFade("Worship-Buddha",0.3f);
+
+        // remember the triggering detector so we can start its cooldown when healing completes
+        _activeWorshipTrigger = source;
+
+        // If a forward direction was supplied by the trigger, rotate the rigidbody to face that
+        // direction using DOTween. Use Rigidbody.MoveRotation inside the tween setter so the
+        // rotation is applied in a physics-friendly way.
+        if (forwardDirection.HasValue)
+        {
+            Vector3 dir = forwardDirection.Value;
+            dir.y = 0f;
+            if (dir.sqrMagnitude > 0.0001f)
+            {
+                Vector3 targetEuler = Quaternion.LookRotation(dir).eulerAngles;
+                DOTween.To(() => _rb.rotation.eulerAngles, x => _rb.MoveRotation(Quaternion.Euler(x)), targetEuler, 0.5f).SetEase(Ease.OutSine);
+            }
+        }
+    }
+
+    
 }

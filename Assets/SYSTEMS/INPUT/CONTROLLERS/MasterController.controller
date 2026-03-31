@@ -131,6 +131,34 @@ AnimatorStateTransition:
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+--- !u!1102 &-8440966353728890861
+AnimatorState:
+  serializedVersion: 6
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Worship-Buddha
+  m_Speed: 1
+  m_CycleOffset: 0
+  m_Transitions:
+  - {fileID: -6393086997646960783}
+  m_StateMachineBehaviours:
+  - {fileID: 6343510937622632537}
+  m_Position: {x: 50, y: 50, z: 0}
+  m_IKOnFeet: 0
+  m_WriteDefaultValues: 1
+  m_Mirror: 0
+  m_SpeedParameterActive: 0
+  m_MirrorParameterActive: 0
+  m_CycleOffsetParameterActive: 0
+  m_TimeParameterActive: 0
+  m_Motion: {fileID: 7400000, guid: c84597f7a7faed44aa91b06907d5d9c2, type: 2}
+  m_Tag: 
+  m_SpeedParameter: 
+  m_MirrorParameter: 
+  m_CycleOffsetParameter: 
+  m_TimeParameter: 
 --- !u!1101 &-8415232025503693492
 AnimatorStateTransition:
   m_ObjectHideFlags: 1
@@ -425,6 +453,7 @@ MonoBehaviour:
   movementEvent: 0
   clinchHandlerEvent: 0
   pickupDetectorEvent: 0
+  _normalizedTime: 1
 --- !u!1101 &-7041077904803877287
 AnimatorStateTransition:
   m_ObjectHideFlags: 1
@@ -581,6 +610,28 @@ AnimatorStateTransition:
   m_TransitionDuration: 0.25
   m_TransitionOffset: 0
   m_ExitTime: 0.8076923
+  m_HasExitTime: 1
+  m_HasFixedDuration: 1
+  m_InterruptionSource: 0
+  m_OrderedInterruption: 1
+  m_CanTransitionToSelf: 1
+--- !u!1101 &-6393086997646960783
+AnimatorStateTransition:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_Conditions: []
+  m_DstStateMachine: {fileID: 0}
+  m_DstState: {fileID: 1102739806260566702}
+  m_Solo: 0
+  m_Mute: 0
+  m_IsExit: 0
+  serializedVersion: 3
+  m_TransitionDuration: 0.25
+  m_TransitionOffset: 0
+  m_ExitTime: 0.9932705
   m_HasExitTime: 1
   m_HasFixedDuration: 1
   m_InterruptionSource: 0
@@ -1021,6 +1072,7 @@ MonoBehaviour:
   movementEvent: 0
   clinchHandlerEvent: 0
   pickupDetectorEvent: 0
+  _normalizedTime: 1
 --- !u!1102 &-4961893584076021263
 AnimatorState:
   serializedVersion: 6
@@ -1561,6 +1613,7 @@ MonoBehaviour:
   movementEvent: 4
   clinchHandlerEvent: 0
   pickupDetectorEvent: 0
+  _normalizedTime: 1
 --- !u!1102 &-3662469248938252665
 AnimatorState:
   serializedVersion: 6
@@ -2915,6 +2968,7 @@ MonoBehaviour:
   movementEvent: 0
   clinchHandlerEvent: 8
   pickupDetectorEvent: 0
+  _normalizedTime: 1
 --- !u!1109 &-16931242815131869
 AnimatorTransition:
   m_ObjectHideFlags: 1
@@ -3140,6 +3194,7 @@ MonoBehaviour:
   movementEvent: 0
   clinchHandlerEvent: 16
   pickupDetectorEvent: 0
+  _normalizedTime: 1
 --- !u!1102 &319759699705825423
 AnimatorState:
   serializedVersion: 6
@@ -3738,7 +3793,7 @@ AnimatorStateMachine:
     m_Position: {x: 770, y: 180, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 5286830742255121922}
-    m_Position: {x: 680, y: 360, z: 0}
+    m_Position: {x: 620, y: 310, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 7012294988196083992}
     m_Position: {x: 770, y: 50, z: 0}
@@ -3748,13 +3803,16 @@ AnimatorStateMachine:
   - serializedVersion: 1
     m_State: {fileID: 1150765500366822922}
     m_Position: {x: 670, y: 260, z: 0}
+  - serializedVersion: 1
+    m_State: {fileID: -8440966353728890861}
+    m_Position: {x: 1210, y: 420, z: 0}
   m_ChildStateMachines:
   - serializedVersion: 1
     m_StateMachine: {fileID: 544690501628335962}
     m_Position: {x: 630, y: 560, z: 0}
   - serializedVersion: 1
     m_StateMachine: {fileID: 5251905975501114045}
-    m_Position: {x: 1210, y: 370, z: 0}
+    m_Position: {x: 1210, y: 360, z: 0}
   m_AnyStateTransitions:
   - {fileID: 7728776077269434792}
   - {fileID: -3164219579230386326}
@@ -4485,6 +4543,7 @@ MonoBehaviour:
   movementEvent: 0
   clinchHandlerEvent: 0
   pickupDetectorEvent: 0
+  _normalizedTime: 1
 --- !u!1107 &3639378384888007606
 AnimatorStateMachine:
   serializedVersion: 6
@@ -4773,6 +4832,7 @@ MonoBehaviour:
   movementEvent: 0
   clinchHandlerEvent: 0
   pickupDetectorEvent: 0
+  _normalizedTime: 1
 --- !u!1107 &4788130226815400952
 AnimatorStateMachine:
   serializedVersion: 6
@@ -5154,6 +5214,43 @@ AnimatorStateTransition:
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+--- !u!114 &6343510937622632537
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e616c25cd4ebc5a458ff57127b5a7c6b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: GameScripts::SMB_AnimationEventNotifier
+  OnEnterEvents: []
+  OnUpdateEvents:
+  - m_enabled: 1
+    m_normalizedTime: 0.7
+    m_ForceCallOnExit: 0
+    m_repeatOnLoop: 0
+    m_FunctionName: WorshipAndRegainHealth
+    m_parameterType: 0
+    m_boolParameter: 0
+    m_floatParameter: 0
+    m_intParameter: 0
+    m_stringParameter: 
+    m_objectParameter: {fileID: 0}
+  OnExitEvents:
+  - m_enabled: 1
+    m_normalizedTime: 0
+    m_ForceCallOnExit: 1
+    m_repeatOnLoop: 0
+    m_FunctionName: RestoreMovement
+    m_parameterType: 0
+    m_boolParameter: 0
+    m_floatParameter: 0
+    m_intParameter: 0
+    m_stringParameter: 
+    m_objectParameter: {fileID: 0}
 --- !u!1102 &6364678203274788513
 AnimatorState:
   serializedVersion: 6
@@ -5453,6 +5550,7 @@ MonoBehaviour:
   movementEvent: 0
   clinchHandlerEvent: 0
   pickupDetectorEvent: 64
+  _normalizedTime: 1
 --- !u!1101 &7466675834718941936
 AnimatorStateTransition:
   m_ObjectHideFlags: 1

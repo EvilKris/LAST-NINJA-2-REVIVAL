@@ -281,6 +281,7 @@ MonoBehaviour:
   GhostTrailsMat: {fileID: 2100000, guid: d7920a276ae40c64ca863ace36ed1fd9, type: 2}
   GhostTrailsMatAdditive: {fileID: 2100000, guid: f023f7ad8970449419c8b26a2851ea7d,
     type: 2}
+  HealingMat: {fileID: 2100000, guid: 75fe5d640f3ba204f84e74e6b40c0d0d, type: 2}
   Tier_One_Drive_Strike: {fileID: 11400000, guid: f9a36207019a5404ead3cfd257d1382f,
     type: 2}
   Charge_Drive_Strike_Tier_Complete: {fileID: 11400000, guid: 31acd13e4d8b1fa43aa1a87bbb8c414d,
@@ -461,8 +462,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3148289131340771517}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.008496323, y: 0.9884211, z: -0.1389135, w: 0.060454488}
-  m_LocalPosition: {x: 429.39554, y: 9.89255, z: 673.28455}
+  m_LocalRotation: {x: 0.2927364, y: 0.09160719, z: -0.028187295, w: 0.95137745}
+  m_LocalPosition: {x: 416.37442, y: 6.161911, z: 596.541}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -499,7 +500,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.1
+  near clip plane: 0.01
   far clip plane: 1000
   field of view: 10
   orthographic: 0

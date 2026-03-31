@@ -38,14 +38,20 @@ public class AnimationStateNotifier : StateMachineBehaviour
     [Tooltip("Event sent to PickupDetector on exit. None = do not notify.")]
     public AnimationExitEvent pickupDetectorEvent = AnimationExitEvent.None;
 
+
+    [Tooltip("Choose normalized time for activation")]
+    [Range(0f, 1f)]
+    public float _normalizedTime = 1f;
+
+
     // Cached direct references — resolved once on state enter to avoid per-exit allocations.
     private CombatHandler _combatHandler;
     private MovementComponent _movement;
     private ClinchHandler _clinchHandler;
     private PickupDetector _pickupDetector;
-    private bool _dustFired; // Prevents the one-shot dust notification from repeating each frame
-    private bool isGroundHitChecked;
+    private HealthComponent _healthComponent;
 
+    private bool _isInState = false;
     /// <summary>
     /// Called by Unity when the Animator enters this state.
     /// Resolves and caches component references once per entry so
@@ -64,8 +70,8 @@ public class AnimationStateNotifier : StateMachineBehaviour
             _clinchHandler = animator.GetComponent<ClinchHandler>();
         if (_pickupDetector == null)
             _pickupDetector = animator.GetComponent<PickupDetector>();
-        _dustFired = false;
-        isGroundHitChecked = false; 
+        if (_healthComponent == null)
+            _healthComponent = animator.GetComponent<HealthComponent>();
     }
 
     public override void OnStateUpdate(
@@ -73,30 +79,16 @@ public class AnimationStateNotifier : StateMachineBehaviour
         AnimatorStateInfo stateInfo,
         int layerIndex)
     {
-        // Drive the pickup collect window from here so it fires even if the state
-        // never fully completes (normalizedTime never reaches 1.0 before cleanup).
+        //Handles interruptions that occur before the normalized time threshold is reached, so that the appropriate "interrupted" events are sent to components.    
 
-
-        //This is just temporary until we have a better system for
-        //handling mid-animation events.
-        //For now, we can use the state update to trigger the dust
-        //effect at the right time during the attack animation,
-        //without needing to create a separate state or animation event for it.
-        
-        /*
-        if (_combatHandler != null && _combatHandler._isAcrobaticMove
-            && !_dustFired && stateInfo.normalizedTime >= 0.7f)
-        {
-            _dustFired = true;
-            _combatHandler.NotifyDust();
-        }*/
 
         //pickupDetector only applicable to Player
         if (_pickupDetector != null
             && pickupDetectorEvent != AnimationExitEvent.None
-            && stateInfo.normalizedTime >= 0.5f)
+            && stateInfo.normalizedTime >= 0.5f && !_isInState)
         {
             _pickupDetector.NotifyCollectWindow();
+            _isInState = true; //set _isInState to true to prevent multiple notifications if the state loops back around before exiting
         }
     }
 
@@ -122,8 +114,11 @@ public class AnimationStateNotifier : StateMachineBehaviour
         AnimatorStateInfo stateInfo,
         int layerIndex)
     {
-        bool completed = stateInfo.normalizedTime >= 1.0f;
 
+        _isInState = false;
+    
+        bool completed = stateInfo.normalizedTime >= 1.0f;
+       
         if (completed)
         {
             if (_combatHandler != null && combatHandlerEvent != AnimationExitEvent.None)
@@ -149,7 +144,26 @@ public class AnimationStateNotifier : StateMachineBehaviour
         if (_pickupDetector != null && pickupDetectorEvent != AnimationExitEvent.None)
             _pickupDetector.OnAnimationStateExit(layerIndex, completed ? pickupDetectorEvent : AnimationExitEvent.ClipInterrupted);
     }
+
+    /*
+    public override void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        bool completed = stateInfo.normalizedTime >= 1.0f;
+        // Get components dynamically to ensure we are talking to the RIGHT instance
+        var receivers = animator.GetComponents<IAnimationStateReceiver>();
+        foreach (var r in receivers)
+        {
+            r.OnAnimationNotify(this.specificEvent, completed);
+        }
+    }
+    
+     public interface IAnimationStateReceiver {
+    void OnAnimationNotify(AnimationExitEvent evt, bool completed);
+}
+     
+     */
+
 }
 
-    
+
 
