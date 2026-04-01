@@ -15,7 +15,7 @@ MonoBehaviour:
   safeName: 
   presetDescription: 
   files:
-  - {fileID: 8300000, guid: f0d14f5ca423e6d49bf432c0cd386222, type: 3}
+  - {fileID: 8300000, guid: 722b11430e636ae40865b97195b2631f, type: 3}
   neverRepeat: 0
   loopStart: 0
   loopEnd: 327.888
@@ -29,12 +29,12 @@ MonoBehaviour:
   loopMode: 1
   delay: 0
   ignoreTimeScale: 0
-  maxPlayingInstances: 10
+  maxPlayingInstances: 1
   channelOverride: 0
   mixerGroupOverride: {fileID: 0}
-  fadeInOut: 0
-  fadeInDuration: 0
-  fadeOutDuration: 0
+  fadeInOut: 1
+  fadeInDuration: 0.1
+  fadeOutDuration: 0.1
   bypassEffects: 0
   bypassListenerEffects: 0
   bypassReverbZones: 0

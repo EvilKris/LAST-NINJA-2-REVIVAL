@@ -29,6 +29,12 @@ public class PrefabBankManager : MonoBehaviour
     public SoundFileObject AreaSoundWater;
     public SoundFileObject AreaSoundForest;
 
+    [Header("Environment AreaZone Music")]
+    [Tooltip("AreaZone but for actual music change")]
+
+    public MusicFileObject thisLevelMusic;
+    public MusicFileObject shrineMusic;
+
 
 
 

@@ -46,6 +46,7 @@ MonoBehaviour:
   Music:
   - {fileID: 11400000, guid: 08661f7bde1f75e42bdad31f5747c928, type: 2}
   - {fileID: 11400000, guid: dec5a987c10e1564c81c259e7259b54f, type: 2}
+  - {fileID: 11400000, guid: f0817d27bff704c439eedb3026ddbd57, type: 2}
   useCustomNames: 0
   generatedName: MyCombatAudioLibrary
   musicEnum: MyCombatAudioLibraryMusic
@@ -91,4 +92,5 @@ MonoBehaviour:
     files:
     - {fileID: 11400000, guid: 08661f7bde1f75e42bdad31f5747c928, type: 2}
     - {fileID: 11400000, guid: dec5a987c10e1564c81c259e7259b54f, type: 2}
+    - {fileID: 11400000, guid: f0817d27bff704c439eedb3026ddbd57, type: 2}
     foldout: 1

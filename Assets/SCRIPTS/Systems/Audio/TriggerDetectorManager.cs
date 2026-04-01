@@ -2,7 +2,6 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
-using static Codice.Client.Common.EventTracking.TrackFeatureUseEvent.Features.DesktopGUI.Filters;
 
 
 
@@ -16,7 +15,7 @@ public class TriggerDetectorManager : MonoBehaviour
         None = 0,
         Worship_At_Altar_Trigger = 10,
         Close_To_Dragon = 20,
-        Play_Altar_Song = 50,
+        CustomA = 50,
         CustomB = 60
     }
 
