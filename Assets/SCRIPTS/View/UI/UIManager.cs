@@ -24,12 +24,17 @@ public class UIManager : MonoBehaviour
     [Tooltip("Charge meter display component.")]
     public UIChargeDisplay chargeMeter;
 
+    [SerializeField] private RectTransform lifeIconPrefabHolder;
+    [SerializeField] private GameObject lifeIconPrefabUI; 
+
     // ── Private state ────────────────────────────────────────────────────────
 
     /// <summary>Per-instance material so the player health shader doesn't affect other users of the same asset.</summary>
     private Material _playerHealthMaterial;
 
     private EnemyHealthBarScript _enemyHealthBarScript;
+    private readonly System.Collections.Generic.List<GameObject> _lifeIcons = new System.Collections.Generic.List<GameObject>();
+    private HealthComponent _playerHealthComponent;
 
     // ═══════════════════════════════════════════════════════════════════
     // Unity Lifecycle
@@ -51,6 +56,10 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         SubscribeToAllHealthComponents();
+        BuildLifeIcons();
+
+        GameDataManager gdm = MasterSingleton.Instance.GameDataManager;
+        gdm.OnLivesChanged += OnLivesChanged;
     }
 
     private void OnDestroy()
@@ -59,6 +68,12 @@ public class UIManager : MonoBehaviour
 
         if (_playerHealthMaterial != null)
             Destroy(_playerHealthMaterial);
+
+        if (MasterSingleton.Instance != null)
+            MasterSingleton.Instance.GameDataManager.OnLivesChanged -= OnLivesChanged;
+
+        if (_playerHealthComponent != null)
+            _playerHealthComponent.OnDeath -= OnPlayerDeath;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -102,14 +117,27 @@ public class UIManager : MonoBehaviour
     private void SubscribeToAllHealthComponents()
     {
         foreach (HealthComponent health in Object.FindObjectsByType<HealthComponent>(FindObjectsSortMode.None))
+        {
             health.OnHealthChanged += OnHealthChanged;
+
+            if (health.faction == Faction.Player)
+            {
+                _playerHealthComponent = health;
+                health.OnDeath += OnPlayerDeath;
+            }
+        }
     }
 
     /// <summary>Unsubscribes from all <see cref="HealthComponent"/> events still present in the scene.</summary>
     private void UnsubscribeFromAllHealthComponents()
     {
         foreach (HealthComponent health in Object.FindObjectsByType<HealthComponent>(FindObjectsSortMode.None))
+        {
             health.OnHealthChanged -= OnHealthChanged;
+
+            if (health.faction == Faction.Player)
+                health.OnDeath -= OnPlayerDeath;
+        }
     }
 
     /// <summary>
@@ -123,9 +151,60 @@ public class UIManager : MonoBehaviour
         float normalized = maxHealth > 0f ? currentHealth / maxHealth : 0f;
 
         if (faction == Faction.Player && _playerHealthMaterial != null)
+        {
             _playerHealthMaterial.SetFloat("_FillAmount", normalized);
+            playerHealthUI.SetMaterialDirty();
+        }
         else if (faction == Faction.Enemy && _enemyHealthBarScript != null)
             _enemyHealthBarScript.UpdateHealthBar(normalized);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Life Icons
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Populates <see cref="lifeIconPrefabHolder"/> with one icon per life.
+    /// Clears any existing icons first so it is safe to call on reset.
+    /// </summary>
+    private void BuildLifeIcons()
+    {
+        if (lifeIconPrefabHolder == null || lifeIconPrefabUI == null) return;
+
+        foreach (GameObject icon in _lifeIcons)
+            Destroy(icon);
+        _lifeIcons.Clear();
+
+        int lives = MasterSingleton.Instance.GameDataManager.Lives;
+        for (int i = 0; i < lives; i++)
+        {
+            GameObject icon = Instantiate(lifeIconPrefabUI, lifeIconPrefabHolder);
+            _lifeIcons.Add(icon);
+        }
+    }
+
+    /// <summary>
+    /// Called when <see cref="GameDataManager.Lives"/> changes.
+    /// Removes the last icon to match the new count.
+    /// </summary>
+    private void OnLivesChanged(int newLives)
+    {
+        if (lifeIconPrefabHolder == null) return;
+
+        while (_lifeIcons.Count > newLives)
+        {
+            int last = _lifeIcons.Count - 1;
+            Destroy(_lifeIcons[last]);
+            _lifeIcons.RemoveAt(last);
+        }
+    }
+
+    /// <summary>
+    /// Called when the player entity dies. Deducts one life via <see cref="GameDataManager.LoseLife"/>.
+    /// </summary>
+    private void OnPlayerDeath()
+    {
+        MasterSingleton.Instance.GameDataManager.LoseLife();
     }
 }
 

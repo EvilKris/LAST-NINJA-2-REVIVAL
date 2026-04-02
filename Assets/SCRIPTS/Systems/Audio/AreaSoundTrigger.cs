@@ -1,6 +1,7 @@
 using UnityEngine;
 using JSAM;
 using System.Collections;
+using Unity.Cinemachine;
 
 public class AreaSoundTrigger : MonoBehaviour
 {
@@ -17,6 +18,24 @@ public class AreaSoundTrigger : MonoBehaviour
     private SoundFileObject sfx;
     private MusicFileObject music;
     private MusicFileObject previousMusic;
+    private float previousMusicTime;
+
+    // Shrine camera — found on this prefab at startup
+    private CinemachineCamera _shrineCamera;
+    private int _shrineCameraOriginalPriority;
+    private CinemachineCamera _previousCamera;
+
+    private void Awake()
+    {
+        if (zoneType == AreaZoneType.MUSIC_SHRINE)
+        {
+            _shrineCamera = GetComponentInChildren<CinemachineCamera>();
+            if (_shrineCamera != null)
+                _shrineCameraOriginalPriority = _shrineCamera.Priority;
+        }
+        else
+            Debug.Log("AreaSoundTrigger: MUSIC_SHRINE zone type requires a CinemachineCamera component on this or a parent GameObject for camera switching to work.");        
+    }
 
     private SoundFileObject GetSoundForZone()
     {
@@ -71,10 +90,14 @@ public class AreaSoundTrigger : MonoBehaviour
                 // store previous music so we can restore it on exit
                 previousMusic = bank.thisLevelMusic;
 
-                // Stop previous music with fade (stopInstantly = false uses transition settings)
+                // Stop previous music with fade, saving playback position to restore later
                 if (previousMusic != null)
                 {
-                    AudioManager.StopMusic(previousMusic, null, false);
+                    var helper = AudioManager.StopMusic(previousMusic, null, false);
+                    if (helper != null && helper.AudioSource != null)
+                    {
+                        previousMusicTime = helper.AudioSource.time;
+                    }
                 }
 
                 // set the bank's main music to this area's music
@@ -82,6 +105,13 @@ public class AreaSoundTrigger : MonoBehaviour
 
                 // play the area's music (will fade in based on music file settings)
                 AudioManager.PlayMusic(music);
+            }
+
+            //turn on cam 
+            if (zoneType == AreaZoneType.MUSIC_SHRINE && _shrineCamera != null)
+            {
+                _previousCamera = CameraZoneManager.Instance.GetCurrentCamera();
+                CameraZoneManager.Instance.ActivateCamera(_shrineCamera);
             }
         }
     }
@@ -109,14 +139,31 @@ public class AreaSoundTrigger : MonoBehaviour
 
                 if (previousMusic != null)
                 {
-                    // Play previous music (will fade in)
-                    AudioManager.PlayMusic(previousMusic);
+                    // Fade previous music back in and restore saved playback position
+                    var helper = AudioManager.FadeMusicIn(previousMusic, 0.2f);
+                    if (helper != null && helper.AudioSource != null)
+                    {
+                        helper.AudioSource.time = previousMusicTime;
+                    }
                 }
 
                 // clear stored references
                 music = null;
                 previousMusic = null;
+                previousMusicTime = 0f;
             }
+
+
+
+            //turn off cam 
+            if (zoneType == AreaZoneType.MUSIC_SHRINE && _shrineCamera != null)
+            {
+                _shrineCamera.Priority = _shrineCameraOriginalPriority;
+                if (_previousCamera != null)
+                    CameraZoneManager.Instance.ActivateCamera(_previousCamera);
+                _previousCamera = null;
+            }
+
         }
     }
 }

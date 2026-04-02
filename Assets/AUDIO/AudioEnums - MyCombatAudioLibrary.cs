@@ -24,7 +24,8 @@
         lightCry,
         fsteps_sludge,
         fsteps_rock,
-        swampambience
+        swampambience,
+        healingwaves
     }
     public enum MyCombatAudioLibraryMusic {
         Level1TheWastelands,

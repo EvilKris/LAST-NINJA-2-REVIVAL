@@ -316,8 +316,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         {
             _healSequence.Kill();
             _healSequence = null;
-            if (_bank != null)
-                _bank.RestoreSharedMaterials(gameObject);
+            
         }
 
         // Calculate how many +1 steps are required
@@ -343,8 +342,8 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
                 if (currentHealth >= maxHealth && _healSequence != null && _healSequence.IsActive())
                 {
                     // Restore original materials when healing completes
-                    if (_bank != null)
-                        _bank.RestoreSharedMaterials(gameObject);
+                  //  if (_bank != null)
+                    //    _bank.RestoreSharedMaterials(gameObject);
 
                     _healSequence.Kill();
                     _healSequence = null;

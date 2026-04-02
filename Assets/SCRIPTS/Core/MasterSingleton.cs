@@ -13,7 +13,7 @@ public class MasterSingleton : Singleton<MasterSingleton>
     public GameDataManager GameDataManager { get; private set; }
     public PlayerManager PlayerManager { get; private set; }
     public InventoryManager InventoryManager { get; private set; }
-    public EventManager EventManager { get; private set; }
+    public SceneLoader SceneLoader { get; private set; }
 
     public override void Awake()
     {
@@ -25,7 +25,7 @@ public class MasterSingleton : Singleton<MasterSingleton>
         GameDataManager = GetComponentInChildren<GameDataManager>();
         PlayerManager = GetComponentInChildren<PlayerManager>(); //might not even need this, but just in case
         InventoryManager = GetComponentInChildren<InventoryManager>();
-        EventManager = GetComponentInChildren<EventManager>();
+        SceneLoader = GetComponentInChildren<SceneLoader>();
     }
 
     

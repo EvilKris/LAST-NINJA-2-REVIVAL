@@ -1,8 +1,14 @@
 using JSAM;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class PrefabBankManager : MonoBehaviour
 {
+    // Stores original sharedMaterials per renderer so RestoreSharedMaterials can
+    // put back the real assets even after Unity overwrites sharedMaterials when
+    // .materials is assigned.
+    private readonly Dictionary<Renderer, Material[]> _originalMaterialsCache = new Dictionary<Renderer, Material[]>();
+
     [Tooltip("Material used for phantom Demon Soul-type vfx")]
     public Material PhantomMaterial;
 
@@ -35,6 +41,9 @@ public class PrefabBankManager : MonoBehaviour
     public MusicFileObject thisLevelMusic;
     public MusicFileObject shrineMusic;
 
+    [Header("Healing")]
+    [Tooltip("Sound played when player uses a healing item")]
+    public SoundFileObject HealingSound;
 
 
 
@@ -75,6 +84,11 @@ public class PrefabBankManager : MonoBehaviour
 
         foreach (Renderer renderer in renderers)
         {
+            // Cache the originals before overwriting so RestoreSharedMaterials can
+            // recover them (assigning .materials corrupts .sharedMaterials in Unity).
+            if (!_originalMaterialsCache.ContainsKey(renderer))
+                _originalMaterialsCache[renderer] = renderer.sharedMaterials;
+
             int matCount = renderer.sharedMaterials.Length;
             Material[] newMats = new Material[matCount];
 
@@ -156,9 +170,16 @@ public class PrefabBankManager : MonoBehaviour
 
         foreach (Renderer renderer in renderers)
         {
-            // Replace current materials array with shared materials to clean up instances
-            Material[] sharedMats = renderer.sharedMaterials;
-            renderer.materials = sharedMats;
+            if (_originalMaterialsCache.TryGetValue(renderer, out Material[] originals))
+            {
+                renderer.materials = originals;
+                _originalMaterialsCache.Remove(renderer);
+            }
+            else
+            {
+                // Fallback: no cached originals, use current sharedMaterials
+                renderer.materials = renderer.sharedMaterials;
+            }
         }
     }
 

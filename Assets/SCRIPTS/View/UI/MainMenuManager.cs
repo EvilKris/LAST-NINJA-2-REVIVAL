@@ -2,7 +2,6 @@ using DG.Tweening;
 using JSAM;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
@@ -38,6 +37,7 @@ public class MainMenuManager : MonoBehaviour
     private bool _flashTriggered; // True once the white flash coroutine has been started
     private UIManager uiManager;             // Cached reference to UIManager singleton
     private GameDataManager gameDataManager; // Cached reference to GameDataManager singleton
+    private Image _bgBlackImage; // Cached Image on bgBlackUI so we can kill its DOFade tween
     
 
     /// <summary>
@@ -118,9 +118,9 @@ public class MainMenuManager : MonoBehaviour
 
         if (bgBlackUI != null)
         {
-            Image bgImage = bgBlackUI.GetComponent<Image>();
-            if (bgImage != null)
-                bgImage.DOFade(0f, 8f).SetEase(bgBlackFadeEase);
+            _bgBlackImage = bgBlackUI.GetComponent<Image>();
+            if (_bgBlackImage != null)
+                _bgBlackImage.DOFade(0f, 8f).SetEase(bgBlackFadeEase);
         }
 
         if (uiTextButton != null)
@@ -145,6 +145,18 @@ public class MainMenuManager : MonoBehaviour
         if (uiCanvasRect != null)
         {
             uiCanvasRect.DOKill();
+        }
+
+        // Kill the background fade animation if it's still running
+        if (_bgBlackImage != null)
+        {
+            _bgBlackImage.DOKill();
+            _bgBlackImage = null;
+        }
+
+        if (bgBlackUI != null)
+        {
+            bgBlackUI.DOKill();
         }
     }
 
@@ -189,8 +201,8 @@ public class MainMenuManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Loads the next scene in the build index.
-    /// Cleans up animations, enables pause functionality, and shows in-game UI.
+    /// Loads LEVEL1-SCENE via the SceneLoader loading screen.
+    /// Cleans up animations and enables pause functionality before transitioning.
     /// </summary>
     private void LoadNextScene()
     {
@@ -201,41 +213,8 @@ public class MainMenuManager : MonoBehaviour
         // Re-enable pause menu functionality for gameplay
         gameDataManager.IsPauseAllowed = true;
 
-        // Wait for the loading screen to finish fading in before loading the scene,
-        // so the transition is never visible mid-load
-        EventManager.OnLoadingScreenShown += OnLoadingScreenReady;
-        EventManager.ShowLoadingScreen();
-    }
-
-    /// <summary>
-    /// Called once the loading screen has fully faded in.
-    /// Triggers the actual scene load so it happens behind the overlay.
-    /// </summary>
-    private void OnLoadingScreenReady()
-    {
-        EventManager.OnLoadingScreenShown -= OnLoadingScreenReady;
-
-        int nextSceneIndex = SceneManager.GetActiveScene().buildIndex + 1;
-        SceneManager.sceneLoaded += OnSceneLoaded;
-        SceneManager.LoadScene(nextSceneIndex);
-    }
-
-    /// <summary>
-    /// Called when the next scene has finished loading.
-    /// Shows the in-game UI overlay (HUD, health bars, etc.).
-    /// </summary>
-    /// <param name="scene">The scene that was loaded</param>
-    /// <param name="mode">The load mode used</param>
-    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-    {
-        // Unsubscribe to prevent memory leaks and duplicate calls
-        SceneManager.sceneLoaded -= OnSceneLoaded;
-        
-        // Show in-game UI elements now that we're in the game scene
-        if (uiManager != null)
-        {
-            uiManager.ToggleInGameOverlay(true);
-        }
+        // Load the target scene through the loading screen
+        MasterSingleton.Instance.SceneLoader.LoadSceneWithLoadingScreen("LEVEL1-SCENE");
     }
 
     /// <summary>

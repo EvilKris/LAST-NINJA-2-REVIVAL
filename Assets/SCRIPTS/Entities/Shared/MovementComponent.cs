@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using DG.Tweening;
+using JSAM;
 
 [RequireComponent(typeof(Rigidbody))]
 public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBReceiver
@@ -402,6 +403,8 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
                 _healthComponent.OnHealthChanged += OnHealthMax; // Listen for health changes to detect when health is fully restored
                 // Start the heal-to-full sequence. HealthComponent exposes HealToFull().
                 _healthComponent.HealToFull();
+                _healsfx=AudioManager.PlaySound(MasterSingleton.Instance.PrefabBankManager.HealingSound);
+                _healsfx.Play();
             }
         }
 
@@ -418,10 +421,12 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
         // Only proceed if we actually hit the target
         if (hp >= maxhp)
         {
-            if (_animator != null)
-            {
-                _animator.speed = 1f;
-            }
+            if(_healsfx != null)
+                _healsfx.Stop(); // Stop the healing sound effect if it's still playing    
+
+            
+            MasterSingleton.Instance.PrefabBankManager.RestoreSharedMaterials(gameObject); // Restore original materials to remove any visual effects applied during the worship sequence   
+                       
 
             // Only unsubscribe once the condition is met
             if (_healthComponent != null)
@@ -452,9 +457,10 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
         CanBeClinched = true;
         syncAnimationSource = null;
         syncAnimatorSpeed = false;
+       /*
         useRootMotion = false;
         if (_animator != null)
-            _animator.applyRootMotion = false;
+            _animator.applyRootMotion = false;*/
     }
 
     //Functions for worshipping at the Buddha Shrine. Called by AnimationStateEvent when the worship animation starts. This is where we set up the state for the worship sequence, which includes immobilizing the player, enabling root motion, and playing the worship animation. The actual healing will be handled by an event at the end of the animation that restores health to full.
@@ -462,6 +468,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
 
     // Optional source trigger that initiated worship so we can notify it when finished
     private TriggerDetectorManager _activeWorshipTrigger;
+    private SoundChannelHelper _healsfx;
 
     public void BeginWorshipSequence(TriggerDetectorManager source = null, Vector3? forwardDirection = null)
     {
