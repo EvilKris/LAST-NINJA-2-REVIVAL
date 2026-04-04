@@ -15,7 +15,7 @@ public class TriggerDetectorManager : MonoBehaviour
         None = 0,
         Worship_At_Altar_Trigger = 10,
         Close_To_Dragon = 20,
-        CustomA = 50,
+        Death_By_Drowning = 50,
         CustomB = 60
     }
 

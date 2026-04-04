@@ -12,6 +12,10 @@ public class PrefabBankManager : MonoBehaviour
     [Tooltip("Material used for phantom Demon Soul-type vfx")]
     public Material PhantomMaterial;
 
+   /* [Header("X-Ray")]
+    [Tooltip("Material used for the X-Ray occlusion effect on XRayEntity")]
+    public Material XRayMaterial;
+   */
     [Header("GhostTrail")]
     [Tooltip("Material used for Drive Strike ghost trail vfx")]
     public Material GhostTrailsMat;

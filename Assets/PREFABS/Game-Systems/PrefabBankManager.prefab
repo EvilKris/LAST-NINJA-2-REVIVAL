@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   PhantomMaterial: {fileID: 2100000, guid: 76ecaadddd04b3f4f8a75e200d261360, type: 2}
+  XRayMaterial: {fileID: 2100000, guid: 520c919dc6e188144a838132888f63e3, type: 2}
   GhostTrailsMat: {fileID: 2100000, guid: d7920a276ae40c64ca863ace36ed1fd9, type: 2}
   GhostTrailsMatAdditive: {fileID: 2100000, guid: f023f7ad8970449419c8b26a2851ea7d,
     type: 2}

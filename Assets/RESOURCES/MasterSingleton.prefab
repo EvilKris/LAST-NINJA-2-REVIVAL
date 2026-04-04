@@ -395,8 +395,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3148289131340771517}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.008496323, y: 0.9884211, z: -0.1389135, w: 0.060454488}
-  m_LocalPosition: {x: 429.39554, y: 9.89255, z: 673.28455}
+  m_LocalRotation: {x: 0.2927364, y: 0.09160719, z: -0.028187295, w: 0.95137745}
+  m_LocalPosition: {x: 416.37442, y: 6.161911, z: 596.541}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -433,7 +433,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.1
+  near clip plane: 0.01
   far clip plane: 1000
   field of view: 10
   orthographic: 0
@@ -707,8 +707,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aae546004d4aed041b56ce83e74789d9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Notes
-  Note: 'This is the main "brain" of the game. A selector that loads all of the relevant
-    managers before anything else starts. '
+  Note: 'This is the main "brain" of the game. A singelton service locator that acts
+    as a registry and provides a global access to all the main managers, specifically
+    loading before anything starts. '
 --- !u!114 &7706659581130661850
 MonoBehaviour:
   m_ObjectHideFlags: 0
