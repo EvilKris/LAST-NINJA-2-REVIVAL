@@ -56,6 +56,11 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     /// </summary>
     public bool IsDead => currentHealth <= 0;
 
+    /// <summary>
+    /// Read-only access to current health. Used by <see cref="Checkpoint"/> to snapshot state.
+    /// </summary>
+    public float CurrentHealth => currentHealth;
+
     // Events that other systems can subscribe to
     /// <summary>
     /// Fired when the entity takes damage but doesn't die.
@@ -205,9 +210,9 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
             _animator.SetTrigger("isDead"); // Move to Death State
         }
 
-        // Swap materials to phantom/ghost material 
+        // Swap materials to phantom/ghost material
         PrefabBankManager _bank = MasterSingleton.Instance.PrefabBankManager;
-        _bank.SwapOutAllMaterials(gameObject, _bank.PhantomMaterial,false);
+        MasterSingleton.Instance.PlayerManager.SwapOutAllMaterials(gameObject, _bank.PhantomMaterial, false);
 
         // Disable components so the "corpse" doesn't slide around or block hits
         // if (TryGetComponent<Collider>(out var col)) col.enabled = false;
@@ -316,7 +321,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         {
             _healSequence.Kill();
             _healSequence = null;
-            
+
         }
 
         // Calculate how many +1 steps are required
@@ -326,7 +331,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         // Swap in the healing material on all renderers for visual feedback
         if (_bank != null && _bank.HealingMat != null)
         {
-            _bank.SwapOutAllMaterials(gameObject, _bank.HealingMat, false);
+            MasterSingleton.Instance.PlayerManager.SwapOutAllMaterials(gameObject, _bank.HealingMat, false);
         }
 
         _healSequence = DOTween.Sequence();
@@ -369,5 +374,26 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
             HandleDeath();
     }
 
-   
+    /// <summary>
+    /// Restores the entity to full health without triggering death or hit events.
+    /// Used after a respawn (e.g. drowning) to reset the entity to a living state.
+    /// </summary>
+    public void Revive()
+    {
+        currentHealth = maxHealth;
+        isInvulnerable = false;
+        OnHealthChanged?.Invoke(currentHealth, maxHealth, faction);
+    }
+
+    /// <summary>
+    /// Restores health to an exact value without triggering death or hit events.
+    /// Used by <see cref="GameManager"/> to apply a <see cref="CheckpointSnapshot"/>.
+    /// </summary>
+    public void SetHealth(float value)
+    {
+        currentHealth = Mathf.Clamp(value, 0f, maxHealth);
+        OnHealthChanged?.Invoke(currentHealth, maxHealth, faction);
+    }
+
+
 }

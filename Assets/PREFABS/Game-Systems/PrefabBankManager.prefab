@@ -46,7 +46,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   PhantomMaterial: {fileID: 2100000, guid: 76ecaadddd04b3f4f8a75e200d261360, type: 2}
-  XRayMaterial: {fileID: 2100000, guid: 520c919dc6e188144a838132888f63e3, type: 2}
   GhostTrailsMat: {fileID: 2100000, guid: d7920a276ae40c64ca863ace36ed1fd9, type: 2}
   GhostTrailsMatAdditive: {fileID: 2100000, guid: f023f7ad8970449419c8b26a2851ea7d,
     type: 2}
@@ -61,6 +60,10 @@ MonoBehaviour:
   AreaSoundForest: {fileID: 0}
   thisLevelMusic: {fileID: 11400000, guid: 08661f7bde1f75e42bdad31f5747c928, type: 2}
   shrineMusic: {fileID: 11400000, guid: f0817d27bff704c439eedb3026ddbd57, type: 2}
+  SwampDrowningSplashes: {fileID: 99635804662965623, guid: ba7d09557b66f0f418e44a79eba19442,
+    type: 3}
+  DrowningSound_swamp: {fileID: 11400000, guid: 9a3b2c3ce56b947439451749dd37e6a1,
+    type: 2}
   HealingSound: {fileID: 11400000, guid: c9116e98cca68d840ab69be1c2bf4ac0, type: 2}
 --- !u!114 &5819000001921922319
 MonoBehaviour:

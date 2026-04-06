@@ -25,7 +25,10 @@
         fsteps_sludge,
         fsteps_rock,
         swampambience,
-        healingwaves
+        healingwaves,
+        landinmud,
+        bubbles,
+        arumakunideath
     }
     public enum MyCombatAudioLibraryMusic {
         Level1TheWastelands,

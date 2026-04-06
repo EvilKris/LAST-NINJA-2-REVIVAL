@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine;
 using DG.Tweening;
 using JSAM;
@@ -40,7 +41,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
     private CombatHandler _combatHandler;
     // Cached HealthComponent reference (set in Awake) to avoid repeated TryGetComponent calls
     private HealthComponent _healthComponent;
-    
+
     [HideInInspector] public bool canRotate = true;
     [HideInInspector] public Vector3 currentMoveDir;
     [HideInInspector] public bool isMovementLocked = false;
@@ -60,9 +61,9 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
     private bool _lastIsRunning;
     private float _lastXAxis;
     private float _lastYAxis;
-   
 
-    
+
+
     private void OnDisable()
     {
         // When MovementComponent is disabled, stop all physics movement immediately
@@ -84,8 +85,8 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
 
         // CRITICAL: Disable root motion by default - MovementComponent handles ALL movement via physics
         // We manually handle root motion in OnAnimatorMove when useRootMotion is enabled
-       // if (_animator != null)
-         //   _animator.applyRootMotion = false;
+        // if (_animator != null)
+        //   _animator.applyRootMotion = false;
 
         // Constrain rotation to prevent tipping over
         _rb.constraints = RigidbodyConstraints.FreezeRotation;
@@ -221,7 +222,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
         // After MovePosition, re-apply the pre-existing Y velocity so gravity
         // continues to accumulate naturally (MovePosition would otherwise zero it).
 
-       
+
 
         float yVelocity = _rb.linearVelocity.y;
         Vector3 delta = _animator.deltaPosition;
@@ -403,12 +404,12 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
                 _healthComponent.OnHealthChanged += OnHealthMax; // Listen for health changes to detect when health is fully restored
                 // Start the heal-to-full sequence. HealthComponent exposes HealToFull().
                 _healthComponent.HealToFull();
-                _healsfx=AudioManager.PlaySound(MasterSingleton.Instance.PrefabBankManager.HealingSound);
+                _healsfx = AudioManager.PlaySound(MasterSingleton.Instance.PrefabBankManager.HealingSound);
                 _healsfx.Play();
             }
         }
 
-        if(functionName == "RestoreMovement")
+        if (functionName == "RestoreMovement")
         {
             // This function can be called by an Animation Event at the end of the any animation as a backup to ensure movement is restored.
             // currently used at the end of the worship animation to ensure the player regains control even if something goes wrong with the health restoration.
@@ -421,12 +422,12 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
         // Only proceed if we actually hit the target
         if (hp >= maxhp)
         {
-            if(_healsfx != null)
+            if (_healsfx != null)
                 _healsfx.Stop(); // Stop the healing sound effect if it's still playing    
 
-            
-            MasterSingleton.Instance.PrefabBankManager.RestoreSharedMaterials(gameObject); // Restore original materials to remove any visual effects applied during the worship sequence   
-                       
+
+            MasterSingleton.Instance.PlayerManager.RestoreSharedMaterials(gameObject); // Restore original materials to remove any visual effects applied during the worship sequence
+
 
             // Only unsubscribe once the condition is met
             if (_healthComponent != null)
@@ -442,12 +443,12 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
 
             // IMPORTANT: If you want movement to work immediately, 
             // you might need to toggle this:
-             isMovementLocked = false; 
+            isMovementLocked = false;
         }
     }
 
     public void RestoreMovement()
-    {        
+    {
         // This function can be called by an Animation Event at the end of the any animation as a backup to ensure movement is restored.
         // currently used at the end of the worship animation to ensure the player regains control even if something goes wrong with the health restoration.
         isImmobilized = false;
@@ -457,10 +458,10 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
         CanBeClinched = true;
         syncAnimationSource = null;
         syncAnimatorSpeed = false;
-       /*
-        useRootMotion = false;
-        if (_animator != null)
-            _animator.applyRootMotion = false;*/
+        /*
+         useRootMotion = false;
+         if (_animator != null)
+             _animator.applyRootMotion = false;*/
     }
 
     //Functions for worshipping at the Buddha Shrine. Called by AnimationStateEvent when the worship animation starts. This is where we set up the state for the worship sequence, which includes immobilizing the player, enabling root motion, and playing the worship animation. The actual healing will be handled by an event at the end of the animation that restores health to full.
@@ -469,6 +470,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
     // Optional source trigger that initiated worship so we can notify it when finished
     private TriggerDetectorManager _activeWorshipTrigger;
     private SoundChannelHelper _healsfx;
+    private SoundChannelHelper _bubblesSfx;
 
     public void BeginWorshipSequence(TriggerDetectorManager source = null, Vector3? forwardDirection = null)
     {
@@ -506,7 +508,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
 
         // 6) Play the worship animation by name (explicit clip expected in animator)
         //_animator.Play("Worship-Buddha", -1, 0f);
-        _animator.CrossFade("Worship-Buddha",0.3f);
+        _animator.CrossFade("Worship-Buddha", 0.3f);
 
         // remember the triggering detector so we can start its cooldown when healing completes
         _activeWorshipTrigger = source;
@@ -526,5 +528,131 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
         }
     }
 
-    
+    // ═══════════════════════════════════════════════════════════════════
+    // Drowning Death Sequence
+    // ═══════════════════════════════════════════════════════════════════
+
+    [Header("Drowning Settings")]
+    [Tooltip("How fast the player sinks when drowning (units/sec).")]
+    [SerializeField] private float drownSinkSpeed = 0.4f;
+    [Tooltip("Seconds the sinking animation plays before the respawn / game-over check.")]
+    [SerializeField] private float drownSinkDuration = 3f;
+
+    private bool _isDrowning;
+    private Coroutine _drowningCoroutine;
+
+    /// <summary>
+    /// Called by TriggerDetectorManager when the player enters a Death_By_Drowning trigger.
+    /// Locks all controls, plays the drowning animation, sinks the player, then either
+    /// respawns at the nearest RespawnPoint (minus a life) or loads the main menu on game over.
+    /// </summary>
+    public void BeginDrowningSequence(Vector3 splashPoint)
+    {
+        //MasterSingleton.Instance.PlayerManager.ToggleXrayRendererFeatures(false);
+            
+       
+        // Spawn a splash particle at the water-surface contact point
+        //SpawnSplash(splashPoint, Vector3.up);
+
+        if (_isDrowning) return;
+        _isDrowning = true;
+
+        // 1) Stop physics movement
+        ZeroVelocity();
+        ZeroAnimatorInputs();
+
+        // 2) Lock all player control
+        isImmobilized = true;
+        isMovementLocked = true;
+        canRotate = false;
+        isClinchActive = false;
+        CanBeClinched = false;
+        syncAnimationSource = null;
+        syncAnimatorSpeed = false;
+
+        // 3) Reset combat state
+        if (_combatHandler != null)
+            _combatHandler.ResetCombatState();
+
+        // 4) Disable root motion — sinking is driven manually
+        useRootMotion = false;
+        if (_animator != null)
+            _animator.applyRootMotion = false;
+
+        // 5) Disable all non-trigger colliders so the sinking body doesn't push geometry
+        SetEntityCollidersActive(false);
+
+        // 6) Disable gravity so we control the downward motion ourselves
+        _rb.useGravity = false;
+        _rb.linearVelocity = Vector3.zero;
+
+        // 6) Play the drowning animation
+        if (_animator != null)
+            _animator.CrossFade("Death-Drowning", 0.3f);
+
+        // 7) Start the sink + respawn coroutine
+        if (_drowningCoroutine != null)
+            StopCoroutine(_drowningCoroutine);
+        _drowningCoroutine = StartCoroutine(DrowningRoutine());
+    }
+
+    /// <summary>
+    /// Enables or disables every non-trigger <see cref="Collider"/> in this entity's hierarchy.
+    /// Trigger colliders are intentionally skipped — they belong to detection systems
+    /// (e.g. <see cref="TriggerDetectorManager"/>) and must remain independent.
+    /// </summary>
+    public void SetEntityCollidersActive(bool active)
+    {
+        foreach (Collider col in GetComponentsInChildren<Collider>(true))
+        {
+            if (!col.isTrigger)
+                col.enabled = active;
+        }
+    }
+
+    private void SpawnSplash(Vector3 position, Vector3 upDirection)
+    {
+        PrefabBankManager bank = MasterSingleton.Instance.PrefabBankManager;
+        if (bank == null || bank.SwampDrowningSplashes == null) return;
+
+        JSAM.AudioManager.PlaySound(bank.DrowningSound_swamp);
+
+        _bubblesSfx = AudioManager.PlaySound(MasterSingleton.Instance.PrefabBankManager.Bubbles);
+        _bubblesSfx.Play();
+
+
+        Quaternion rotation = upDirection != Vector3.zero
+            ? Quaternion.LookRotation(upDirection)
+            : Quaternion.identity;
+
+        GameObject instance = Instantiate(bank.SwampDrowningSplashes, position, rotation);
+
+        ParticleSystem ps = instance.GetComponent<ParticleSystem>();
+        if (ps == null || !ps.main.stopAction.Equals(ParticleSystemStopAction.Destroy))
+            Destroy(instance, 5f);
+    }
+
+    private IEnumerator DrowningRoutine()
+    {
+        // Sink for a fixed 5 seconds regardless of drownSinkDuration, then hand off to GameManager
+        float elapsed = 0f;
+        const float maxSinkTime = 5f;
+        while (elapsed < maxSinkTime)
+        {
+            _rb.MovePosition(_rb.position + drownSinkSpeed * Time.fixedDeltaTime * Vector3.down);
+            elapsed += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+
+        if(_bubblesSfx != null) 
+            _bubblesSfx.Stop();
+
+        _isDrowning = false;
+        _drowningCoroutine = null;
+
+        // Hand the full death sequence (life loss, fade, respawn / game-over) to GameManager
+        MasterSingleton.Instance.GameManager.HandlePlayerDeath(this);
+    }
+
+
 }

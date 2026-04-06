@@ -15,8 +15,7 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private SoundFileObject clickSound; // Sound played when clicking menu buttons
     [SerializeField] private SoundFileObject overSound; // Sound played when hovering over menu buttons
     [SerializeField] private MusicFileObject myMusic; // Background music for the main menu
-    [SerializeField] private float musicFadeOutDuration = 1f; // Duration for music fade out (currently unused)
-
+  
     // UI transition settings
     [Header("UI Transition")]
     [SerializeField] private CanvasGroup mainMenuCanvasGroup; // Canvas group for fading the entire menu
@@ -30,8 +29,7 @@ public class MainMenuManager : MonoBehaviour
 
     [SerializeField] private VideoPlayer videoPlayer; // Reference to the VideoPlayer component for playing menu videos
     [SerializeField] private RawImage displayImage; // RawImage displaying the video — hidden when playback ends
-    [SerializeField] private float flashLeadTime = 0.5f; // Seconds before video end to start the white flash (peaks at video end)
-
+    
     // Runtime state
     private Tween fadeTween;      // Active fade animation tween
     private bool _flashTriggered; // True once the white flash coroutine has been started
@@ -71,6 +69,9 @@ public class MainMenuManager : MonoBehaviour
 
         // Hide in-game UI elements (HUD, health bars, etc.)
         uiManager.ToggleInGameOverlay(false);
+
+        // Reset game data so lives/score are correct on the next playthrough
+        gameDataManager.ResetToDefaults();
 
         // Subscribe then play so the event is guaranteed to be registered before the clip ends
         if (videoPlayer != null)

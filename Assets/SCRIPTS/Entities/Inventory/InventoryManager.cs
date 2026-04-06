@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 using System;
 
@@ -8,8 +9,10 @@ public class InventoryManager : MonoBehaviour
     public List<ItemData> ownedWeapons = new List<ItemData>();
     public List<ItemData> ownedItems = new List<ItemData>();
 
-    [SerializeField] private int currentWeaponIndex = 0;
-    [SerializeField] private int currentItemIndex = 0;
+    /// <summary>Index of the currently equipped weapon. Written by <see cref="CycleWeapon"/> and restored by <see cref="GameManager"/>.</summary>
+    [SerializeField] public int currentWeaponIndex = 0;
+    /// <summary>Index of the currently equipped item. Written by <see cref="CycleItem"/> and restored by <see cref="GameManager"/>.</summary>
+    [SerializeField] public int currentItemIndex = 0;
 
     // Events for UI and Player to listen to
     public event Action<ItemData> OnWeaponChanged;

@@ -17,7 +17,7 @@ public class AnimationStateEvent
         [SerializeField] private bool m_ForceCallOnExit = true;
         [SerializeField] private bool m_repeatOnLoop = true;
         [SerializeField] private string m_FunctionName = string.Empty;
-        [SerializeField] private ArgumentType m_parameterType = ArgumentType.stringType;
+       // [SerializeField] private ArgumentType m_parameterType = ArgumentType.stringType;
 
         [SerializeField] private bool m_boolParameter;
         [SerializeField] private float m_floatParameter;

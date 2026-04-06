@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using System.Collections;
@@ -63,8 +62,10 @@ public class LoadingScreen : MonoBehaviour
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
-        Debug.Log($"LoadingScreen: Scene '{scene.name}' loaded. Enabling in-game overlay.");
-        
-        MasterSingleton.Instance.UIManager.ToggleInGameOverlay(true);
+        Debug.Log($"LoadingScreen: Scene '{scene.name}' loaded.");
+
+        // Only show the in-game overlay for gameplay scenes, not the main menu
+        if (scene.name != "1-Menu-Scene")
+            MasterSingleton.Instance.UIManager.ToggleInGameOverlay(true);
     }
 }

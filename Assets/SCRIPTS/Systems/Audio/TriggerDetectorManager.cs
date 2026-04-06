@@ -56,6 +56,8 @@ public class TriggerDetectorManager : MonoBehaviour
 
     private void Awake()
     {
+       
+        
         // Ensure the collider is set to trigger
         _triggerCollider = GetComponent<Collider>();
         Collider col = _triggerCollider;
@@ -94,7 +96,19 @@ public class TriggerDetectorManager : MonoBehaviour
                         _triggerCollider.enabled = false;
                     BeginWorshipSequence(other.gameObject);
                     break;
-                    // Handle other trigger types as needed
+
+                case TriggerEventType.Death_By_Drowning:
+                    if (_triggerCollider != null)
+                        _triggerCollider.enabled = false;
+                    if (other.gameObject.TryGetComponent<MovementComponent>(out var movement))
+                    {
+                        Vector3 closest = other.ClosestPoint(transform.position);
+                        
+                        movement.BeginDrowningSequence(closest);
+                    }
+                    // Re-enable the collider after a cooldown so the trigger works if the player respawns nearby
+                    StartCooldown();
+                    break;
             }
 
         }
