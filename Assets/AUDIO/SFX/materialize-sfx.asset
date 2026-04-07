@@ -10,36 +10,26 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0d15ae218647a2d4f85e14306846c10c, type: 3}
-  m_Name: arumakuni-death
-  m_EditorClassIdentifier: 
-  safeName: SpatialSound
-  presetDescription: '<Default Preset>
-
-    - Sound meant to be played in the game
-    world
-
-    - Spatialization is enabled
-
-    - Minor pitch shift is applied'
+  m_Name: materialize-sfx
+  m_EditorClassIdentifier: com.Brogrammist.JSAM::JSAM.SoundFileObject
+  safeName: 
+  presetDescription: 
   files:
-  - {fileID: 8300000, guid: 5a46b67d6f8438a40b61ec38ac1b121a, type: 3}
-  - {fileID: 8300000, guid: 483c775b566b79641a229e7acff0d39b, type: 3}
-  - {fileID: 8300000, guid: 4b5f0df0124e2b046a303960e1cbdee8, type: 3}
-  - {fileID: 8300000, guid: 984d4c45fd646d045853bfa0a2848fba, type: 3}
-  neverRepeat: 1
+  - {fileID: 8300000, guid: a2a82a746c2b4b949bebc8913880ad74, type: 3}
+  neverRepeat: 0
   loopStart: 0
-  loopEnd: 0.792
+  loopEnd: 0
   bpm: 120
   relativeVolume: 1
   spatialize: 0
   maxDistance: 0
-  priority: 192
+  priority: 128
   startingPitch: 1
   pitchShift: 0.05
-  loopMode: 1
+  loopMode: 0
   delay: 0
   ignoreTimeScale: 0
-  maxPlayingInstances: 5
+  maxPlayingInstances: 1
   channelOverride: 0
   mixerGroupOverride: {fileID: 0}
   fadeInOut: 0

@@ -80,6 +80,9 @@ public class CharacterEffects : ScriptableObject
     [Header("??? DEATH ???")]
     [Tooltip("Death cry/scream")]
     public SoundFileObject sfxDeath;
+
+    [Tooltip("Drowning death sound (gurgling, muffled, bubbles)")]
+    public SoundFileObject drowningDeath;
     
     [Tooltip("Body collapsing sound")]
     public SoundFileObject sfxBodyCollapse;

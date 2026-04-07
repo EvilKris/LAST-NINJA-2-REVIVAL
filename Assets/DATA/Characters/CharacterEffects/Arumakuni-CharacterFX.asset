@@ -34,6 +34,7 @@ MonoBehaviour:
   sfxGetUp: {fileID: 0}
   sfxThrown: {fileID: 0}
   sfxDeath: {fileID: 0}
+  drowningDeath: {fileID: 11400000, guid: 1e951fc64627d4742b896c6a22be05be, type: 2}
   sfxBodyCollapse: {fileID: 0}
   sfxFootstepWalk: {fileID: 0}
   sfxFootstepRun: {fileID: 0}

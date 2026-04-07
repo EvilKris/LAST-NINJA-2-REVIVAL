@@ -79,6 +79,9 @@ public class AnimationStateNotifier : StateMachineBehaviour
         AnimatorStateInfo stateInfo,
         int layerIndex)
     {
+        // Suppress mid-state notifications while dead
+        if (_healthComponent != null && _healthComponent.IsDead) return;
+
         //Handles interruptions that occur before the normalized time threshold is reached, so that the appropriate "interrupted" events are sent to components.    
 
 
@@ -105,6 +108,8 @@ public class AnimationStateNotifier : StateMachineBehaviour
     /// <summary>
     /// Called by Unity when the Animator exits this state — including when interrupted
     /// by a transition. Each component is notified independently using its own event field.
+    /// Notifications are suppressed entirely when the entity is dead, preventing
+    /// mid-death animation exits from corrupting combat or clinch state.
     /// </summary>
     /// <param name="animator">The Animator this behaviour is attached to.</param>
     /// <param name="stateInfo">Info about the state that is being exited.</param>
@@ -114,9 +119,13 @@ public class AnimationStateNotifier : StateMachineBehaviour
         AnimatorStateInfo stateInfo,
         int layerIndex)
     {
-
         _isInState = false;
-    
+
+        // Suppress all exit notifications while dead — the death sequence owns
+        // the entity's state from this point and must not be overridden by
+        // stale animation callbacks (e.g. EndThrow, BreakClinch, EndImmobilized).
+        if (_healthComponent != null && _healthComponent.IsDead) return;
+
         bool completed = stateInfo.normalizedTime >= 1.0f;
        
         if (completed)

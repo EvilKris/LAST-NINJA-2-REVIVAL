@@ -27,8 +27,10 @@
         swampambience,
         healingwaves,
         landinmud,
-        bubbles,
-        arumakunideath
+        deatharumakuni,
+        bubblesdeath,
+        deathdrownarumakuni,
+        materializesfx
     }
     public enum MyCombatAudioLibraryMusic {
         Level1TheWastelands,

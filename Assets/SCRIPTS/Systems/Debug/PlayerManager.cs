@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using System.Collections.Generic;
-using System;
 
 public class PlayerManager : MonoBehaviour
 {
@@ -11,12 +10,21 @@ public class PlayerManager : MonoBehaviour
     // .materials is assigned.
     private readonly Dictionary<Renderer, Material[]> _originalMaterialsCache = new Dictionary<Renderer, Material[]>();
 
+    // Stores the active state each ScriptableRendererFeature had before we first
+    // touched it. Restored on quit and destroy to prevent SO asset mutation persisting
+    // across Editor play sessions or between builds.
+    private readonly Dictionary<ScriptableRendererFeature, bool> _featureOriginalStates
+        = new Dictionary<ScriptableRendererFeature, bool>();
+
     // ???????????????????????????????????????????????????????????????????
     // Renderer Feature Toggle
     // ???????????????????????????????????????????????????????????????????
 
     /// <summary>
     /// Enables or disables a URP ScriptableRendererFeature by name across all renderer data entries.
+    /// The original active state is snapshotted on first call per feature and restored automatically
+    /// when the application quits or this component is destroyed, preventing SO asset mutation
+    /// from persisting across Editor play sessions.
     /// </summary>
     /// <param name="featureName">The exact name of the renderer feature as shown in the Inspector.</param>
     /// <param name="active">True to enable, false to disable.</param>
@@ -34,16 +42,45 @@ public class PlayerManager : MonoBehaviour
             if (rendererData == null) continue;
             foreach (ScriptableRendererFeature feature in rendererData.rendererFeatures)
             {
-                if (feature != null && feature.name == featureName)
-                {
-                    feature.SetActive(active);
-                    found = true;
-                }
+                if (feature == null || feature.name != featureName) continue;
+
+                // Snapshot the original state the very first time we touch this feature
+                // so we can restore it exactly when the session ends.
+                if (!_featureOriginalStates.ContainsKey(feature))
+                    _featureOriginalStates[feature] = feature.isActive;
+
+                feature.SetActive(active);
+                found = true;
             }
         }
 
         if (!found)
             Debug.LogWarning($"PlayerManager.SetRendererFeatureActive: No renderer feature named '{featureName}' was found.");
+    }
+
+    /// <summary>
+    /// Restores every <see cref="ScriptableRendererFeature"/> that was modified this session
+    /// back to the state it was in before <see cref="SetRendererFeatureActive"/> first touched it.
+    /// Called automatically on application quit and component destroy.
+    /// </summary>
+    private void RestoreRendererFeatureStates()
+    {
+        foreach (var kvp in _featureOriginalStates)
+        {
+            if (kvp.Key != null)
+                kvp.Key.SetActive(kvp.Value);
+        }
+        _featureOriginalStates.Clear();
+    }
+
+    private void OnApplicationQuit()
+    {
+        RestoreRendererFeatureStates();
+    }
+
+    private void OnDestroy()
+    {
+        RestoreRendererFeatureStates();
     }
 
     // ???????????????????????????????????????????????????????????????????
@@ -190,7 +227,7 @@ public class PlayerManager : MonoBehaviour
     {
         // These features are used by the player X-ray shader graph to show/hide the player model when the shader is active.
         // Get the spelling right! Check the LastNinja URP Data in the project for reference if you want to toggle these on/off.
-        SetRendererFeatureActive("PlayerVisible", v);
+        //SetRendererFeatureActive("PlayerVisible", v);
         SetRendererFeatureActive("PlayerHidden", v);
     }
 }

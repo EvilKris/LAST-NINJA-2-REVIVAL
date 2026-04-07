@@ -73,9 +73,21 @@ public class Checkpoint : MonoBehaviour
     {
         if (!IsPlayer(other.gameObject)) return;
 
+        if (MasterSingleton.Instance == null)
+        {
+            Debug.LogError($"Checkpoint '{name}': MasterSingleton.Instance is null. Is the MasterSingleton GameObject in the scene?");
+            return;
+        }
+
+        if (MasterSingleton.Instance.GameDataManager == null)
+        {
+            Debug.LogError($"Checkpoint '{name}': GameDataManager is null on MasterSingleton.");
+            return;
+        }
+
         CaptureSnapshot(other.gameObject);
 
-        MasterSingleton.Instance.GameManager.RegisterCheckpoint(this);
+        MasterSingleton.Instance.GameDataManager.RegisterCheckpoint(this);
 
         Debug.Log($"Checkpoint '{name}' activated. Lives: {Snapshot.lives}, " +
                   $"Health: {Snapshot.health:F0}, " +

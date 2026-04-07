@@ -3,17 +3,21 @@ using UnityEngine;
 
 public class PrefabBankManager : MonoBehaviour
 {
+    [Header("Special Mats (Shaders)")]
     [Tooltip("Material used for phantom Demon Soul-type vfx")]
     public Material PhantomMaterial;
 
-    [Header("GhostTrail")]
-    [Tooltip("Material used for Drive Strike ghost trail vfx")]
+    [Tooltip("GhostTrail Material used for Strike ghost trail vfx")]
     public Material GhostTrailsMat;
     public Material GhostTrailsMatAdditive;
 
-    [Header("Healing")]
-    [Tooltip("Mat used when Healing")]
+    [Tooltip("Mat applied used when Healing")]
     public Material HealingMat;
+
+    [Tooltip("Materialize Mat used for He-Man Glow on objects within the camera's view")]
+    public Material MaterializeMat; 
+
+
 
     [Tooltip("Sound commences on Tier One Drive Strike")]
     public SoundFileObject Tier_One_Drive_Strike;
@@ -42,7 +46,11 @@ public class PrefabBankManager : MonoBehaviour
     [Header("Drowning")]
     [Tooltip("Sound played when player falls into liquid and drowns")]
     public SoundFileObject DrowningSound_swamp;
-    public SoundFileObject Bubbles; 
+    public SoundFileObject Bubbles;
+
+    [Header("Materialize")]
+    [Tooltip("Sound played when player materializes")]  
+    public SoundFileObject MaterializeSound;    
 
     [Header("Healing")]
     [Tooltip("Sound played when player uses a healing item")]

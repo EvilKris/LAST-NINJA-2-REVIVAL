@@ -5262,7 +5262,6 @@ MonoBehaviour:
     m_ForceCallOnExit: 0
     m_repeatOnLoop: 0
     m_FunctionName: WorshipAndRegainHealth
-    m_parameterType: 0
     m_boolParameter: 0
     m_floatParameter: 0
     m_intParameter: 0
@@ -5274,7 +5273,6 @@ MonoBehaviour:
     m_ForceCallOnExit: 1
     m_repeatOnLoop: 0
     m_FunctionName: RestoreMovement
-    m_parameterType: 0
     m_boolParameter: 0
     m_floatParameter: 0
     m_intParameter: 0

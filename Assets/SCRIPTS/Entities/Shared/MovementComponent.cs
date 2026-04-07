@@ -458,6 +458,20 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
         CanBeClinched = true;
         syncAnimationSource = null;
         syncAnimatorSpeed = false;
+
+        // Reset the animator back to the base locomotion state so no death/worship/drowning
+        // animation is left frozen on screen when the player regains control.
+        if (_animator != null)
+        {
+            // Restore speed to the normal movement rate — it may have been frozen at 0
+            // (e.g. during the worship kneel hold) or set to an attack/acrobatic speed.
+            //_animator.speed = movementSpeed * movementAnimSpeedModifier;
+
+            // Cross-fade into the base Locomotion blend tree on layer 0 at normalised
+            // time 0 so the idle pose is shown immediately rather than mid-clip.
+            _animator.CrossFade("Idle", 0.15f, 0, 0f);
+        }
+
         /*
          useRootMotion = false;
          if (_animator != null)
@@ -548,11 +562,11 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
     /// </summary>
     public void BeginDrowningSequence(Vector3 splashPoint)
     {
-        //MasterSingleton.Instance.PlayerManager.ToggleXrayRendererFeatures(false);
+        MasterSingleton.Instance.PlayerManager.ToggleXrayRendererFeatures(false);
             
        
         // Spawn a splash particle at the water-surface contact point
-        //SpawnSplash(splashPoint, Vector3.up);
+        SpawnSplash(splashPoint, Vector3.up);
 
         if (_isDrowning) return;
         _isDrowning = true;
@@ -575,9 +589,9 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
             _combatHandler.ResetCombatState();
 
         // 4) Disable root motion — sinking is driven manually
-        useRootMotion = false;
         if (_animator != null)
-            _animator.applyRootMotion = false;
+            _animator.applyRootMotion = true;
+        useRootMotion = true;
 
         // 5) Disable all non-trigger colliders so the sinking body doesn't push geometry
         SetEntityCollidersActive(false);
@@ -615,7 +629,9 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
         PrefabBankManager bank = MasterSingleton.Instance.PrefabBankManager;
         if (bank == null || bank.SwampDrowningSplashes == null) return;
 
-        JSAM.AudioManager.PlaySound(bank.DrowningSound_swamp);
+        AudioManager.PlaySound(bank.DrowningSound_swamp);
+        AudioManager.PlaySound(_healthComponent.characterEffects.drowningDeath);
+
 
         _bubblesSfx = AudioManager.PlaySound(MasterSingleton.Instance.PrefabBankManager.Bubbles);
         _bubblesSfx.Play();
@@ -625,11 +641,16 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
             ? Quaternion.LookRotation(upDirection)
             : Quaternion.identity;
 
-        GameObject instance = Instantiate(bank.SwampDrowningSplashes, position, rotation);
+
+       
+
+        GameObject instance = Instantiate(bank.SwampDrowningSplashes, position, Quaternion.identity);
 
         ParticleSystem ps = instance.GetComponent<ParticleSystem>();
         if (ps == null || !ps.main.stopAction.Equals(ParticleSystemStopAction.Destroy))
             Destroy(instance, 5f);
+
+       
     }
 
     private IEnumerator DrowningRoutine()
@@ -650,8 +671,8 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
         _isDrowning = false;
         _drowningCoroutine = null;
 
-        // Hand the full death sequence (life loss, fade, respawn / game-over) to GameManager
-        MasterSingleton.Instance.GameManager.HandlePlayerDeath(this);
+        // Hand the full death sequence (life loss, fade, respawn / game-over) to GameDataManager
+        MasterSingleton.Instance.GameDataManager.HandlePlayerDeath(this);
     }
 
 

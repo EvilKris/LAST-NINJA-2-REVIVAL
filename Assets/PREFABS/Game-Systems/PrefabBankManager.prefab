@@ -50,6 +50,7 @@ MonoBehaviour:
   GhostTrailsMatAdditive: {fileID: 2100000, guid: f023f7ad8970449419c8b26a2851ea7d,
     type: 2}
   HealingMat: {fileID: 2100000, guid: 75fe5d640f3ba204f84e74e6b40c0d0d, type: 2}
+  MaterializeMat: {fileID: 2100000, guid: a5dad921600bd614e86905c4a966dda1, type: 2}
   Tier_One_Drive_Strike: {fileID: 11400000, guid: f9a36207019a5404ead3cfd257d1382f,
     type: 2}
   Charge_Drive_Strike_Tier_Complete: {fileID: 11400000, guid: 31acd13e4d8b1fa43aa1a87bbb8c414d,
@@ -60,10 +61,12 @@ MonoBehaviour:
   AreaSoundForest: {fileID: 0}
   thisLevelMusic: {fileID: 11400000, guid: 08661f7bde1f75e42bdad31f5747c928, type: 2}
   shrineMusic: {fileID: 11400000, guid: f0817d27bff704c439eedb3026ddbd57, type: 2}
-  SwampDrowningSplashes: {fileID: 99635804662965623, guid: ba7d09557b66f0f418e44a79eba19442,
+  SwampDrowningSplashes: {fileID: 337548954030632684, guid: adc8d6d69dd7c894e86c43ffe12c6b03,
     type: 3}
   DrowningSound_swamp: {fileID: 11400000, guid: 9a3b2c3ce56b947439451749dd37e6a1,
     type: 2}
+  Bubbles: {fileID: 11400000, guid: aed4eb5b3710d884c8d0ca8ef6d3c5e5, type: 2}
+  MaterializeSound: {fileID: 11400000, guid: 9c856a99ff531144981cb6191dde9d6b, type: 2}
   HealingSound: {fileID: 11400000, guid: c9116e98cca68d840ab69be1c2bf4ac0, type: 2}
 --- !u!114 &5819000001921922319
 MonoBehaviour:

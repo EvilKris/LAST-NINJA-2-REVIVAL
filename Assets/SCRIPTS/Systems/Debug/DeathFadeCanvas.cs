@@ -7,7 +7,7 @@ using DG.Tweening;
 /// <summary>
 /// Procedurally builds a full-screen black Canvas that fades in, fires a callback at peak opacity,
 /// then fades back out and destroys itself. No prefab required.
-/// Attach via <see cref="GameManager.HandlePlayerDeath"/> — do not place in the scene manually.
+/// Attach via <see cref="GameDataManager.HandlePlayerDeath"/> — do not place in the scene manually.
 /// Replace the fade logic here with a shader-driven effect when ready.
 /// </summary>
 public class DeathFadeCanvas : MonoBehaviour
@@ -23,6 +23,11 @@ public class DeathFadeCanvas : MonoBehaviour
 
     private void Awake()
     {
+        // Hide from the Editor hierarchy and Inspector entirely so Unity never
+        // tries to inspect this object while it is being created and destroyed at runtime.
+        // This prevents TransformInspector / GameObjectInspector null-ref errors.
+        gameObject.hideFlags = HideFlags.HideAndDontSave;
+
         BuildCanvas();
         _canvasGroup.alpha = 0f;
     }
