@@ -15,8 +15,7 @@ MonoBehaviour:
   itemName: Katana
   category: 0
   icon: {fileID: 21300000, guid: 12d37deea4bc0844eba8451f244f6362, type: 3}
-  weaponPrefab: {fileID: 0}
-  moveset: []
-  description: 'Katana
-
-'
+  itemPrefab: {fileID: 0}
+  fightingStyle: {fileID: 11400000, guid: f0d2b02056d92274ca48f8a72c895230, type: 2}
+  pickupSound: {fileID: 0}
+  description: 

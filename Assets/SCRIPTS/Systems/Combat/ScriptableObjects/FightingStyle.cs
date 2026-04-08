@@ -3,7 +3,11 @@ using UnityEngine;
 
 [CreateAssetMenu(fileName = "NewStyle", menuName = "Combat/Style")]
 public class FightingStyle : ScriptableObject
-{
+{  
+
+    [Header("Clinch Config - Close Range Grappling Attacks + Throws")] 
+    public FightingStyleType styleType; // Determines available combat mechanics (e.g. clinching)
+
     public CombatMove[] lightAttacks; // 1-3 move combo chain
     public CombatMove mediumAttack;
     public CombatMove heavyAttack;
@@ -16,8 +20,6 @@ public class FightingStyle : ScriptableObject
     [Tooltip("Tier 1 is index 0, Tier 2 is index 1, etc.")]
     public List<CombatMove> chargedAttacks; // This defines your Max Charges!
 
-    [Header("Clinch Config - Close Range Grappling Attacks + Throws")] 
-    public bool supportsClinching; // The toggle for your logic
     [Tooltip("Don't bother with these two if no Clinching")]
     public ClinchAttack clinchLightAtk;  // Light attack in clinch
     public CombatThrow clinchThrowDefault; // Throw performed if no direction is input during throw release 
@@ -30,4 +32,9 @@ public class FightingStyle : ScriptableObject
     [Header("Defensive")]
     [Tooltip("Block animation clip swapped into the ReplaceableBlock slot at runtime.")]
     public AnimationClip blockClip;
+
+    [Header("Weapon Only - Ignore if melee")]
+    [Tooltip("Specific draw weapon clip")]
+    public AnimationClip drawWeaponClip;
+
 }

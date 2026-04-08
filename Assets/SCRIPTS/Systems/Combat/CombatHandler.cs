@@ -223,6 +223,17 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         _health.OnDeath += ForceReleaseBlock;
     }
 
+    /// <summary>
+    /// Swaps the active <see cref="FightingStyle"/> at runtime (e.g. on weapon pickup).
+    /// Resets combat state cleanly before re-initialising all style-dependent modules.
+    /// </summary>
+    public void EquipStyle(FightingStyle newStyle)
+    {
+        currentStyle = newStyle;
+        ResetCombatState();
+        InitializeStyleModules();
+    }
+
     private void InitializeStyleModules()
     {
         if (currentStyle != null && currentStyle.clinchThrowDefault != null)
@@ -249,7 +260,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
         BlockClip = currentStyle != null ? currentStyle.blockClip : null;
 
-        if (currentStyle != null && currentStyle.supportsClinching)
+        if (currentStyle != null && currentStyle.styleType == FightingStyleType.MeleeAndClinch)
         {
             if (!TryGetComponent<ClinchHandler>(out _clinchModule))
                 _clinchModule = gameObject.AddComponent<ClinchHandler>();

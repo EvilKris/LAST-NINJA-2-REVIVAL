@@ -82,6 +82,20 @@ public enum CombatState
     Freefall
 }
 
+/// <summary>
+/// Defines the type of fighting style, which determines available combat mechanics
+/// such as clinching, weapon type, and attack behavior.
+/// </summary>
+public enum FightingStyleType
+{
+    MeleeNoClinch,
+    MeleeAndClinch,
+    SwordFighting,
+    Nunchaku,
+    StaffFighting,
+    ThrownWeapon
+}
+
 [System.Flags]
 public enum AnimationExitEvent
 {

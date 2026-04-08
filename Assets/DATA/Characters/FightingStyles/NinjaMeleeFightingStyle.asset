@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 98ef5bb48c8ea17489aea00950005e5c, type: 3}
-  m_Name: NinjaFightingStyle
+  m_Name: NinjaMeleeFightingStyle
   m_EditorClassIdentifier: Assembly-CSharp::FightingStyle
   lightAttacks:
   - {fileID: 11400000, guid: 7ec330e0bf4936b4d9025a06f0ba4c93, type: 2}

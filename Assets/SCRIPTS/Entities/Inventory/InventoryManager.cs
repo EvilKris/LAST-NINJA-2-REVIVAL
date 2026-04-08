@@ -1,5 +1,5 @@
 using UnityEngine;
-using UnityEngine;
+
 using System.Collections.Generic;
 using System;
 
@@ -8,6 +8,10 @@ public class InventoryManager : MonoBehaviour
     [Header("Current Inventory")]
     public List<ItemData> ownedWeapons = new List<ItemData>();
     public List<ItemData> ownedItems = new List<ItemData>();
+
+    private CombatHandler _combatHandler;
+    private Coroutine _equipDelayCoroutine;
+    private const float EQUIP_DELAY = 2f;
 
     /// <summary>Index of the currently equipped weapon. Written by <see cref="CycleWeapon"/> and restored by <see cref="GameManager"/>.</summary>
     [SerializeField] public int currentWeaponIndex = 0;
@@ -18,11 +22,18 @@ public class InventoryManager : MonoBehaviour
     public event Action<ItemData> OnWeaponChanged;
     public event Action<ItemData> OnItemChanged;
 
+    private void Awake()
+    {
+        _combatHandler = GetComponent<CombatHandler>();
+    }
+
     public void CycleWeapon()
     {
         if (ownedWeapons.Count == 0) return;
         currentWeaponIndex = (currentWeaponIndex + 1) % ownedWeapons.Count;
-        OnWeaponChanged?.Invoke(ownedWeapons[currentWeaponIndex]);
+        ItemData weapon = ownedWeapons[currentWeaponIndex];
+        OnWeaponChanged?.Invoke(weapon);
+        RestartEquipTimer(weapon);
     }
 
     public void CycleItem()
@@ -36,8 +47,32 @@ public class InventoryManager : MonoBehaviour
     public void AddToInventory(ItemData data)
     {
         if (data.category == ItemCategory.Weapon)
+        {
             ownedWeapons.Add(data);
+            OnWeaponChanged?.Invoke(data);
+        }
         else
+        {
             ownedItems.Add(data);
+        }
+    }
+
+    /// <summary>
+    /// Cancels any pending equip and starts a fresh <see cref="EQUIP_DELAY"/> countdown.
+    /// If the player stops cycling before the timer expires the style is committed.
+    /// </summary>
+    private void RestartEquipTimer(ItemData weapon)
+    {
+        if (_equipDelayCoroutine != null)
+            StopCoroutine(_equipDelayCoroutine);
+        _equipDelayCoroutine = StartCoroutine(EquipAfterDelay(weapon));
+    }
+
+    private System.Collections.IEnumerator EquipAfterDelay(ItemData weapon)
+    {
+        yield return new WaitForSeconds(EQUIP_DELAY);
+        _equipDelayCoroutine = null;
+        if (_combatHandler != null && weapon.fightingStyle != null)
+            _combatHandler.EquipStyle(weapon.fightingStyle);
     }
 }

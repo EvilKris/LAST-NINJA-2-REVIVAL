@@ -15,8 +15,9 @@ MonoBehaviour:
   itemName: Default
   category: 0
   icon: {fileID: 21300000, guid: 76e207e49b7202648b72466c539565a2, type: 3}
-  weaponPrefab: {fileID: 0}
-  moveset: []
+  itemPrefab: {fileID: 0}
+  fightingStyle: {fileID: 11400000, guid: f0d2b02056d92274ca48f8a72c895230, type: 2}
+  pickupSound: {fileID: 0}
   description: 'Empty
 
 '

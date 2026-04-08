@@ -14,8 +14,8 @@ public class ItemData : ScriptableObject
     public GameObject itemPrefab;
 
     [Header("Combat/Usage")]
-    [Tooltip("If it's a weapon, link its specific moveset here.")]
-    public CombatMove[] moveset; // Link back to our CombatMove SOs
+    [Tooltip("The fighting style (moveset, clinch support, animator) applied when this weapon is equipped.")]
+    public FightingStyle fightingStyle;
 
     [Header("Audio")]
     [Tooltip("Sound played on pickup. Leave empty to use the project-wide default in PrefabBankManager.")]
