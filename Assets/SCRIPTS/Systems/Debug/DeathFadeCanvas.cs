@@ -1,76 +1,63 @@
-using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 
 /// <summary>
-/// Procedurally builds a full-screen black Canvas that fades in, fires a callback at peak opacity,
-/// then fades back out and destroys itself. No prefab required.
-/// Attach via <see cref="GameDataManager.HandlePlayerDeath"/> — do not place in the scene manually.
-/// Replace the fade logic here with a shader-driven effect when ready.
+/// Placed on the ScreenFade prefab. Fades the child <see cref="Image"/> in to black,
+/// fires a callback at peak opacity, fades back out, then destroys this GameObject.
+/// Activated via <see cref="GameDataManager.SpawnFadeCanvas"/> — do not place in the scene manually.
 /// </summary>
 public class DeathFadeCanvas : MonoBehaviour
 {
     /// <summary>Fired once the screen has fully faded to black, before the fade-out begins.</summary>
-    public Action OnFadeComplete;
+    public System.Action OnFadeComplete;
 
-    [SerializeField] private float fadeInDuration = 0.8f;
-    [SerializeField] private float holdDuration = 0.4f;
-    [SerializeField] private float fadeOutDuration = 0.8f;
+    private float fadeInDuration = 0.8f;
+    private float holdDuration = 0.4f;
+    private float fadeOutDuration = 0.8f;
 
-    private CanvasGroup _canvasGroup;
+    private Image _fadeImage;
 
     private void Awake()
     {
-        // Hide from the Editor hierarchy and Inspector entirely so Unity never
-        // tries to inspect this object while it is being created and destroyed at runtime.
-        // This prevents TransformInspector / GameObjectInspector null-ref errors.
         gameObject.hideFlags = HideFlags.HideAndDontSave;
 
-        BuildCanvas();
-        _canvasGroup.alpha = 0f;
+        _fadeImage = GetComponentInChildren<Image>(true);
+        if (_fadeImage == null)
+            Debug.LogWarning("DeathFadeCanvas: No Image found in children of ScreenFade prefab.");
+        else
+            _fadeImage.color = new Color(0f, 0f, 0f, 0f);
     }
 
     private void Start()
     {
+        if (_fadeImage == null)
+        {
+            OnFadeComplete?.Invoke();
+            Destroy(gameObject);
+            return;
+        }
+
         StartCoroutine(FadeSequence());
     }
 
-    /// <summary>
-    /// Constructs the Canvas, CanvasGroup, and black Image entirely in code.
-    /// </summary>
-    private void BuildCanvas()
+    private void OnDisable()
     {
-        Canvas canvas = gameObject.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        // Render on top of everything else in the scene
-        canvas.sortingOrder = 999;
+        if (Application.isPlaying) return;
 
-        gameObject.AddComponent<CanvasScaler>();
-        gameObject.AddComponent<GraphicRaycaster>();
-
-        _canvasGroup = gameObject.AddComponent<CanvasGroup>();
-        // Block input during the fade so the player can't do anything while blacked out
-        _canvasGroup.blocksRaycasts = true;
-        _canvasGroup.interactable = false;
-
-        // Full-screen black panel
-        GameObject panel = new GameObject("FadePanel");
-        panel.transform.SetParent(transform, false);
-        Image img = panel.AddComponent<Image>();
-        img.color = Color.black;
-        RectTransform rt = img.rectTransform;
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.sizeDelta = Vector2.zero;
-        rt.anchoredPosition = Vector2.zero;
+        if (_fadeImage != null)
+        {
+            _fadeImage.DOKill();
+            _fadeImage.color = new Color(0f, 0f, 0f, 0f);
+        }
+        DestroyImmediate(gameObject);
     }
 
     private IEnumerator FadeSequence()
     {
         // Fade to black
-        yield return _canvasGroup.DOFade(1f, fadeInDuration).WaitForCompletion();
+        yield return _fadeImage.DOFade(1f, fadeInDuration).WaitForCompletion();
 
         // Hold at full black, then notify the caller (teleport happens here)
         yield return new WaitForSeconds(holdDuration);
@@ -79,8 +66,8 @@ public class DeathFadeCanvas : MonoBehaviour
         // Brief pause so the scene has a frame to settle after the teleport
         yield return null;
 
-        // Fade back to clear, then remove this object
-        yield return _canvasGroup.DOFade(0f, fadeOutDuration).WaitForCompletion();
+        // Fade back to clear, then destroy
+        yield return _fadeImage.DOFade(0f, fadeOutDuration).WaitForCompletion();
         Destroy(gameObject);
     }
 }

@@ -1,4 +1,3 @@
-using UnityEngine;
 
 /// <summary>
 /// Central repository for all global enums used throughout the Last Ninja 2 Revival project.

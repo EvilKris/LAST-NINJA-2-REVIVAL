@@ -170,7 +170,6 @@ public class GameDataManager : MonoBehaviour
             {
                 health.SetHealth(snap.health);
             }
-            SetLives(snap.lives);
 
             if (inv != null)
             {
@@ -210,9 +209,21 @@ public class GameDataManager : MonoBehaviour
 
     private void SpawnFadeCanvas(System.Action onBlackCallback)
     {
-        GameObject go = new GameObject("DeathFadeCanvas");
-        DeathFadeCanvas fade = go.AddComponent<DeathFadeCanvas>();
+        // Instantiate inactive so Awake runs but Start (and the coroutine) is deferred
+        // until after OnFadeComplete is assigned, preventing any race on the callback.
+        GameObject prefab = MasterSingleton.Instance.UIManager.ScreenFadePrefab;
+        if (prefab == null)
+        {
+            Debug.LogWarning("GameDataManager.SpawnFadeCanvas: ScreenFadePrefab is not assigned in UIManager.");
+            onBlackCallback?.Invoke();
+            return;
+        }
+
+        GameObject go = Instantiate(prefab);
+        go.SetActive(false);
+        DeathFadeCanvas fade = go.GetComponent<DeathFadeCanvas>();
         fade.OnFadeComplete = onBlackCallback;
+        go.SetActive(true);
     }
 
     // ═══════════════════════════════════════════════════════════════════

@@ -282,6 +282,7 @@ MonoBehaviour:
   EnemiesDefeated: 0
   MusicEnabled: 0
   IsPauseAllowed: 1
+  mainMenuScene: 1-Menu-Scene
 --- !u!1 &2731288125025071637
 GameObject:
   m_ObjectHideFlags: 0
@@ -1536,6 +1537,12 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7077142103358661625, guid: a0d4e843eec283c40b276beef7018f96,
+        type: 3}
+      propertyPath: ScreenFadePrefab
+      value: 
+      objectReference: {fileID: 8518974973735027691, guid: 0791decffcb006642b122783b07ec964,
+        type: 3}
     - target: {fileID: 8138912494280347487, guid: a0d4e843eec283c40b276beef7018f96,
         type: 3}
       propertyPath: m_AnchorMax.y

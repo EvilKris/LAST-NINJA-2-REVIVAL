@@ -25,7 +25,15 @@ public class UIManager : MonoBehaviour
     public UIChargeDisplay chargeMeter;
 
     [SerializeField] private RectTransform lifeIconPrefabHolder;
-    [SerializeField] private GameObject lifeIconPrefabUI; 
+    [SerializeField] private GameObject lifeIconPrefabUI;
+
+    [Header("Screen Effects")]
+
+    [Tooltip("Blacken the screen out upon death")]
+    [SerializeField] private GameObject screenFadePrefab;
+
+    /// <summary>The screen-fade prefab used by <see cref="DeathFadeCanvas"/> for death transitions.</summary>
+    public GameObject ScreenFadePrefab => screenFadePrefab;
 
     // ── Private state ────────────────────────────────────────────────────────
 
@@ -200,11 +208,14 @@ public class UIManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Called when the player entity dies. Deducts one life via <see cref="GameDataManager.LoseLife"/>.
+    /// Called when the player entity dies. Triggers the full death sequence via <see cref="GameDataManager.HandlePlayerDeath"/>.
     /// </summary>
     private void OnPlayerDeath()
     {
-        MasterSingleton.Instance.GameDataManager.LoseLife();
+        MovementComponent movement = _playerHealthComponent != null
+            ? _playerHealthComponent.GetComponent<MovementComponent>()
+            : null;
+        MasterSingleton.Instance.GameDataManager.HandlePlayerDeath(movement);
     }
 }
 

@@ -563,10 +563,12 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
     public void BeginDrowningSequence(Vector3 splashPoint)
     {
         MasterSingleton.Instance.PlayerManager.ToggleXrayRendererFeatures(false);
-            
-       
+
+
         // Spawn a splash particle at the water-surface contact point
-        SpawnSplash(splashPoint, Vector3.up);
+       // SpawnSplash(splashPoint, Vector3.up);
+
+        SpawnSplash(transform.position, Vector3.up);
 
         if (_isDrowning) return;
         _isDrowning = true;

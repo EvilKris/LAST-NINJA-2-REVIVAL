@@ -3304,6 +3304,8 @@ MonoBehaviour:
   lifeIconPrefabHolder: {fileID: 1051660779343415035}
   lifeIconPrefabUI: {fileID: 1153537549117890957, guid: 02a041e152239f642b2260e9648bdb29,
     type: 3}
+  screenFadePrefab: {fileID: 8518974973735027691, guid: 0791decffcb006642b122783b07ec964,
+    type: 3}
 --- !u!1 &6795205868417481223
 GameObject:
   m_ObjectHideFlags: 0
