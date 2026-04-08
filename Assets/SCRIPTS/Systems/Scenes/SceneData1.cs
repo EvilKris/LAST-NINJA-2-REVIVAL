@@ -18,7 +18,12 @@ public class SceneData1 : MonoBehaviour
         if (SetRetroMode)
             MasterSingleton.Instance.CameraManager.SetRetroMode(true);
 
-        if (playMusic || MasterSingleton.Instance.GameDataManager.MusicEnabled)
+
+        bool shouldPlayMusic = Application.isEditor
+            ? playMusic
+            : MasterSingleton.Instance.GameDataManager.MusicEnabled;
+
+        if (shouldPlayMusic)
             AudioManager.PlayMusic(thisLevelMusic, true);
 
         MasterSingleton.Instance.GameDataManager.PlayMaterializeIntro(materializeTag, materializeDuration);

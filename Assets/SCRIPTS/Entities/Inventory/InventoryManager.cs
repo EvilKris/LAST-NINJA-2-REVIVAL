@@ -22,9 +22,11 @@ public class InventoryManager : MonoBehaviour
     public event Action<ItemData> OnWeaponChanged;
     public event Action<ItemData> OnItemChanged;
 
-    private void Awake()
+    private void Start()
     {
-        _combatHandler = GetComponent<CombatHandler>();
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null)
+            _combatHandler = player.GetComponent<CombatHandler>();
     }
 
     public void CycleWeapon()
@@ -71,7 +73,10 @@ public class InventoryManager : MonoBehaviour
     private System.Collections.IEnumerator EquipAfterDelay(ItemData weapon)
     {
         yield return new WaitForSeconds(EQUIP_DELAY);
+       
         _equipDelayCoroutine = null;
+        
+
         if (_combatHandler != null && weapon.fightingStyle != null)
             _combatHandler.EquipStyle(weapon.fightingStyle);
     }

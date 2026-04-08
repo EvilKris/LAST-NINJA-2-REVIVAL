@@ -33667,7 +33667,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   thisLevelMusic: {fileID: 11400000, guid: 08661f7bde1f75e42bdad31f5747c928, type: 2}
-  playMusic: 1
+  playMusic: 0
   SetRetroMode: 1
   materializeDuration: 2
   materializeTag: Player
@@ -34794,6 +34794,11 @@ PrefabInstance:
       propertyPath: acrobaticGravityScale
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 4948865570488888835, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5831742156721561918, guid: 411878b1cc9a5d446aaa95b142dd4b7f,
         type: 3}
       propertyPath: m_Enabled
@@ -35419,10 +35424,10 @@ SceneRoots:
   - {fileID: 1109043739}
   - {fileID: 1240806051}
   - {fileID: 748483139}
+  - {fileID: 2036990388}
   - {fileID: 762705015}
   - {fileID: 1251585976}
   - {fileID: 401254820}
   - {fileID: 4997823331892945900}
   - {fileID: 34141066}
   - {fileID: 2139989369}
-  - {fileID: 2036990388}

@@ -12,17 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98ef5bb48c8ea17489aea00950005e5c, type: 3}
   m_Name: SwordFightingStyle
   m_EditorClassIdentifier: Assembly-CSharp::FightingStyle
+  styleType: 2
   lightAttacks:
-  - {fileID: 11400000, guid: 7ec330e0bf4936b4d9025a06f0ba4c93, type: 2}
-  - {fileID: 11400000, guid: 7c20a8a1ebbfd3746ba55c023c4b8819, type: 2}
+  - {fileID: 11400000, guid: c3fe25b2a2568ef4bae1786187257977, type: 2}
+  - {fileID: 11400000, guid: 88a77dadefd9f5a459ffb4ce264c09ef, type: 2}
   mediumAttack: {fileID: 11400000, guid: ce031f49184b31144bbf7beffab20076, type: 2}
   heavyAttack: {fileID: 11400000, guid: 8239a880578eab749a79dbd1032c43d4, type: 2}
   specialAttack: {fileID: 0}
   acrobaticFlip: {fileID: 11400000, guid: fe750173cf74f7d43a0f3f95bf8f7ac3, type: 2}
   chargedAttacks:
-  - {fileID: 11400000, guid: f892730f3edbe7841ac6bed7b890f5fb, type: 2}
-  supportsClinching: 1
-  clinchLightAtk: {fileID: 11400000, guid: a366724006e9ae843baa074cb1aa27a4, type: 2}
-  clinchThrowDefault: {fileID: 11400000, guid: d589600e312129543b52f8a38250d157, type: 2}
+  - {fileID: 11400000, guid: 798e02c0d5c24ef46808cf4564335113, type: 2}
+  clinchLightAtk: {fileID: 0}
+  clinchThrowDefault: {fileID: 0}
   styleAnimator: {fileID: 0}
   blockClip: {fileID: 7400000, guid: 412cb7c4ba865a441b3872bb43fee9d5, type: 2}
+  drawWeaponClip: {fileID: 7400000, guid: 92f238749d929194fba31f4c4265048f, type: 2}

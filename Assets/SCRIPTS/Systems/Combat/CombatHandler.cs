@@ -24,6 +24,10 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     private Rigidbody _rb;
     private Collider _collider;
     private ClinchHandler _clinchModule;
+    private SwordFightingHandler _swordModule;
+    private NunchakuHandler _nunchakuModule;
+    private StaffFightingHandler _staffModule;
+    private ThrownWeaponHandler _thrownWeaponModule;
 
     [Header("Data")]
     public FightingStyle currentStyle;
@@ -229,6 +233,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     /// </summary>
     public void EquipStyle(FightingStyle newStyle)
     {
+       
         currentStyle = newStyle;
         ResetCombatState();
         InitializeStyleModules();
@@ -260,7 +265,10 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
         BlockClip = currentStyle != null ? currentStyle.blockClip : null;
 
-        if (currentStyle != null && currentStyle.styleType == FightingStyleType.MeleeAndClinch)
+        FightingStyleType type = currentStyle != null ? currentStyle.styleType : FightingStyleType.MeleeNoClinch;
+
+        // Clinch
+        if (type == FightingStyleType.MeleeAndClinch)
         {
             if (!TryGetComponent<ClinchHandler>(out _clinchModule))
                 _clinchModule = gameObject.AddComponent<ClinchHandler>();
@@ -268,8 +276,65 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         }
         else
         {
-            if (TryGetComponent<ClinchHandler>(out var oldModule))
-                Destroy(oldModule);
+            if (TryGetComponent<ClinchHandler>(out var old))
+                Destroy(old);
+            _clinchModule = null;
+        }
+
+        // Sword Fighting
+        if (type == FightingStyleType.SwordFighting)
+        {
+            if (!TryGetComponent<SwordFightingHandler>(out _swordModule))
+                _swordModule = gameObject.AddComponent<SwordFightingHandler>();
+            _swordModule.Initialize(this);
+        }
+        else
+        {
+            if (TryGetComponent<SwordFightingHandler>(out var old))
+                Destroy(old);
+            _swordModule = null;
+        }
+
+        // Nunchaku
+        if (type == FightingStyleType.Nunchaku)
+        {
+            if (!TryGetComponent<NunchakuHandler>(out _nunchakuModule))
+                _nunchakuModule = gameObject.AddComponent<NunchakuHandler>();
+            _nunchakuModule.Initialize(this);
+        }
+        else
+        {
+            if (TryGetComponent<NunchakuHandler>(out var old))
+                Destroy(old);
+            _nunchakuModule = null;
+        }
+
+        // Staff Fighting
+        if (type == FightingStyleType.StaffFighting)
+        {
+            if (!TryGetComponent<StaffFightingHandler>(out _staffModule))
+                _staffModule = gameObject.AddComponent<StaffFightingHandler>();
+            _staffModule.Initialize(this);
+        }
+        else
+        {
+            if (TryGetComponent<StaffFightingHandler>(out var old))
+                Destroy(old);
+            _staffModule = null;
+        }
+
+        // Thrown Weapon
+        if (type == FightingStyleType.ThrownWeapon)
+        {
+            if (!TryGetComponent<ThrownWeaponHandler>(out _thrownWeaponModule))
+                _thrownWeaponModule = gameObject.AddComponent<ThrownWeaponHandler>();
+            _thrownWeaponModule.Initialize(this);
+        }
+        else
+        {
+            if (TryGetComponent<ThrownWeaponHandler>(out var old))
+                Destroy(old);
+            _thrownWeaponModule = null;
         }
     }
 
