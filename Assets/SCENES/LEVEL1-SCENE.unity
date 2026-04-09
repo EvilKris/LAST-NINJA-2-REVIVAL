@@ -11857,7 +11857,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.1
+  near clip plane: 0.01
   far clip plane: 1000
   field of view: 10
   orthographic: 0
@@ -11885,8 +11885,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.008496323, y: 0.9884211, z: -0.1389135, w: 0.060454488}
-  m_LocalPosition: {x: 429.39554, y: 9.89255, z: 673.28455}
+  m_LocalRotation: {x: 0.2927364, y: 0.09160719, z: -0.028187295, w: 0.95137745}
+  m_LocalPosition: {x: 416.37442, y: 6.161911, z: 596.541}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -33222,7 +33222,7 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: cca78e79bb7f16948a1f15942ffccefa,
         type: 3}
       propertyPath: m_Name
-      value: katana
+      value: katana-pick-up
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -33260,7 +33260,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GameScripts::PickupFlashEffect
   flashInterval: 1.2
-  flashDuration: 0.1
+  flashDuration: 0.2
+  flashMaterial: {fileID: 2100000, guid: 43907d60126b0c044b2707569a247610, type: 2}
 --- !u!114 &2036990391
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34110,7 +34111,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3405289947790891631}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.26329976, y: -0.09676665, z: 0.11176351, w: 0.95331967}
+  m_LocalRotation: {x: -0.3397761, y: -0.059499122, z: 0.10927046, w: 0.9322403}
   m_LocalPosition: {x: 1.3038516e-10, y: 0.009668218, z: -6.140908e-11}
   m_LocalScale: {x: 1.0000002, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -34647,7 +34648,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 632583111905726905}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.635062, y: 0.04097363, z: 0.049216315, w: 0.7698021}
+  m_LocalRotation: {x: -0.635062, y: 0.04097363, z: 0.049216304, w: 0.7698021}
   m_LocalPosition: {x: 0.0000000026635825, y: -9.952055e-10, z: -5.587935e-10}
   m_LocalScale: {x: 1, y: 1.0000001, z: 0.9999999}
   m_ConstrainProportionsScale: 0

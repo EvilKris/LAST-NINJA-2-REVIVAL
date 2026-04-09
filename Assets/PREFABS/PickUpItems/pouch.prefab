@@ -154,3 +154,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: GameScripts::PickupFlashEffect
   flashInterval: 1.2
   flashDuration: 0.1
+  flashMaterial: {fileID: 2100000, guid: 43907d60126b0c044b2707569a247610, type: 2}

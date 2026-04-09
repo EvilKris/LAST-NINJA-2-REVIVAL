@@ -28,6 +28,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     private NunchakuHandler _nunchakuModule;
     private StaffFightingHandler _staffModule;
     private ThrownWeaponHandler _thrownWeaponModule;
+    private WeaponEventRelay _weaponRelay;
 
     [Header("Data")]
     public FightingStyle currentStyle;
@@ -83,6 +84,11 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     public event Action<int> OnMaxChargesChanged;
     public event Action<int, float> OnChargeStateChanged;
+
+    /// <summary>Fired when a move's hitbox opens. Passes the active <see cref="CombatMove"/>.</summary>
+    public event Action<CombatMove> OnHitboxOpened;
+    /// <summary>Fired when the active hitbox closes (hit window ended, move reset, or interrupted).</summary>
+    public event Action OnHitboxClosed;
 
     public int MaxCharges => currentStyle != null && currentStyle.chargedAttacks != null ? currentStyle.chargedAttacks.Count : 0;
     public int CurrentTier => Mathf.FloorToInt(_currentChargeTimer);
@@ -335,6 +341,24 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             if (TryGetComponent<ThrownWeaponHandler>(out var old))
                 Destroy(old);
             _thrownWeaponModule = null;
+        }
+
+        // Weapon Event Relay — bind to whichever weapon handler is active
+        IWeaponHandler activeWeapon = (IWeaponHandler)_swordModule
+                                   ?? (IWeaponHandler)_nunchakuModule
+                                   ?? (IWeaponHandler)_staffModule
+                                   ?? (IWeaponHandler)_thrownWeaponModule;
+
+        if (activeWeapon != null)
+        {
+            if (_weaponRelay == null && !TryGetComponent(out _weaponRelay))
+                _weaponRelay = gameObject.AddComponent<WeaponEventRelay>();
+            _weaponRelay.Bind(activeWeapon);
+        }
+        else
+        {
+            if (_weaponRelay != null)
+                _weaponRelay.Unbind();
         }
     }
 
@@ -665,7 +689,10 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     public void ResetCombatState()
     {
         if (_activeMove != null && _hitboxActive)
+        {
             CloseHitbox(GetHitboxType(_activeMove));
+            OnHitboxClosed?.Invoke();
+        }
 
         DisableAllTrailEmitters();
 
@@ -969,11 +996,13 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         {
             OpenHitbox(GetHitboxType(_activeMove));
             _hitboxActive = true;
+            OnHitboxOpened?.Invoke(_activeMove as CombatMove);
         }
         else if (!shouldBeOpen && _hitboxActive)
         {
             CloseHitbox(GetHitboxType(_activeMove));
             _hitboxActive = false;
+            OnHitboxClosed?.Invoke();
         }
 
         bool newComboState = _activeMove.IsInComboWindow(normalizedTime);

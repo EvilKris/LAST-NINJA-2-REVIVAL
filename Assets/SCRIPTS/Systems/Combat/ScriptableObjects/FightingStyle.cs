@@ -37,4 +37,16 @@ public class FightingStyle : ScriptableObject
     [Tooltip("Specific draw weapon clip")]
     public AnimationClip drawWeaponClip;
 
+    [Tooltip("3D weapon model instantiated on the entity's hand when this style is equipped.")]
+    public GameObject weaponPrefab;
+
+    [Tooltip("Which bone the weapon prefab is parented to.")]
+    public HumanBodyBones weaponBone = HumanBodyBones.RightHand;
+
+    [Tooltip("Local position offset applied to the weapon relative to the bone.")]
+    public Vector3 weaponPositionOffset = Vector3.zero;
+
+    [Tooltip("Local rotation offset applied to the weapon relative to the bone (Euler angles).")]
+    public Vector3 weaponRotationOffset = Vector3.zero;
+
 }

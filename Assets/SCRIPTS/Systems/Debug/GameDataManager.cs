@@ -137,7 +137,10 @@ public class GameDataManager : MonoBehaviour
             yield break;
         }
 
-        // Still have lives — fade to black, restore checkpoint, fade back in
+        // Still have lives — stop any active area sounds, fade to black, restore checkpoint, fade back in
+        foreach (var trigger in UnityEngine.Object.FindObjectsByType<AreaSoundTrigger>(UnityEngine.FindObjectsSortMode.None))
+            trigger.ForceStop();
+
         bool respawnReady = false;
         SpawnFadeCanvas(() => respawnReady = true);
 

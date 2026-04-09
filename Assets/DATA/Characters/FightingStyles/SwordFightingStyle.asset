@@ -27,3 +27,8 @@ MonoBehaviour:
   styleAnimator: {fileID: 0}
   blockClip: {fileID: 7400000, guid: 412cb7c4ba865a441b3872bb43fee9d5, type: 2}
   drawWeaponClip: {fileID: 7400000, guid: 92f238749d929194fba31f4c4265048f, type: 2}
+  weaponPrefab: {fileID: 1144845377597882043, guid: 5b43ba81ca943434b894304b45cfc806,
+    type: 3}
+  weaponBone: 18
+  weaponPositionOffset: {x: 0.182, y: 0.087, z: -0.016}
+  weaponRotationOffset: {x: 178.632, y: -264.626, z: -169.771}

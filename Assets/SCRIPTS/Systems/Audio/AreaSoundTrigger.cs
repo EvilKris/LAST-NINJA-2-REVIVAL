@@ -2,6 +2,7 @@ using UnityEngine;
 using JSAM;
 using System.Collections;
 using Unity.Cinemachine;
+using UnityEngine;
 
 public class AreaSoundTrigger : MonoBehaviour
 {
@@ -113,6 +114,30 @@ public class AreaSoundTrigger : MonoBehaviour
                 _previousCamera = CameraZoneManager.Instance.GetCurrentCamera();
                 CameraZoneManager.Instance.ActivateCamera(_shrineCamera);
             }
+        }
+    }
+
+    /// <summary>
+    /// Stops any active area sound/music and resets tracking state.
+    /// Call this on player death so sounds do not persist through the respawn.
+    /// </summary>
+    public void ForceStop()
+    {
+        if (!isPlayerInside) return;
+
+        isPlayerInside = false;
+
+        if (sfx != null)
+            AudioManager.StopSound(sfx);
+
+        if (music != null)
+        {
+            AudioManager.StopMusic(music, null, false);
+            var bank = MasterSingleton.Instance.PrefabBankManager;
+            bank.thisLevelMusic = previousMusic;
+            music = null;
+            previousMusic = null;
+            previousMusicTime = 0f;
         }
     }
 

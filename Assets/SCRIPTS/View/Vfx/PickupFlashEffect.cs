@@ -4,9 +4,10 @@ using UnityEngine;
 /// Attach to any <see cref="WorldItem"/> prefab to make it periodically flash solid white,
 /// making small pickups easy to spot in the world.
 ///
-/// The component is self-contained: it creates its own white URP Unlit material instance
-/// at runtime, caches the originals from every child Renderer on Awake, and swaps
-/// between them on a configurable interval/duration cycle.
+/// Assign a white URP Unlit material to <see cref="flashMaterial"/> in the Inspector.
+/// This ensures the shader is included in builds (Shader.Find is Editor-only reliable).
+/// Caches the originals from every child Renderer on Awake and swaps between them
+/// on a configurable interval/duration cycle.
 /// </summary>
 public class PickupFlashEffect : MonoBehaviour
 {
@@ -15,6 +16,9 @@ public class PickupFlashEffect : MonoBehaviour
 
     [Tooltip("How long the white flash lasts each cycle.")]
     [SerializeField] private float flashDuration = 0.1f;
+
+    [Tooltip("Assign a solid-white URP Unlit material here. Required for builds — Shader.Find is not build-safe.")]
+    [SerializeField] private Material flashMaterial;
 
     // Cached renderer data so we never call GetComponentsInChildren in Update
     private struct RendererEntry
@@ -30,23 +34,20 @@ public class PickupFlashEffect : MonoBehaviour
 
     private void Awake()
     {
-        Material whiteMat = CreateWhiteMaterial();
+        Material whiteMat = GetOrCreateWhiteMaterial();
         CacheRenderers(whiteMat);
     }
 
     private void OnDestroy()
     {
-        // Clean up the per-renderer flash material instances we own
+        // Only destroy the material if we created it at runtime (no serialized reference was assigned)
         if (_entries == null) return;
-        foreach (var entry in _entries)
-        {
-            if (entry.flashMaterials == null) continue;
-            foreach (var mat in entry.flashMaterials)
-            {
-                if (mat != null) Destroy(mat);
-            }
-        }
+        if (flashMaterial == null && _runtimeCreatedMaterial != null)
+            Destroy(_runtimeCreatedMaterial);
     }
+
+    // Tracks a material we created at runtime so we can destroy it in OnDestroy
+    private Material _runtimeCreatedMaterial;
 
     private void Update()
     {
@@ -72,6 +73,8 @@ public class PickupFlashEffect : MonoBehaviour
 
     private void CacheRenderers(Material whiteMat)
     {
+        if (whiteMat == null) { _entries = System.Array.Empty<RendererEntry>(); return; }
+
         Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
         _entries = new RendererEntry[renderers.Length];
 
@@ -113,29 +116,34 @@ public class PickupFlashEffect : MonoBehaviour
     }
 
     /// <summary>
-    /// Creates a single shared white URP Unlit material instance.
-    /// All flash slots point to the same instance — they only need to be white,
-    /// so sharing is safe and avoids unnecessary allocations.
+    /// Returns the serialized <see cref="flashMaterial"/> if assigned, otherwise creates
+    /// a fallback white material at runtime. The serialized path is strongly preferred
+    /// because <c>Shader.Find</c> only works in builds when the shader is in
+    /// "Always Included Shaders" — the serialized reference guarantees inclusion.
     /// </summary>
-    private static Material CreateWhiteMaterial()
+    private Material GetOrCreateWhiteMaterial()
     {
-        // URP built-in unlit shader — always present in a URP project
-        Shader unlit = Shader.Find("Universal Render Pipeline/Unlit");
+        if (flashMaterial != null)
+            return flashMaterial;
+
+        Debug.LogWarning("[PickupFlashEffect] No flash material assigned. Falling back to Shader.Find — this may not work in builds. Assign a white URP Unlit material in the Inspector.", this);
+
+        Shader unlit = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
         if (unlit == null)
         {
-            // Fallback for any edge case (shouldn't happen in a URP project)
-            unlit = Shader.Find("Unlit/Color");
+            Debug.LogError("[PickupFlashEffect] Could not find a usable unlit shader. Flash effect will be disabled.", this);
+            return null;
         }
 
         var mat = new Material(unlit);
-        mat.name = "PickupFlash_White";
+        mat.name = "PickupFlash_White_Runtime";
 
-        // Set base colour to solid white regardless of which property name the shader uses
         if (mat.HasProperty("_BaseColor"))
             mat.SetColor("_BaseColor", Color.white);
         if (mat.HasProperty("_Color"))
             mat.SetColor("_Color", Color.white);
 
+        _runtimeCreatedMaterial = mat;
         return mat;
     }
 

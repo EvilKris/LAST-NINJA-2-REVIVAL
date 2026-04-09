@@ -2996,7 +2996,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  motionScale: 2
+  motionScale: 1
   damage: 15
   isHeavy: 0
   reactionToTrigger: 4
@@ -3010,4 +3010,4 @@ MonoBehaviour:
   canCombo: 0
   comboStart: 1
   comboEnd: 1
-  rotationAllowanceEnd: 0.05
+  rotationAllowanceEnd: 0.1
