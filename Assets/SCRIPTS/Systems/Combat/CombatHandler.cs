@@ -32,6 +32,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     [Header("Data")]
     public FightingStyle currentStyle;
+    private FightingStyle _defaultStyle;
 
     private const string CLIP_SLOT_KEY = "Replaceable_Motion_Base";
     private const string BLOCK_CLIP_SLOT_KEY = "ReplaceableBlock";
@@ -208,6 +209,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         _rb        = GetComponent<Rigidbody>();
         _collider  = GetComponent<Collider>();
 
+        _defaultStyle = currentStyle;
+
         _overrideController = new AnimatorOverrideController(_animator.runtimeAnimatorController);
         _animator.runtimeAnimatorController = _overrideController;
 
@@ -239,10 +242,18 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     /// </summary>
     public void EquipStyle(FightingStyle newStyle)
     {
-       
         currentStyle = newStyle;
         ResetCombatState();
         InitializeStyleModules();
+    }
+
+    /// <summary>
+    /// Immediately reverts to the default (fist) style that was set in the Inspector.
+    /// Called by <see cref="HealthComponent"/> on death before any death animations play.
+    /// </summary>
+    public void RevertToDefaultStyle()
+    {
+        EquipStyle(_defaultStyle);
     }
 
     private void InitializeStyleModules()
@@ -297,7 +308,10 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         else
         {
             if (TryGetComponent<SwordFightingHandler>(out var old))
+            {
+                old.Teardown();
                 Destroy(old);
+            }
             _swordModule = null;
         }
 

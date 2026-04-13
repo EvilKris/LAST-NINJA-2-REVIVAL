@@ -5402,6 +5402,6 @@ MonoBehaviour:
   hitStart: 0.412
   hitEnd: 0.523
   canCombo: 1
-  comboStart: 0.561
-  comboEnd: 0.809
+  comboStart: 0.503
+  comboEnd: 0.872
   rotationAllowanceEnd: 0.055

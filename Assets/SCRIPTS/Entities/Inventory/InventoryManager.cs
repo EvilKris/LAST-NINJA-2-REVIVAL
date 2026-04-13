@@ -22,11 +22,20 @@ public class InventoryManager : MonoBehaviour
     public event Action<ItemData> OnWeaponChanged;
     public event Action<ItemData> OnItemChanged;
 
-    private void Start()
+    /// <summary>
+    /// Lazily resolves the player's <see cref="CombatHandler"/>. The reference is
+    /// cached, but if it becomes stale (scene reload / player respawn) it is
+    /// re-acquired automatically.
+    /// </summary>
+    private CombatHandler ResolveCombatHandler()
     {
-        GameObject player = GameObject.FindWithTag("Player");
-        if (player != null)
-            _combatHandler = player.GetComponent<CombatHandler>();
+        if (_combatHandler == null)
+        {
+            GameObject player = GameObject.FindWithTag("Player");
+            if (player != null)
+                _combatHandler = player.GetComponent<CombatHandler>();
+        }
+        return _combatHandler;
     }
 
     public void CycleWeapon()
@@ -60,6 +69,23 @@ public class InventoryManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Resets the active weapon back to fists (no weapon).
+    /// Fires <see cref="OnWeaponChanged"/> with <c>null</c> so the UI clears its icon.
+    /// Called by <see cref="HealthComponent"/> on death.
+    /// </summary>
+    public void RevertToFists()
+    {
+        if (_equipDelayCoroutine != null)
+        {
+            StopCoroutine(_equipDelayCoroutine);
+            _equipDelayCoroutine = null;
+        }
+
+        currentWeaponIndex = 0;
+        OnWeaponChanged?.Invoke(null);
+    }
+
+    /// <summary>
     /// Cancels any pending equip and starts a fresh <see cref="EQUIP_DELAY"/> countdown.
     /// If the player stops cycling before the timer expires the style is committed.
     /// </summary>
@@ -73,11 +99,11 @@ public class InventoryManager : MonoBehaviour
     private System.Collections.IEnumerator EquipAfterDelay(ItemData weapon)
     {
         yield return new WaitForSeconds(EQUIP_DELAY);
-       
-        _equipDelayCoroutine = null;
-        
 
-        if (_combatHandler != null && weapon.fightingStyle != null)
-            _combatHandler.EquipStyle(weapon.fightingStyle);
+        _equipDelayCoroutine = null;
+
+        CombatHandler handler = ResolveCombatHandler();
+        if (handler != null && weapon.fightingStyle != null)
+            handler.EquipStyle(weapon.fightingStyle);
     }
 }

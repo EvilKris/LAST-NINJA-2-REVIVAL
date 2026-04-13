@@ -28,12 +28,14 @@ public class UIWeaponDisplay : MonoBehaviour
 
     private void UpdateWeaponUI(ItemData newWeapon)
     {
-        if (newWeapon == null || weaponIconImage == null) return;
+        if (weaponIconImage == null) return;
 
-        weaponIconImage.sprite = newWeapon.icon;
+        // null means fists — no weapon to display
+        weaponIconImage.sprite = newWeapon != null ? newWeapon.icon : null;
+        weaponIconImage.enabled = newWeapon != null;
 
 #if UNITY_EDITOR
-        Debug.Log($"UI Updated: Now showing {newWeapon.itemName}");
+        Debug.Log($"UI Updated: Now showing {(newWeapon != null ? newWeapon.itemName : "Fist")}");
 #endif
     }
 

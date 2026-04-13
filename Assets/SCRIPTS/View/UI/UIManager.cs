@@ -1,11 +1,12 @@
 ﻿using DG.Tweening;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
 /// Central UI manager. Owns the in-game overlay, health bars, and charge meter.
-/// Subscribes to <see cref="HealthComponent.OnHealthChanged"/> events from all entities
-/// in the scene and routes updates to the correct UI widgets.
+/// Entities call <see cref="RegisterHealthComponent"/> / <see cref="UnregisterHealthComponent"/>
+/// when they spawn or are destroyed so the UI stays in sync regardless of scene timing.
 /// </summary>
 public class UIManager : MonoBehaviour
 {
@@ -41,8 +42,9 @@ public class UIManager : MonoBehaviour
     private Material _playerHealthMaterial;
 
     private EnemyHealthBarScript _enemyHealthBarScript;
-    private readonly System.Collections.Generic.List<GameObject> _lifeIcons = new System.Collections.Generic.List<GameObject>();
+    private readonly List<GameObject> _lifeIcons = new List<GameObject>();
     private HealthComponent _playerHealthComponent;
+    private readonly HashSet<HealthComponent> _registeredHealthComponents = new HashSet<HealthComponent>();
 
     // ═══════════════════════════════════════════════════════════════════
     // Unity Lifecycle
@@ -63,7 +65,6 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        SubscribeToAllHealthComponents();
         BuildLifeIcons();
 
         GameDataManager gdm = MasterSingleton.Instance.GameDataManager;
@@ -72,16 +73,21 @@ public class UIManager : MonoBehaviour
 
     private void OnDestroy()
     {
-        UnsubscribeFromAllHealthComponents();
+        // Unsubscribe from every component that is still alive
+        foreach (HealthComponent health in _registeredHealthComponents)
+        {
+            if (health == null) continue;
+            health.OnHealthChanged -= OnHealthChanged;
+            if (health.faction == Faction.Player)
+                health.OnDeath -= OnPlayerDeath;
+        }
+        _registeredHealthComponents.Clear();
 
         if (_playerHealthMaterial != null)
             Destroy(_playerHealthMaterial);
 
         if (MasterSingleton.Instance != null)
             MasterSingleton.Instance.GameDataManager.OnLivesChanged -= OnLivesChanged;
-
-        if (_playerHealthComponent != null)
-            _playerHealthComponent.OnDeath -= OnPlayerDeath;
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -113,38 +119,43 @@ public class UIManager : MonoBehaviour
     }
 
     // ═══════════════════════════════════════════════════════════════════
-    // Health Event Handling
+    // Health Registration (called by HealthComponent)
     // ═══════════════════════════════════════════════════════════════════
 
     /// <summary>
-    /// Finds every <see cref="HealthComponent"/> in the scene and subscribes to its
-    /// <see cref="HealthComponent.OnHealthChanged"/> event.
-    /// Call once on Start; for dynamically spawned entities call this again or
-    /// subscribe directly from the spawner.
+    /// Registers a <see cref="HealthComponent"/> so its health changes are reflected in the UI.
+    /// Call from <see cref="HealthComponent.Start"/> (or whenever the entity becomes active).
     /// </summary>
-    private void SubscribeToAllHealthComponents()
+    public void RegisterHealthComponent(HealthComponent health)
     {
-        foreach (HealthComponent health in Object.FindObjectsByType<HealthComponent>(FindObjectsSortMode.None))
-        {
-            health.OnHealthChanged += OnHealthChanged;
+        if (health == null || !_registeredHealthComponents.Add(health)) return;
 
-            if (health.faction == Faction.Player)
-            {
-                _playerHealthComponent = health;
-                health.OnDeath += OnPlayerDeath;
-            }
+        health.OnHealthChanged += OnHealthChanged;
+
+        if (health.faction == Faction.Player)
+        {
+            _playerHealthComponent = health;
+            health.OnDeath += OnPlayerDeath;
         }
+
+        Debug.Log($"[UIManager] Registered HealthComponent: '{health.gameObject.name}' (Faction: {health.faction})", health);
     }
 
-    /// <summary>Unsubscribes from all <see cref="HealthComponent"/> events still present in the scene.</summary>
-    private void UnsubscribeFromAllHealthComponents()
+    /// <summary>
+    /// Unregisters a <see cref="HealthComponent"/> when it is destroyed or disabled.
+    /// Call from <see cref="HealthComponent.OnDestroy"/>.
+    /// </summary>
+    public void UnregisterHealthComponent(HealthComponent health)
     {
-        foreach (HealthComponent health in Object.FindObjectsByType<HealthComponent>(FindObjectsSortMode.None))
-        {
-            health.OnHealthChanged -= OnHealthChanged;
+        if (health == null || !_registeredHealthComponents.Remove(health)) return;
 
-            if (health.faction == Faction.Player)
-                health.OnDeath -= OnPlayerDeath;
+        health.OnHealthChanged -= OnHealthChanged;
+
+        if (health.faction == Faction.Player)
+        {
+            health.OnDeath -= OnPlayerDeath;
+            if (_playerHealthComponent == health)
+                _playerHealthComponent = null;
         }
     }
 

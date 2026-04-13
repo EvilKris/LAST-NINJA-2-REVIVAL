@@ -3007,7 +3007,7 @@ MonoBehaviour:
     sound: {fileID: 11400000, guid: 9ecea84ea71caae4b9bc32c7a9c14db6, type: 2}
   hitStart: 0.531
   hitEnd: 0.631
-  canCombo: 0
-  comboStart: 1
+  canCombo: 1
+  comboStart: 0.859
   comboEnd: 1
   rotationAllowanceEnd: 0.1

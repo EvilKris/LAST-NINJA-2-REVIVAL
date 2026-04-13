@@ -45,7 +45,8 @@ public class SwordFightingHandler : MonoBehaviour, IWeaponHandler
         if (style == null || style.drawWeaponClip == null) return;
 
         _combat.OverrideController[DRAW_CLIP_SLOT_KEY] = style.drawWeaponClip;
-        _animator.Play(DRAW_ANIM_STATE, 0, 0f);
+        _animator.CrossFade(DRAW_ANIM_STATE, 0.15f, 0, 0f);
+        //_animator.Play(DRAW_ANIM_STATE, 0, 0f);
         _animator.Update(0f);
     }
 
@@ -53,6 +54,19 @@ public class SwordFightingHandler : MonoBehaviour, IWeaponHandler
     {
         if (_weaponInstance != null)
             _weaponInstance.SetActive(true);
+    }
+
+    /// <summary>
+    /// Immediately destroys the weapon model. Called by <see cref="CombatHandler"/> before
+    /// this component is destroyed so the prop vanishes without waiting for end-of-frame.
+    /// </summary>
+    public void Teardown()
+    {
+        if (_weaponInstance != null)
+        {
+            Destroy(_weaponInstance);
+            _weaponInstance = null;
+        }
     }
 
     private void Update()

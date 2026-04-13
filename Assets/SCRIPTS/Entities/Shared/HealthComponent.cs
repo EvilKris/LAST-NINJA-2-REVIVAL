@@ -92,6 +92,17 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         ConfigureDeadLayer();
     }
 
+    private void Start()
+    {
+        MasterSingleton.Instance?.UIManager?.RegisterHealthComponent(this);
+    }
+
+    private void OnDestroy()
+    {
+        if (MasterSingleton.Instance != null && MasterSingleton.Instance.UIManager != null)
+            MasterSingleton.Instance.UIManager.UnregisterHealthComponent(this);
+    }
+
     /// <summary>
     /// Configures physics layer collision rules so dead entities only collide with the floor.
     /// Reads <see cref="deadLayer"/> and <see cref="floorLayer"/> assigned in the Inspector.
@@ -192,6 +203,14 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     /// </summary>
     private void HandleDeath()
     {
+        // Revert to fist style before any death animation plays
+        if (_combatHandler != null)
+            _combatHandler.RevertToDefaultStyle();
+
+        // Clear the weapon UI icon if this is the player
+        if (faction == Faction.Player)
+            MasterSingleton.Instance?.InventoryManager?.RevertToFists();
+
         // Switch to Dead layer so the corpse only collides with the floor
         if (_deadLayerIndex >= 0)
             SetLayerRecursive(gameObject, _deadLayerIndex);
