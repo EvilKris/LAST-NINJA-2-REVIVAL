@@ -41,9 +41,17 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     [Tooltip("Layer used for floor collision. Dead entities remain collidable only with this layer.")]
     public LayerMask floorLayer;
 
+    [Header("Stun")]
+    [Tooltip("Duration in seconds the entity remains stunned when hit by Heavy_Stun or a smoke bomb.")]
+    public float StunTime = 2f;
+
     [Header("Internal References")]
     private Animator _animator;
     private CombatHandler _combatHandler;
+    private Coroutine _stunCoroutine;
+
+    /// <summary>True while a stun countdown is active on this entity.</summary>
+    public bool IsStunned => _stunCoroutine != null;
     // Sequence used for incremental heal-to-full tweens
     private Sequence _healSequence;
 
@@ -277,8 +285,36 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         }
         else if (type == HitReactionType.Light_Stun)
         {
+           // _animator.SetInteger("i_HitType", 2);
+        }
+        else if (type == HitReactionType.Knockdown)
+        {
             _animator.SetInteger("i_HitType", 2);
         }
+        else if (type == HitReactionType.Heavy_Stun)
+        {
+            _animator.SetInteger("i_HitType", 3);
+            StartStun();
+        }
+    }
+
+    /// <summary>
+    /// Interrupts any running stun and starts a new <see cref="StunTime"/> countdown,
+    /// after which the animator is cross-faded back to Idle.
+    /// </summary>
+    public void StartStun()
+    {
+        if (_stunCoroutine != null)
+            StopCoroutine(_stunCoroutine);
+        _stunCoroutine = StartCoroutine(StunCountdown());
+    }
+
+    private System.Collections.IEnumerator StunCountdown()
+    {
+        yield return new WaitForSeconds(StunTime);
+        _stunCoroutine = null;
+        if (_animator != null)
+            _animator.CrossFade("Idle", 0.15f, 0, 0f);
     }
 
     // ═══════════════════════════════════════════════════════════════════

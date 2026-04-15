@@ -30,6 +30,7 @@ public class PrefabBankManager : MonoBehaviour
     [Tooltip("Sound commencing on Tier One Drive Strike")]
     public SoundFileObject Tier_One_Drive_Strike;
     public SoundFileObject Charge_Drive_Strike_Tier_Complete;
+    public SoundFileObject smokeExplosion_sfx; 
 
 
     [Header("Pickup")]

@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98ef5bb48c8ea17489aea00950005e5c, type: 3}
+  m_Name: ProjectileBombFightingStyle
+  m_EditorClassIdentifier: Assembly-CSharp::FightingStyle
+  styleType: 5
+  lightAttacks:
+  - {fileID: 11400000, guid: 51f6917e37bc29142bf9eca150256900, type: 2}
+  mediumAttack: {fileID: 0}
+  heavyAttack: {fileID: 11400000, guid: f70204f050c5cc2499f08865ff4ad657, type: 2}
+  specialAttack: {fileID: 0}
+  acrobaticFlip: {fileID: 11400000, guid: fe750173cf74f7d43a0f3f95bf8f7ac3, type: 2}
+  chargedAttacks: []
+  clinchLightAtk: {fileID: 0}
+  clinchThrowDefault: {fileID: 0}
+  styleAnimator: {fileID: 0}
+  blockClip: {fileID: 7400000, guid: 412cb7c4ba865a441b3872bb43fee9d5, type: 2}
+  drawWeaponClip: {fileID: 7400000, guid: 92f238749d929194fba31f4c4265048f, type: 2}
+  weaponPrefab: {fileID: 6962806406607417796, guid: 23e8c0d98ee6e5941ad3bb242ac29a2e,
+    type: 3}
+  weaponBone: 18
+  weaponPositionOffset: {x: 0.182, y: 0.087, z: -0.016}
+  weaponRotationOffset: {x: 178.632, y: -264.626, z: -169.771}

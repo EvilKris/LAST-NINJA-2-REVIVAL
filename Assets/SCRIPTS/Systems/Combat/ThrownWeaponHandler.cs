@@ -5,6 +5,8 @@ public class ThrownWeaponHandler : MonoBehaviour, IWeaponHandler
     private const string DRAW_CLIP_SLOT_KEY = "ReplaceableDrawWeapon";
     private const string DRAW_ANIM_STATE = "ReplaceableDrawWeapon";
 
+    private const float THROW_FORCE = 4f;
+
     private CombatHandler _combat;
     private Animator _animator;
     private GameObject _weaponInstance;
@@ -12,6 +14,7 @@ public class ThrownWeaponHandler : MonoBehaviour, IWeaponHandler
     private ParticleSystem[] _weaponParticles;
     private Rigidbody _weaponRigidbody;
     private Collider[] _weaponColliders;
+    private int _amount = 10;
 
     public void Initialize(CombatHandler combat)
     {
@@ -78,6 +81,11 @@ public class ThrownWeaponHandler : MonoBehaviour, IWeaponHandler
 
     private void Start()
     {
+        ApplyWeaponOffset();
+    }
+
+    private void ApplyWeaponOffset()
+    {
         if (_weaponInstance == null || _combat.currentStyle == null) return;
 
         FightingStyle style = _combat.currentStyle;
@@ -85,9 +93,52 @@ public class ThrownWeaponHandler : MonoBehaviour, IWeaponHandler
     }
    
 
-    private void OnHitboxOpened(CombatMove move) => SetTrailsEmitting(true);
+    private void OnHitboxOpened(CombatMove move)
+    {
+        if (!IsLightAttack(move)) return;
+        ThrowProjectile();
+    }
+
+    private bool IsLightAttack(CombatMove move)
+    {
+        if (move == null || _combat.currentStyle == null || _combat.currentStyle.lightAttacks == null) return false;
+        foreach (CombatMove light in _combat.currentStyle.lightAttacks)
+        {
+            if (light == move) return true;
+        }
+        return false;
+    }
 
     private void OnHitboxClosed() => SetTrailsEmitting(false);
+
+    private void ThrowProjectile()
+    {
+        if (_weaponInstance == null || _weaponRigidbody == null) return;
+
+        SetTrailsEmitting(true);
+
+        ThrownProjectileBomb projectile = _weaponInstance.AddComponent<ThrownProjectileBomb>();
+        projectile.Launch(transform.root, _weaponRigidbody, _weaponColliders, THROW_FORCE);
+
+        _weaponInstance = null;
+        _weaponTrails = null;
+        _weaponParticles = null;
+        _weaponRigidbody = null;
+        _weaponColliders = null;
+
+        _amount--;
+
+        if (_amount > 0)
+        {
+            SpawnWeapon();
+            OnWeaponReveal();
+            ApplyWeaponOffset();
+        }
+        else
+        {
+            _combat.RevertToDefaultStyle();
+        }
+    }
 
     private void SetTrailsEmitting(bool emitting)
     {

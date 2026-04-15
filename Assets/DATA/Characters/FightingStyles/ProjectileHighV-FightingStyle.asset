@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 98ef5bb48c8ea17489aea00950005e5c, type: 3}
-  m_Name: ProjectileFightingStyle
+  m_Name: ProjectileHighV-FightingStyle
   m_EditorClassIdentifier: Assembly-CSharp::FightingStyle
   styleType: 5
   lightAttacks:
@@ -25,7 +25,7 @@ MonoBehaviour:
   styleAnimator: {fileID: 0}
   blockClip: {fileID: 7400000, guid: 412cb7c4ba865a441b3872bb43fee9d5, type: 2}
   drawWeaponClip: {fileID: 7400000, guid: 92f238749d929194fba31f4c4265048f, type: 2}
-  weaponPrefab: {fileID: 6962806406607417796, guid: 23e8c0d98ee6e5941ad3bb242ac29a2e,
+  weaponPrefab: {fileID: 3643133958701381872, guid: e704828c234d2184cae3ff4ecdc8080f,
     type: 3}
   weaponBone: 18
   weaponPositionOffset: {x: 0.182, y: 0.087, z: -0.016}

@@ -1,8 +1,7 @@
-using UnityEngine;
 using JSAM;
-using System.Collections;
 using Unity.Cinemachine;
 using UnityEngine;
+
 
 public class AreaSoundTrigger : MonoBehaviour
 {
@@ -35,7 +34,7 @@ public class AreaSoundTrigger : MonoBehaviour
                 _shrineCameraOriginalPriority = _shrineCamera.Priority;
         }
         else
-            Debug.Log("AreaSoundTrigger: MUSIC_SHRINE zone type requires a CinemachineCamera component on this or a parent GameObject for camera switching to work.");        
+            Debug.Log("AreaSoundTrigger: MUSIC_SHRINE zone type requires a CinemachineCamera component on this or a parent GameObject for camera switching to work.");
     }
 
     private SoundFileObject GetSoundForZone()

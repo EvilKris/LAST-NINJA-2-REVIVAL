@@ -53,10 +53,13 @@ MonoBehaviour:
   MaterializeMat: {fileID: 2100000, guid: a5dad921600bd614e86905c4a966dda1, type: 2}
   smokeBombProjectilePrefab: {fileID: 6962806406607417796, guid: 23e8c0d98ee6e5941ad3bb242ac29a2e,
     type: 3}
+  smokeExplosion: {fileID: 1985655064596568, guid: ee04fbb182a226f42aae287a75d102f2,
+    type: 3}
   Tier_One_Drive_Strike: {fileID: 11400000, guid: f9a36207019a5404ead3cfd257d1382f,
     type: 2}
   Charge_Drive_Strike_Tier_Complete: {fileID: 11400000, guid: 31acd13e4d8b1fa43aa1a87bbb8c414d,
     type: 2}
+  smokeExplosion_sfx: {fileID: 11400000, guid: 59b28a5e5ad1ace46a61b1ecb5287089, type: 2}
   DefaultPickupSound: {fileID: 11400000, guid: f520321739d28634083f39b5e292dcfa, type: 2}
   AreaSoundSwamp: {fileID: 11400000, guid: 41814931271fba646bd66db07bbe79b9, type: 2}
   AreaSoundWater: {fileID: 0}
