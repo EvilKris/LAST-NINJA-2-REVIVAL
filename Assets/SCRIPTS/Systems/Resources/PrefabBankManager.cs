@@ -15,13 +15,22 @@ public class PrefabBankManager : MonoBehaviour
     public Material HealingMat;
 
     [Tooltip("Materialize Mat used for He-Man Glow on objects within the camera's view")]
-    public Material MaterializeMat; 
+    public Material MaterializeMat;
 
+    [Header("Projectiles")]
+    [Tooltip("Prefab for the basic projectile used by the player and some enemies. Contains a Projectile component and a TrailRenderer.")]
+    public GameObject smokeBombProjectilePrefab;
 
+ 
+    [Header("VFX EFFECTS (VISUAL PREFABS) ")]
+    [Tooltip("Prefab for the basic explosion effect used by the smoke bomb and some hit effects. Contains a ParticleSystem component.")]
+    public GameObject smokeExplosion; // Used for smoke bomb explosion and some hit effects
 
-    [Tooltip("Sound commences on Tier One Drive Strike")]
+    [Header("SFX")]
+    [Tooltip("Sound commencing on Tier One Drive Strike")]
     public SoundFileObject Tier_One_Drive_Strike;
     public SoundFileObject Charge_Drive_Strike_Tier_Complete;
+
 
     [Header("Pickup")]
     [Tooltip("Default sound played when any item is picked up. Can be overridden per-item in ItemData.")]

@@ -31,15 +31,14 @@ public class SwordFightingHandler : MonoBehaviour, IWeaponHandler
         if (bone == null) return;
 
         _weaponInstance = Instantiate(style.weaponPrefab, bone);
-        _weaponInstance.transform.localPosition = Vector3.zero;
-        _weaponInstance.transform.localRotation = Quaternion.identity;
+        _weaponInstance.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
         _weaponInstance.SetActive(false);
 
         _weaponTrails = _weaponInstance.GetComponentsInChildren<TrailRenderer>(true);
         SetTrailsEmitting(false);
     }
 
-    private void PlayDrawAnimation()
+    public void PlayDrawAnimation()
     {
         FightingStyle style = _combat.currentStyle;
         if (style == null || style.drawWeaponClip == null) return;
@@ -69,6 +68,14 @@ public class SwordFightingHandler : MonoBehaviour, IWeaponHandler
         }
     }
 
+    private void Start()
+    {
+        if (_weaponInstance == null || _combat.currentStyle == null) return;
+
+        FightingStyle style = _combat.currentStyle;
+        _weaponInstance.transform.SetLocalPositionAndRotation(style.weaponPositionOffset, Quaternion.Euler(style.weaponRotationOffset));
+    }
+    /*
     private void Update()
     {
         if (_weaponInstance == null || _combat.currentStyle == null) return;
@@ -76,7 +83,7 @@ public class SwordFightingHandler : MonoBehaviour, IWeaponHandler
         FightingStyle style = _combat.currentStyle;
         _weaponInstance.transform.localPosition = style.weaponPositionOffset;
         _weaponInstance.transform.localRotation = Quaternion.Euler(style.weaponRotationOffset);
-    }
+    }*/
 
     private void OnHitboxOpened(CombatMove move) => SetTrailsEmitting(true);
 

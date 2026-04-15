@@ -41,7 +41,13 @@ public class UIWeaponDisplay : MonoBehaviour
 
     private bool TryGetInventoryManager(out InventoryManager manager)
     {
-        manager = MasterSingleton.Instance?.InventoryManager;
-        return manager != null;
+        var instance = MasterSingleton.Instance;
+        if (instance != null && instance.InventoryManager != null)
+        {
+            manager = instance.InventoryManager;
+            return true;
+        }
+        manager = null;
+        return false;
     }
 }

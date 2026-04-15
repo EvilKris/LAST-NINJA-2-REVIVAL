@@ -12,4 +12,9 @@ public class NunchakuHandler : MonoBehaviour, IWeaponHandler
     public void OnWeaponReveal()
     {
     }
+
+    public void PlayDrawAnimation()
+    {
+        throw new System.NotImplementedException();
+    }
 }

@@ -4,7 +4,7 @@ using JSAM;
 /// <summary>
 /// Identifies which limb should have its strike trail activated during this move.
 /// </summary>
-public enum StrikeLimb
+public enum VFXLimb
 {
     None,
     RightHand,
@@ -55,7 +55,7 @@ public class CombatMove : ScriptableObject, IActiveCombatMove
     [Header("Combat Stats")]
     public float damage = 10f;
     public bool isHeavy;
-    public HitReactionType reactionToTrigger = HitReactionType.Light_High;
+    public HitReactionType EnemyReaction = HitReactionType.Light_High;
     // Inside your CombatMove script
     // ─────────────────────────────────────────────
     // HITBOX
@@ -65,7 +65,7 @@ public class CombatMove : ScriptableObject, IActiveCombatMove
     public HitboxType hitboxType;
 
     [Tooltip("Which limb's strike trail to activate during this move's hit window. Only used when a strikeTrailMelee prefab is assigned in CharacterEffects.")]
-    public StrikeLimb strikeLimb = StrikeLimb.None;
+    public VFXLimb strikeLimb = VFXLimb.None;
 
     // ─────────────────────────────────────────────
     // AUDIO
@@ -105,7 +105,7 @@ public class CombatMove : ScriptableObject, IActiveCombatMove
     // ─────────────────────────────────────────────
 
     float IActiveCombatMove.Damage => damage;
-    HitReactionType IActiveCombatMove.ReactionToTrigger => reactionToTrigger;
+    HitReactionType IActiveCombatMove.ReactionToTrigger => EnemyReaction;
     AnimationAudioEvent[] IActiveCombatMove.AudioEvents => audioEvents;
 
     // ─────────────────────────────────────────────

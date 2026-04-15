@@ -275,7 +275,7 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         {
             _animator.SetInteger("i_HitType", 1);
         }
-        else if (type == HitReactionType.Heavy_Back)
+        else if (type == HitReactionType.Light_Stun)
         {
             _animator.SetInteger("i_HitType", 2);
         }

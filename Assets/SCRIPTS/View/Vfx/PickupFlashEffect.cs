@@ -128,15 +128,19 @@ public class PickupFlashEffect : MonoBehaviour
 
         Debug.LogWarning("[PickupFlashEffect] No flash material assigned. Falling back to Shader.Find — this may not work in builds. Assign a white URP Unlit material in the Inspector.", this);
 
-        Shader unlit = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
+        Shader unlit = Shader.Find("Universal Render Pipeline/Unlit");
+        if (unlit == null)
+            unlit = Shader.Find("Unlit/Color");
         if (unlit == null)
         {
             Debug.LogError("[PickupFlashEffect] Could not find a usable unlit shader. Flash effect will be disabled.", this);
             return null;
         }
 
-        var mat = new Material(unlit);
-        mat.name = "PickupFlash_White_Runtime";
+        var mat = new Material(unlit)
+        {
+            name = "PickupFlash_White_Runtime"
+        };
 
         if (mat.HasProperty("_BaseColor"))
             mat.SetColor("_BaseColor", Color.white);

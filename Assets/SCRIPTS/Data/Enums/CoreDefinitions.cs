@@ -64,7 +64,8 @@ public enum HitReactionType
     None,
     Light_High,  // Head/Chest snap
     Light_Low,   // Stomach/Leg flinch
-    Heavy_Back,  // Stagger backward
+    Light_Stun,  // Stagger backward
+    Heavy_Stun,  // Longer stagger (paralysed)
     Knockdown,   // Fall to ground
     Launch       // Air combo starter
 }

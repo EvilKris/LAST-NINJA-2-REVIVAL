@@ -31,7 +31,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Noise_Texture_2:
-        m_Texture: {fileID: 2800000, guid: 3d7bfbc364206dd41a92c11cabd8f36b, type: 3}
+        m_Texture: {fileID: 2800000, guid: feebd9fe3a61f384286140f9201d038d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
@@ -48,18 +48,18 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Foam_Distance: 0.69
-    - _Metallic: 0.251
-    - _Noise_Scale: 0.164
+    - _Foam_Distance: 1.67
+    - _Metallic: 0.347
+    - _Noise_Scale: 0.306
     - _QueueControl: 0
     - _QueueOffset: 0
-    - _Refraction: 0.0534
-    - _Smoothness: 0.765
-    - _Transparency: 0.65
-    - _Wave_Speed: 0.00541
+    - _Refraction: 0.0611
+    - _Smoothness: 0.612
+    - _Transparency: 0.606
+    - _Wave_Speed: 0.00789
     m_Colors:
-    - _Foam_Color: {r: 1, g: 1, b: 1, a: 0.5686275}
-    - _Water_Color: {r: 0.19958022, g: 0.19464225, b: 0.509434, a: 0.40392157}
+    - _Foam_Color: {r: 0.78686786, g: 1, b: 0, a: 1}
+    - _Water_Color: {r: 0.19958016, g: 0.64705884, b: 0.22745094, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &2490189419767720270

@@ -184,7 +184,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     private TrailRenderer _trailRightFoot;
     private TrailRenderer _trailLeftFoot;
 
-    private StrikeLimb _activeTrailLimb = StrikeLimb.None;
+    private VFXLimb _activeTrailLimb = VFXLimb.None;
 
     #endregion
 
@@ -432,14 +432,14 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         return trail;
     }
 
-    private void SetTrailEmitter(StrikeLimb limb, bool enabled)
+    private void SetTrailEmitter(VFXLimb limb, bool enabled)
     {
         TrailRenderer target = limb switch
         {
-            StrikeLimb.RightHand => _trailRightHand,
-            StrikeLimb.LeftHand  => _trailLeftHand,
-            StrikeLimb.RightFoot => _trailRightFoot,
-            StrikeLimb.LeftFoot  => _trailLeftFoot,
+            VFXLimb.RightHand => _trailRightHand,
+            VFXLimb.LeftHand  => _trailLeftHand,
+            VFXLimb.RightFoot => _trailRightFoot,
+            VFXLimb.LeftFoot  => _trailLeftFoot,
             _                    => null
         };
 
@@ -455,11 +455,11 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     private void DisableAllTrailEmitters()
     {        
-        SetTrailEmitter(StrikeLimb.RightHand, false);
-        SetTrailEmitter(StrikeLimb.LeftHand,  false);
-        SetTrailEmitter(StrikeLimb.RightFoot, false);
-        SetTrailEmitter(StrikeLimb.LeftFoot,  false);
-        _activeTrailLimb = StrikeLimb.None;
+        SetTrailEmitter(VFXLimb.RightHand, false);
+        SetTrailEmitter(VFXLimb.LeftHand,  false);
+        SetTrailEmitter(VFXLimb.RightFoot, false);
+        SetTrailEmitter(VFXLimb.LeftFoot,  false);
+        _activeTrailLimb = VFXLimb.None;
     }
 
     #endregion
@@ -948,7 +948,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
         // Activate the strike trail only for heavy moves
         DisableAllTrailEmitters();
-        if (move.isHeavy && move.strikeLimb != StrikeLimb.None)
+        if (move.isHeavy && move.strikeLimb != VFXLimb.None)
         {
             
             _activeTrailLimb = move.strikeLimb;
