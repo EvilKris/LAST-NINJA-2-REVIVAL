@@ -94,7 +94,8 @@ public enum FightingStyleType
     SwordFighting,
     Nunchaku,
     StaffFighting,
-    ThrownWeapon
+    ThrownWeaponBomb,
+    ThrownWeaponShuriken
 }
 
 [System.Flags]

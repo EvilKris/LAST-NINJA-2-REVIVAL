@@ -1,5 +1,6 @@
 ﻿using DG.Tweening;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -33,6 +34,13 @@ public class UIManager : MonoBehaviour
     [Tooltip("Blacken the screen out upon death")]
     [SerializeField] private GameObject screenFadePrefab;
 
+    [Tooltip("Counters for Weapons and Items")]
+    [SerializeField] private TextMeshProUGUI weaponCounter;
+    [SerializeField] private TextMeshProUGUI itemCounter;
+
+
+
+
     /// <summary>The screen-fade prefab used by <see cref="DeathFadeCanvas"/> for death transitions.</summary>
     public GameObject ScreenFadePrefab => screenFadePrefab;
 
@@ -42,9 +50,9 @@ public class UIManager : MonoBehaviour
     private Material _playerHealthMaterial;
 
     private EnemyHealthBarScript _enemyHealthBarScript;
-    private readonly List<GameObject> _lifeIcons = new List<GameObject>();
+    private readonly List<GameObject> _lifeIcons = new();
     private HealthComponent _playerHealthComponent;
-    private readonly HashSet<HealthComponent> _registeredHealthComponents = new HashSet<HealthComponent>();
+    private readonly HashSet<HealthComponent> _registeredHealthComponents = new();
 
     // ═══════════════════════════════════════════════════════════════════
     // Unity Lifecycle
@@ -69,6 +77,16 @@ public class UIManager : MonoBehaviour
 
         GameDataManager gdm = MasterSingleton.Instance.GameDataManager;
         gdm.OnLivesChanged += OnLivesChanged;
+
+        InventoryManager inventory = MasterSingleton.Instance.InventoryManager;
+        if (inventory != null)
+        {
+            inventory.OnWeaponChanged += OnWeaponChanged;
+            inventory.OnItemChanged   += OnItemChanged;
+        }
+
+        SetCounterText(weaponCounter, 0);
+        SetCounterText(itemCounter, 0);
     }
 
     private void OnDestroy()
@@ -87,7 +105,16 @@ public class UIManager : MonoBehaviour
             Destroy(_playerHealthMaterial);
 
         if (MasterSingleton.Instance != null)
+        {
             MasterSingleton.Instance.GameDataManager.OnLivesChanged -= OnLivesChanged;
+
+            InventoryManager inventory = MasterSingleton.Instance.InventoryManager;
+            if (inventory != null)
+            {
+                inventory.OnWeaponChanged -= OnWeaponChanged;
+                inventory.OnItemChanged   -= OnItemChanged;
+            }
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════════
@@ -228,5 +255,40 @@ public class UIManager : MonoBehaviour
             : null;
         MasterSingleton.Instance.GameDataManager.HandlePlayerDeath(movement);
     }
-}
 
+    // ═══════════════════════════════════════════════════════════════════
+    // Inventory Counters
+    // ═══════════════════════════════════════════════════════════════════
+
+    private void OnWeaponChanged(ItemData item)
+    {
+        int count = item != null ? item.count : 0;
+        SetCounterText(weaponCounter, count);
+    }
+
+    /// <summary>
+    /// Updates the weapon counter display with the current remaining ammo.
+    /// Called by thrown-weapon handlers each time a projectile is consumed.
+    /// </summary>
+    public void UpdateWeaponCounter(int count)
+    {
+        SetCounterText(weaponCounter, count);
+    }
+
+    private void OnItemChanged(ItemData item)
+    {
+        int count = item != null ? item.count : 0;
+        SetCounterText(itemCounter, count);
+    }
+
+    /// <summary>
+    /// Updates a counter <see cref="TextMeshProUGUI"/> and shows or hides its parent
+    /// <see cref="GameObject"/> depending on whether <paramref name="count"/> is greater than zero.
+    /// </summary>
+    private static void SetCounterText(TextMeshProUGUI label, int count)
+    {
+        if (label == null) return;
+        label.text = count.ToString();
+        label.transform.gameObject.SetActive(count > 0);
+    }
+}

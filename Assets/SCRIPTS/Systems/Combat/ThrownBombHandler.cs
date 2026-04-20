@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class ThrownWeaponHandler : MonoBehaviour, IWeaponHandler
+public class ThrownBombHandler : MonoBehaviour, IWeaponHandler
 {
     private const string DRAW_CLIP_SLOT_KEY = "ReplaceableDrawWeapon";
     private const string DRAW_ANIM_STATE = "ReplaceableDrawWeapon";
@@ -14,11 +14,12 @@ public class ThrownWeaponHandler : MonoBehaviour, IWeaponHandler
     private ParticleSystem[] _weaponParticles;
     private Rigidbody _weaponRigidbody;
     private Collider[] _weaponColliders;
-    private int _amount = 10;
+    private int _amount;
 
-    public void Initialize(CombatHandler combat)
+    public void Initialize(CombatHandler combat, int amount)
     {
         _combat = combat;
+        _amount = amount;
         _animator = GetComponent<Animator>();
 
         SpawnWeapon();
@@ -117,8 +118,10 @@ public class ThrownWeaponHandler : MonoBehaviour, IWeaponHandler
 
         SetTrailsEmitting(true);
 
+        LayerMask floorLayer = _combat.GetComponent<HealthComponent>().floorLayer;
+
         ThrownProjectileBomb projectile = _weaponInstance.AddComponent<ThrownProjectileBomb>();
-        projectile.Launch(transform.root, _weaponRigidbody, _weaponColliders, THROW_FORCE);
+        projectile.Launch(transform.root, _weaponRigidbody, _weaponColliders, THROW_FORCE, floorLayer);
 
         _weaponInstance = null;
         _weaponTrails = null;
@@ -127,6 +130,9 @@ public class ThrownWeaponHandler : MonoBehaviour, IWeaponHandler
         _weaponColliders = null;
 
         _amount--;
+
+        if (MasterSingleton.Instance != null)
+            MasterSingleton.Instance.UIManager?.UpdateWeaponCounter(_amount);
 
         if (_amount > 0)
         {

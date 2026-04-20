@@ -19,18 +19,20 @@ public class PrefabBankManager : MonoBehaviour
 
     [Header("Projectiles")]
     [Tooltip("Prefab for the basic projectile used by the player and some enemies. Contains a Projectile component and a TrailRenderer.")]
-    public GameObject smokeBombProjectilePrefab;
+    public GameObject smokeBombProjectilePrefab; // Used for the smoke bomb projectile and some enemy projectiles
 
- 
+
     [Header("VFX EFFECTS (VISUAL PREFABS) ")]
     [Tooltip("Prefab for the basic explosion effect used by the smoke bomb and some hit effects. Contains a ParticleSystem component.")]
-    public GameObject smokeExplosion; // Used for smoke bomb explosion and some hit effects
+    public GameObject smokeExplosionPrefab; // Used for smoke bomb explosion and some hit effects
+    public GameObject shurikenHitPrefab; // Used for shuriken hit effects
 
     [Header("SFX")]
     [Tooltip("Sound commencing on Tier One Drive Strike")]
-    public SoundFileObject Tier_One_Drive_Strike;
-    public SoundFileObject Charge_Drive_Strike_Tier_Complete;
-    public SoundFileObject smokeExplosion_sfx; 
+    public SoundFileObject Tier_One_Drive_Strike; // Played when a Drive Strike is initiated
+    public SoundFileObject Charge_Drive_Strike_Tier_Complete; // Played when a Drive Strike reaches max charge
+    public SoundFileObject smokeExplosionSfx; // Used for smoke bomb explosion and some hit effects
+    public SoundFileObject shurikenHitSfx; // Used for shuriken hit effects   
 
 
     [Header("Pickup")]

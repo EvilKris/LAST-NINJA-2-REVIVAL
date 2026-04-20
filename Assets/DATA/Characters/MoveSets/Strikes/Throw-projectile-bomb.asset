@@ -4031,9 +4031,9 @@ MonoBehaviour:
   audioEvents:
   - triggerTime: 0
     sound: {fileID: 11400000, guid: cc4ef2ec390fa8347a40019289fbad36, type: 2}
-  hitStart: 0.23
-  hitEnd: 0.302
+  hitStart: 0.266
+  hitEnd: 0.417
   canCombo: 0
   comboStart: 1
   comboEnd: 1
-  rotationAllowanceEnd: 0.109
+  rotationAllowanceEnd: 0.1

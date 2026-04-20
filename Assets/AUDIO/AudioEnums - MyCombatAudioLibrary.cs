@@ -31,7 +31,9 @@
         bubblesdeath,
         deathdrownarumakuni,
         materializesfx,
-        whooshtoss
+        whooshtoss,
+        shurikendraw,
+        shurikenthrow
     }
     public enum MyCombatAudioLibraryMusic {
         Level1TheWastelands,

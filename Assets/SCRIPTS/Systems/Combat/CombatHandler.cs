@@ -1,4 +1,4 @@
-using System;
+ï»¿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -27,12 +27,14 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     private SwordFightingHandler _swordModule;
     private NunchakuHandler _nunchakuModule;
     private StaffFightingHandler _staffModule;
-    private ThrownWeaponHandler _thrownWeaponModule;
+    private ThrownBombHandler _thrownWeaponModule;
+    private ThrownShurikenHandler _shurikenModule;
     private WeaponEventRelay _weaponRelay;
 
     [Header("Data")]
     public FightingStyle currentStyle;
     private FightingStyle _defaultStyle;
+    private int _equippedItemCount;
 
     private const string CLIP_SLOT_KEY = "Replaceable_Motion_Base";
     private const string BLOCK_CLIP_SLOT_KEY = "ReplaceableBlock";
@@ -248,6 +250,16 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     }
 
     /// <summary>
+    /// Equips a weapon from an <see cref="ItemData"/>, using its <c>count</c> to seed
+    /// thrown-weapon handlers.
+    /// </summary>
+    public void EquipStyle(ItemData item)
+    {
+        _equippedItemCount = item != null ? item.count : 0;
+        EquipStyle(item != null ? item.fightingStyle : null);
+    }
+
+    /// <summary>
     /// Immediately reverts to the default (fist) style that was set in the Inspector.
     /// Called by <see cref="HealthComponent"/> on death before any death animations play.
     /// </summary>
@@ -343,25 +355,43 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             _staffModule = null;
         }
 
-        // Thrown Weapon
-        if (type == FightingStyleType.ThrownWeapon)
+        // Thrown Weapon (Bomb)
+        if (type == FightingStyleType.ThrownWeaponBomb)
         {
-            if (!TryGetComponent<ThrownWeaponHandler>(out _thrownWeaponModule))
-                _thrownWeaponModule = gameObject.AddComponent<ThrownWeaponHandler>();
-            _thrownWeaponModule.Initialize(this);
+            if (!TryGetComponent<ThrownBombHandler>(out _thrownWeaponModule))
+                _thrownWeaponModule = gameObject.AddComponent<ThrownBombHandler>();
+            _thrownWeaponModule.Initialize(this, _equippedItemCount);
         }
         else
         {
-            if (TryGetComponent<ThrownWeaponHandler>(out var old))
+            if (TryGetComponent<ThrownBombHandler>(out var old))
                 Destroy(old);
             _thrownWeaponModule = null;
         }
 
-        // Weapon Event Relay — bind to whichever weapon handler is active
+        // Thrown Weapon (Shuriken)
+        if (type == FightingStyleType.ThrownWeaponShuriken)
+        {
+            if (!TryGetComponent<ThrownShurikenHandler>(out _shurikenModule))
+                _shurikenModule = gameObject.AddComponent<ThrownShurikenHandler>();
+            _shurikenModule.Initialize(this, _equippedItemCount);
+        }
+        else
+        {
+            if (TryGetComponent<ThrownShurikenHandler>(out var old))
+            {
+                old.Teardown();
+                Destroy(old);
+            }
+            _shurikenModule = null;
+        }
+
+        // Weapon Event Relay â€” bind to whichever weapon handler is active
         IWeaponHandler activeWeapon = (IWeaponHandler)_swordModule
                                    ?? (IWeaponHandler)_nunchakuModule
                                    ?? (IWeaponHandler)_staffModule
-                                   ?? (IWeaponHandler)_thrownWeaponModule;
+                                   ?? (IWeaponHandler)_thrownWeaponModule
+                                   ?? (IWeaponHandler)_shurikenModule;
 
         if (activeWeapon != null)
         {
@@ -1019,6 +1049,10 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             OnHitboxClosed?.Invoke();
         }
 
+        // Guard against re-entrancy: OnHitboxOpened subscribers (e.g. thrown-weapon handlers)
+        // may call RevertToDefaultStyle() â†’ ResetCombatState() which nulls _activeMove.
+        if (_activeMove == null) return;
+
         bool newComboState = _activeMove.IsInComboWindow(normalizedTime);
         if (newComboState && !_canAcceptComboInput)
             _animator.SetBool(HashIsAction, false);
@@ -1164,7 +1198,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         }
         else if (exitEvent == AnimationExitEvent.EndAcrobatics)
         {
-            // The flip animation clip finished — enter freefall.
+            // The flip animation clip finished â€” enter freefall.
             // If ResetCombatState already ran (e.g. death), state is already Idle; skip.
             if (_state != CombatState.Acrobatic) return;
 
@@ -1180,11 +1214,11 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     /// <summary>
     /// Kept for backward compatibility with <see cref="AnimationStateNotifier"/>.
-    /// No longer needed for freefall — floor detection is now collider-based.
+    /// No longer needed for freefall â€” floor detection is now collider-based.
     /// </summary>
     public void ToggleAcrobaticGroundCheck(bool active)
     {
-        // Intentionally empty — freefall is now driven by EndAcrobatics + collider contact.
+        // Intentionally empty â€” freefall is now driven by EndAcrobatics + collider contact.
     }
 
     #endregion

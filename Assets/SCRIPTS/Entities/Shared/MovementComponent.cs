@@ -550,7 +550,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
     [Tooltip("How fast the player sinks when drowning (units/sec).")]
     [SerializeField] private float drownSinkSpeed = 0.4f;
     [Tooltip("Seconds the sinking animation plays before the respawn / game-over check.")]
-    [SerializeField] private float drownSinkDuration = 3f;
+    //[SerializeField] private float drownSinkDuration = 3f;
 
     private bool _isDrowning;
     private Coroutine _drowningCoroutine;

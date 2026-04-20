@@ -2787,11 +2787,11 @@ MonoBehaviour:
   hitboxType: 5
   strikeLimb: 0
   audioEvents:
-  - triggerTime: 0
-    sound: {fileID: 11400000, guid: cc4ef2ec390fa8347a40019289fbad36, type: 2}
-  hitStart: 0.281
+  - triggerTime: 0.06
+    sound: {fileID: 11400000, guid: be2de82ae2cf17240ad6b2551cdb94c5, type: 2}
+  hitStart: 0.245
   hitEnd: 0.526
-  canCombo: 0
-  comboStart: 1
+  canCombo: 1
+  comboStart: 0.302
   comboEnd: 1
   rotationAllowanceEnd: 0.109

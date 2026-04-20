@@ -104,6 +104,6 @@ public class InventoryManager : MonoBehaviour
 
         CombatHandler handler = ResolveCombatHandler();
         if (handler != null && weapon.fightingStyle != null)
-            handler.EquipStyle(weapon.fightingStyle);
+            handler.EquipStyle(weapon);
     }
 }

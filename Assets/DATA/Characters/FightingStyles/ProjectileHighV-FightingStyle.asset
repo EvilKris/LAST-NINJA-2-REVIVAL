@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 98ef5bb48c8ea17489aea00950005e5c, type: 3}
   m_Name: ProjectileHighV-FightingStyle
   m_EditorClassIdentifier: Assembly-CSharp::FightingStyle
-  styleType: 5
+  styleType: 6
   lightAttacks:
   - {fileID: 11400000, guid: 2f90120f08b9640408ea324a5e172788, type: 2}
   mediumAttack: {fileID: 0}
@@ -28,5 +28,5 @@ MonoBehaviour:
   weaponPrefab: {fileID: 3643133958701381872, guid: e704828c234d2184cae3ff4ecdc8080f,
     type: 3}
   weaponBone: 18
-  weaponPositionOffset: {x: 0.182, y: 0.087, z: -0.016}
-  weaponRotationOffset: {x: 178.632, y: -264.626, z: -169.771}
+  weaponPositionOffset: {x: 0.025, y: 0.091, z: 0.044}
+  weaponRotationOffset: {x: 1.368, y: -84.626, z: 10.229}
