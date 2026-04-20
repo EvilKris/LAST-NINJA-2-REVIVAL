@@ -15,6 +15,9 @@ MonoBehaviour:
   itemName: Nunchukas
   category: 0
   icon: {fileID: 21300000, guid: 401a6d4b5e641da4fa0f6eabd276d34d, type: 3}
-  weaponPrefab: {fileID: 0}
-  moveset: []
+  itemPrefab: {fileID: 0}
+  fightingStyle: {fileID: 0}
+  pickupSound: {fileID: 0}
+  drawSound: {fileID: 11400000, guid: 2b29a137a974db4468449ea5aeb7a2cc, type: 2}
+  count: 0
   description: Staff

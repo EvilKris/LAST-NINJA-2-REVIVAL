@@ -80,7 +80,8 @@ public enum CombatState
     Attacking,
     Acrobatic,
     Blocking,
-    Freefall
+    Freefall,
+    DrawingWeapon
 }
 
 /// <summary>
@@ -110,4 +111,5 @@ public enum AnimationExitEvent
     EndBlock        = 1 << 5,
     EndPickup       = 1 << 6,
     EndAcrobatics   = 1 << 7,
+    EndDrawWeapon   = 1 << 8  
 }

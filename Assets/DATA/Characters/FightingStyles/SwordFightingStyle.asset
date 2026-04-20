@@ -32,3 +32,6 @@ MonoBehaviour:
   weaponBone: 18
   weaponPositionOffset: {x: 0.182, y: 0.087, z: -0.016}
   weaponRotationOffset: {x: 178.632, y: -264.626, z: -169.771}
+  leapBackUpForce: 4
+  leapBackForce: 5.5
+  leapBackGravityScale: 3

@@ -374,7 +374,12 @@ public class PlayerController : MonoBehaviour
         }
         
         if (_combat != null)
+        {
+            // Sword combo cancel: leap backward if in a sword attack combo window.
+            if (_combat.ExecuteSwordLeapBack()) return;
+
             _combat.ExecuteAcrobatics();
+        }
     }
 
     public void OnKIInput(InputAction.CallbackContext _) => _combat.HandleKIInput();

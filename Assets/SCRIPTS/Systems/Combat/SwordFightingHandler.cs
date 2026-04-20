@@ -16,7 +16,8 @@ public class SwordFightingHandler : MonoBehaviour, IWeaponHandler
         _animator = GetComponent<Animator>();
 
         SpawnWeapon();
-        PlayDrawAnimation();
+        // Draw animation is sequenced by CombatHandler.BeginDrawWeapon()
+        // after any in-progress attack completes, so we do not call it here.
 
         _combat.OnHitboxOpened += OnHitboxOpened;
         _combat.OnHitboxClosed += OnHitboxClosed;

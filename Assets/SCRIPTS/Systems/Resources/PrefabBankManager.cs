@@ -33,11 +33,16 @@ public class PrefabBankManager : MonoBehaviour
     public SoundFileObject Charge_Drive_Strike_Tier_Complete; // Played when a Drive Strike reaches max charge
     public SoundFileObject smokeExplosionSfx; // Used for smoke bomb explosion and some hit effects
     public SoundFileObject shurikenHitSfx; // Used for shuriken hit effects   
-
-
+        
     [Header("Pickup")]
     [Tooltip("Default sound played when any item is picked up. Can be overridden per-item in ItemData.")]
     public SoundFileObject DefaultPickupSound;
+
+    [Header("UI")]
+    [Tooltip("KI PowerUP used sfx")]
+    public SoundFileObject KiPowerUpUsedSound;
+    [Tooltip("KI PowerUP Charged and Available sfx")]
+    public SoundFileObject KiPowerUpAvailableSound;   
 
     [Header("Environment AreaZone Sounds")]
     [Tooltip("Sounds played when player enters an AreaZone")]

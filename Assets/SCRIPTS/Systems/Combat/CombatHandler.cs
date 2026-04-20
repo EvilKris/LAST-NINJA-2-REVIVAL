@@ -5,8 +5,10 @@ using UnityEngine;
 
 /// <summary>
 /// Central combat controller for an entity. Manages attack execution (light, heavy,
-/// charged, acrobatic, clinch), hitbox lifecycle, combo chaining, the charge/tier system,
-/// KI defensive actions, and motion-root translation driven by animation curves.
+/// charged, acrobatic, clinch), hitbox lifecycle, combo chaining, and motion-root
+/// translation driven by animation curves.
+/// Delegates charge logic to <see cref="ChargeHandler"/>, blocking/KI to
+/// <see cref="BlockHandler"/>, and strike trail VFX to <see cref="StrikeTrailManager"/>.
 /// Uses a <see cref="CombatState"/> state machine for clarity.
 /// Implements <see cref="IAnimationStateListener"/> so the Animator can signal when a
 /// clip has finished, allowing <see cref="ResetCombatState"/> to clean up automatically.
@@ -31,13 +33,20 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     private ThrownShurikenHandler _shurikenModule;
     private WeaponEventRelay _weaponRelay;
 
+    /// <summary>Subsystem: charge/tier meter.</summary>
+    private ChargeHandler _charge;
+    /// <summary>Subsystem: blocking and KI defensive actions.</summary>
+    private BlockHandler _block;
+    /// <summary>Subsystem: per-limb strike trail VFX.</summary>
+    private StrikeTrailManager _strikeTrails;
+
     [Header("Data")]
     public FightingStyle currentStyle;
     private FightingStyle _defaultStyle;
     private int _equippedItemCount;
+    private ItemData _equippedItem;
 
     private const string CLIP_SLOT_KEY = "Replaceable_Motion_Base";
-    private const string BLOCK_CLIP_SLOT_KEY = "ReplaceableBlock";
     private const string ACROBATICS_CLIP_SLOT_KEY = "Replaceable_Base_Flip";
 
     private readonly int HashIsAction   = Animator.StringToHash("isAction");
@@ -72,30 +81,28 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     #endregion
 
-    #region Charge System
-
-    [Header("Charge System (Spike Out Style)")]
-    [Tooltip("Number of charges the entity has (for consecutively stronger special moves)")]
-    public int ChargeCount = 1;
-
-    private float _currentChargeTimer;
-    private bool _isCharging;
-    private int _cachedMaxCharges = -1;
-    private int _cachedCurrentTier = -1;
-    private float _cachedChargeProgress = -1f;
-    private int _lastPlayedTierSfx = -1;
-
-    public event Action<int> OnMaxChargesChanged;
-    public event Action<int, float> OnChargeStateChanged;
+    #region Charge & Event Accessors
 
     /// <summary>Fired when a move's hitbox opens. Passes the active <see cref="CombatMove"/>.</summary>
     public event Action<CombatMove> OnHitboxOpened;
     /// <summary>Fired when the active hitbox closes (hit window ended, move reset, or interrupted).</summary>
     public event Action OnHitboxClosed;
 
-    public int MaxCharges => currentStyle != null && currentStyle.chargedAttacks != null ? currentStyle.chargedAttacks.Count : 0;
-    public int CurrentTier => Mathf.FloorToInt(_currentChargeTimer);
-    public float ChargeProgress => _currentChargeTimer % 1.0f;
+    /// <summary>Proxy: subscribe to charge events via the subsystem.</summary>
+    public event Action<int> OnMaxChargesChanged
+    {
+        add    => _charge.OnMaxChargesChanged += value;
+        remove => _charge.OnMaxChargesChanged -= value;
+    }
+    public event Action<int, float> OnChargeStateChanged
+    {
+        add    => _charge.OnChargeStateChanged += value;
+        remove => _charge.OnChargeStateChanged -= value;
+    }
+
+    public int MaxCharges => _charge.MaxCharges;
+    public int CurrentTier => _charge.CurrentTier;
+    public float ChargeProgress => _charge.ChargeProgress;
 
     #endregion
 
@@ -148,21 +155,21 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     private int _freefallGraceTicks;
     private const int FREEFALL_GRACE_TICKS = 3;
 
+    /// <summary>
+    /// Realtime timestamp set when freefall begins. Landing is ignored until
+    /// at least <see cref="MIN_FREEFALL_AIRTIME"/> seconds have elapsed, preventing
+    /// an instant landing resolution when the entity is still touching the floor
+    /// at the moment of launch (e.g. sword leap-back).
+    /// </summary>
+    private float _freefallMinAirtime;
+    private const float MIN_FREEFALL_AIRTIME = 0.5f;
+
+    /// <summary>True when the current freefall was initiated by <see cref="ExecuteSwordLeapBack"/>,
+    /// so the extra gravity multiplier from <see cref="FightingStyle.leapBackGravityScale"/> is applied.</summary>
+    private bool _isLeapBackFreefall;
+
     #endregion
-
-    #region KI & Defensive State
-
-    private float _kiBars = 3f;
-    private const float KI_PARRY_WINDOW = 0.2f;
-    private const float BLOCK_HOLD_THRESHOLD = 0.9f;
-    private float _lastBlockStartTime;
-    private bool _isBlocking;
-    private bool _blockAnimationPlaying;
-    private bool _blockFrozen;
-    private bool _blockReleased;
-    private bool _blockHeld;
-
-    #endregion
+    // KI & Defensive state is managed by BlockHandler (_block).
 
     #region Core Combat State
 
@@ -179,25 +186,17 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     #endregion
 
-    #region Strike Trail State
-
-    private TrailRenderer _trailRightHand;
-    private TrailRenderer _trailLeftHand;
-    private TrailRenderer _trailRightFoot;
-    private TrailRenderer _trailLeftFoot;
-
-    private VFXLimb _activeTrailLimb = VFXLimb.None;
-
-    #endregion
+    // Strike trail state is managed by StrikeTrailManager (_strikeTrails).
 
     #region Public State Accessors
 
     public bool CanRotateDuringAttack => _canRotateDuringAttack;
     public bool IsAttacking    => _activeMove != null;
     public bool IsAcrobatic    => _state == CombatState.Acrobatic;
-    public bool IsCharging     => _isCharging;
-    public bool IsBlocking     => _isBlocking;
+    public bool IsCharging     => _charge != null && _charge.IsCharging;
+    public bool IsBlocking     => _block != null && _block.IsBlocking;
     public bool IsFreefalling  => _state == CombatState.Freefall;
+    public bool IsDrawingWeapon => _state == CombatState.DrawingWeapon;
 
     #endregion
 
@@ -223,7 +222,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         // Derive a single layer index from the floor LayerMask for OnCollision checks
         _floorLayerIndex = LayerMaskToIndex(_health.floorLayer);
 
-        InitializeStrikeTrails();
+        _charge = new ChargeHandler(this);
+        _strikeTrails = new StrikeTrailManager(_animator, _health);
     }
 
     private void Start()
@@ -233,9 +233,10 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             UIChargeDisplay playerUI = MasterSingleton.Instance.UIManager.chargeMeter;
             playerUI.SetTarget(this);
         }
+        _block = new BlockHandler(this, _animator, _overrideController, _movement, _health);
         InitializeStyleModules();
 
-        _health.OnDeath += ForceReleaseBlock;
+        _health.OnDeath += _block.ForceRelease;
     }
 
     /// <summary>
@@ -256,6 +257,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     public void EquipStyle(ItemData item)
     {
         _equippedItemCount = item != null ? item.count : 0;
+        _equippedItem = item;
         EquipStyle(item != null ? item.fightingStyle : null);
     }
 
@@ -398,6 +400,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             if (_weaponRelay == null && !TryGetComponent(out _weaponRelay))
                 _weaponRelay = gameObject.AddComponent<WeaponEventRelay>();
             _weaponRelay.Bind(activeWeapon);
+
+            BeginDrawWeapon(activeWeapon);
         }
         else
         {
@@ -418,81 +422,37 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         return -1;
     }
 
-    #endregion
-
-    #region Strike Trail Initialisation
-
-    private void InitializeStrikeTrails()
+    /// <summary>
+    /// Initiates the draw-weapon sequence for <paramref name="handler"/>.
+    /// If the entity is currently attacking the draw is deferred until the attack
+    /// resolves via a coroutine, then locks input for the full draw animation.
+    /// </summary>
+    private void BeginDrawWeapon(IWeaponHandler handler)
     {
-        if (_health.characterEffects == null || _health.characterEffects.strikeTrailMelee == null)
-            return;
-
-        _trailRightHand = SpawnTrailOnBone(HumanBodyBones.RightHand);
-        _trailLeftHand  = SpawnTrailOnBone(HumanBodyBones.LeftHand);
-        _trailRightFoot = SpawnTrailOnBone(HumanBodyBones.RightFoot);
-        _trailLeftFoot  = SpawnTrailOnBone(HumanBodyBones.LeftFoot);
-
-        // Guarantee all emitters are silent after spawning
-        DisableAllTrailEmitters();
+        if (handler == null) return;
+        StartCoroutine(DrawWeaponWhenReady(handler));
     }
 
-    private TrailRenderer SpawnTrailOnBone(HumanBodyBones bone)
+    private IEnumerator DrawWeaponWhenReady(IWeaponHandler handler)
     {
-        Transform boneTransform = _animator.GetBoneTransform(bone);
-        if (boneTransform == null) return null;
+        // Wait until we're fully idle (not mid-attack, not mid-draw, not blocking).
+        yield return new WaitUntil(() =>
+            _state == CombatState.Idle && !_health.IsDead);
 
-        GameObject instance = Instantiate(
-            _health.characterEffects.strikeTrailMelee,
-            boneTransform);
+        _state = CombatState.DrawingWeapon;
+        _movement.canRotate = true;   // rotation is permitted during the draw
+        _animator.SetBool(HashIsAction, true);
 
-        instance.transform.localPosition = Vector3.zero;
-        instance.transform.localRotation = Quaternion.identity;
+        if (_equippedItem != null && _equippedItem.drawSound != null)
+            JSAM.AudioManager.PlaySound(_equippedItem.drawSound);
 
-        if (!instance.TryGetComponent<TrailRenderer>(out var trail))
-        {
-            trail = instance.GetComponentInChildren<TrailRenderer>();
-        }
-
-        if (trail != null)
-        {
-            trail.emitting = false;
-            trail.Clear();
-        }
-
-        return trail;
-    }
-
-    private void SetTrailEmitter(VFXLimb limb, bool enabled)
-    {
-        TrailRenderer target = limb switch
-        {
-            VFXLimb.RightHand => _trailRightHand,
-            VFXLimb.LeftHand  => _trailLeftHand,
-            VFXLimb.RightFoot => _trailRightFoot,
-            VFXLimb.LeftFoot  => _trailLeftFoot,
-            _                    => null
-        };
-
-        if (target == null) return;
-
-        target.emitting = enabled;
-
-        if (!enabled)
-        {
-            target.Clear();
-        }
-    }
-
-    private void DisableAllTrailEmitters()
-    {        
-        SetTrailEmitter(VFXLimb.RightHand, false);
-        SetTrailEmitter(VFXLimb.LeftHand,  false);
-        SetTrailEmitter(VFXLimb.RightFoot, false);
-        SetTrailEmitter(VFXLimb.LeftFoot,  false);
-        _activeTrailLimb = VFXLimb.None;
+        handler.PlayDrawAnimation();
     }
 
     #endregion
+
+    // Strike trail initialisation and management is in StrikeTrailManager.
+
 
     #region Collision-Based Floor Detection
 
@@ -517,22 +477,11 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     private void Update()
     {
-        HandleChargeLogic();
+        _charge.Tick();
 
         // --- Block hold tick ---
-        if (_state == CombatState.Blocking && _blockAnimationPlaying)
-        {
-            AnimatorStateInfo blockState = _animator.GetCurrentAnimatorStateInfo(0);
-            if (blockState.IsName("ReplaceableBlock"))
-            {
-                if (!_blockFrozen && !_blockReleased && _blockHeld && blockState.normalizedTime >= BLOCK_HOLD_THRESHOLD)
-                {
-                    _blockFrozen = true;
-                    _animator.SetFloat("animatorSpeed", 0f);
-                }
-                return;
-            }
-        }
+        if (_state == CombatState.Blocking && _block.TickBlockHold())
+            return;
 
         // Freefall blocks all other ticking
         if (_state == CombatState.Freefall) return;
@@ -556,6 +505,11 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         // --- Freefall state machine ---
         if (_state == CombatState.Freefall)
         {
+            if (_isLeapBackFreefall && currentStyle != null && currentStyle.leapBackGravityScale > 1f)
+            {
+                float extraGravity = Physics.gravity.y * (currentStyle.leapBackGravityScale - 1f);
+                _rb.linearVelocity += new Vector3(0f, extraGravity * Time.fixedDeltaTime, 0f);
+            }
             TickFreefall();
             return;
         }
@@ -618,6 +572,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         _state = CombatState.Freefall;
         _isAcrobaticMove = false;
         _freefallGraceTicks = 0;
+        _freefallMinAirtime = 0f;
+        _isLeapBackFreefall = false;
 
         // Let physics gravity pull the entity down; OnAnimatorMove skips when isInFlight.
         _movement.isInFlight = true;
@@ -649,6 +605,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             return;
         }
 
+        if (Time.time < _freefallMinAirtime) return;
+
         if (_isTouchingFloor)
         {
             OnFreefallLanded();
@@ -665,7 +623,8 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     }
 
     private void OnFreefallLanded()
-    {
+    {   
+        _isLeapBackFreefall = false;
         _movement.isInFlight = false;
         _movement.canRotate  = true;
 
@@ -705,12 +664,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
                 break;
 
             case CombatState.Blocking:
-                _blockAnimationPlaying = false;
-                _blockFrozen = false;
-                _blockReleased = false;
-                _blockHeld = false;
-                _isBlocking = false;
-                _animator.SetFloat("animatorSpeed", 1f);
+                _block.Reset();
                 break;
 
             case CombatState.Freefall:
@@ -738,15 +692,11 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             OnHitboxClosed?.Invoke();
         }
 
-        DisableAllTrailEmitters();
+        _strikeTrails.DisableAll();
 
         _activeMove = null;
         _hitboxActive = false;
-        _blockAnimationPlaying = false;
-        _blockFrozen = false;
-        _blockReleased = false;
-        _blockHeld = false;
-        _isBlocking = false;
+        _block?.Reset();
         _canAcceptComboInput = false;
         _canRotateDuringAttack = false;
         _isAcrobaticMove = false;
@@ -763,77 +713,31 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     #region Charge Logic
 
-    private void HandleChargeLogic()
-    {
-        int maxCharges = MaxCharges;
-        if (maxCharges != _cachedMaxCharges)
-        {
-            _cachedMaxCharges = maxCharges;
-            OnMaxChargesChanged?.Invoke(maxCharges);
-        }
-
-        if (_isCharging)
-        {
-            _currentChargeTimer = Mathf.Min(_currentChargeTimer + Time.deltaTime, MaxCharges);
-
-            int currentTier = CurrentTier;
-            float chargeProgress = ChargeProgress;
-            if (currentTier != _cachedCurrentTier || Mathf.Abs(chargeProgress - _cachedChargeProgress) > 0.01f)
-            {
-                _cachedCurrentTier    = currentTier;
-                _cachedChargeProgress = chargeProgress;
-                OnChargeStateChanged?.Invoke(currentTier, chargeProgress);
-            }
-
-            if (currentTier > 0 && currentTier != _lastPlayedTierSfx)
-            {
-                _lastPlayedTierSfx = currentTier;
-                JSAM.AudioManager.PlaySound(MasterSingleton.Instance.PrefabBankManager.Charge_Drive_Strike_Tier_Complete);
-            }
-        }
-    }
-
     public void StartCharging()
     {
         if (_health.IsDead) return;
         if (_state == CombatState.Freefall) return;
+        if (_state == CombatState.DrawingWeapon) return;
         if (_animator.GetBool(HashIsAction) && (_activeMove == null || !_canAcceptComboInput)) return;
 
-        _isCharging          = true;
-        _currentChargeTimer  = 0f;
-        _cachedCurrentTier   = 0;
-        _cachedChargeProgress = 0f;
-        _lastPlayedTierSfx   = -1;
-        OnChargeStateChanged?.Invoke(0, 0f);
+        _charge.StartCharging();
     }
 
     public void ReleaseCharge()
     {
-        if (!_isCharging) return;
+        if (!_charge.IsCharging) return;
 
         if (_clinchModule != null && _clinchModule.IsClinching)
         {
-            bool hasTier = CurrentTier > 0;
-            _isCharging = false;
-            _currentChargeTimer = 0f;
-            _cachedCurrentTier  = 0;
-            _cachedChargeProgress = 0f;
-            _lastPlayedTierSfx = -1;
-            OnChargeStateChanged?.Invoke(0, 0f);
+            bool hasTier = _charge.CurrentTier > 0;
+            _charge.Cancel();
             if (hasTier) return;
         }
 
-        _isCharging = false;
-        int tier = CurrentTier;
+        int tier = _charge.Release();
 
         if (tier <= 0) ExecuteLightAttack();
         else           ExecuteChargedAttack(tier);
-
-        _currentChargeTimer   = 0f;
-        _cachedCurrentTier    = 0;
-        _cachedChargeProgress = 0f;
-        _lastPlayedTierSfx    = -1;
-        OnChargeStateChanged?.Invoke(0, 0f);
     }
 
     public void ExecuteChargedAttack(int chargeTier)
@@ -871,8 +775,9 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     {
         if (_health.IsDead) return;
         if (_state == CombatState.Freefall) return;
+        if (_state == CombatState.DrawingWeapon) return;
         if (_activeMove != null && !_canAcceptComboInput) return;
-        if (_isBlocking) return;
+        if (_block.IsBlocking) return;
 
         if (_clinchModule != null && _clinchModule.IsClinching)
         {
@@ -904,8 +809,9 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     {
         if (_health.IsDead) return;
         if (_state == CombatState.Freefall) return;
+        if (_state == CombatState.DrawingWeapon) return;
         if (_animator.GetBool(HashIsAction) && (_activeMove == null || !_canAcceptComboInput)) return;
-        if (_isBlocking) return;
+        if (_block.IsBlocking) return;
 
         if (_clinchModule != null && _clinchModule.IsClinching)
         {
@@ -922,7 +828,7 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     public void ExecuteAcrobatics()
     {
         if (_health.IsDead) return;
-        if (_state != CombatState.Idle) return;
+        if (_state != CombatState.Idle) return;  // DrawingWeapon is not Idle, so this blocks it naturally.
 
         // Allow the jump if grounded now OR within the coyote-time window after leaving the floor.
         bool withinCoyoteWindow = (Time.time - _lastGroundedTime) <= COYOTE_TIME;
@@ -958,6 +864,63 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         Destroy(effect);
     }
 
+    /// <summary>
+    /// Sword-only combo cancel: if the entity is mid-attack in a combo window with a
+    /// <see cref="FightingStyleType.SwordFighting"/> style, leap backward with an arc
+    /// and enter freefall. Resets the combo chain.
+    /// </summary>
+    /// <returns><c>true</c> if the leap-back was executed; <c>false</c> if preconditions were not met.</returns>
+    public bool ExecuteSwordLeapBack()
+    {
+        if (_health.IsDead) return false;
+        if (_state != CombatState.Attacking) return false;
+        if (!_canAcceptComboInput) return false;
+        if (currentStyle == null || currentStyle.styleType != FightingStyleType.SwordFighting) return false;
+
+        if (_health.characterEffects != null && _health.characterEffects.sfxLightAttackCry != null)
+            JSAM.AudioManager.PlaySound(_health.characterEffects.sfxLightAttackCry);
+
+        // Reset combo
+        _comboIndex = 0;
+
+        // Clean up the current attack (close hitbox, clear trails, etc.)
+        if (_activeMove != null && _hitboxActive)
+        {
+            CloseHitbox(GetHitboxType(_activeMove));
+            OnHitboxClosed?.Invoke();
+        }
+        _strikeTrails.DisableAll();
+        _activeMove = null;
+        _hitboxActive = false;
+        _canAcceptComboInput = false;
+        _canRotateDuringAttack = false;
+
+        // Physics-driven backward leap: entity stays facing the same direction
+        _animator.applyRootMotion = false;
+        _movement.isInFlight = true;
+        _movement.canRotate  = false;
+
+        float upForce   = currentStyle.leapBackUpForce;
+        float backForce = currentStyle.leapBackForce;
+        Vector3 velocity = -transform.forward * backForce;
+        velocity.y = upForce;
+        _rb.linearVelocity = velocity;
+
+        // Transition straight into freefall — the "Acrobatics Fall" state is driven
+        // by the t_isFalling trigger from Any State, so no special clip override needed.
+        _state = CombatState.Freefall;
+        _freefallGraceTicks = 0;
+        _freefallMinAirtime = Time.time + MIN_FREEFALL_AIRTIME;
+        _isLeapBackFreefall = true;
+
+        _animator.SetBool(HashIsGrounded, false);
+        _animator.SetBool(HashIsAction, true);
+        _animator.SetTrigger(HashIsFalling);
+        
+
+        return true;
+    }
+
     #endregion
 
     #region Core Combat Engine
@@ -977,13 +940,9 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         _movement.canRotate = move.rotationAllowanceEnd > 0f;
 
         // Activate the strike trail only for heavy moves
-        DisableAllTrailEmitters();
+        _strikeTrails.DisableAll();
         if (move.isHeavy && move.strikeLimb != VFXLimb.None)
-        {
-            
-            _activeTrailLimb = move.strikeLimb;
-            SetTrailEmitter(move.strikeLimb, true);
-        }
+            _strikeTrails.EnableForLimb(move.strikeLimb);
 
         if (isAcrobatic)
         {
@@ -1092,85 +1051,23 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
         if (blocking)
         {
-            if (_activeMove != null || _isBlocking) return;
-            if (_state == CombatState.Freefall) return;
+            if (_activeMove != null || _block.IsBlocking) return;
+            if (_state == CombatState.Freefall || _state == CombatState.DrawingWeapon) return;
             if (BlockClip == null) return;
 
             _state = CombatState.Blocking;
-            _isBlocking = true;
-            _blockAnimationPlaying = true;
-            _blockFrozen = false;
-            _blockHeld = true;
-            _lastBlockStartTime = Time.time;
-
             _animator.SetBool(HashIsAction, true);
-            _animator.SetFloat("animatorSpeed", 1f);
-
-            _overrideController[BLOCK_CLIP_SLOT_KEY] = BlockClip;
-            _animator.Play("ReplaceableBlock", 0, 0f);
-            _animator.Update(0f);
-        }
-        else
-        {
-            if (_blockAnimationPlaying) return;
+            _block.SetBlocking(true, BlockClip);
         }
     }
 
-    public void ResetBlocking()
-    {
-        _blockHeld = false;
+    public void ResetBlocking() => _block.ResetBlocking();
 
-        if (!_blockFrozen)
-        {
-            _blockReleased = true;
-            return;
-        }
-
-        _blockReleased = true;
-        _blockFrozen   = false;
-        _isBlocking    = false;
-        _animator.SetFloat("animatorSpeed", 1f);
-    }
-
-    public void HandleKIInput()
-    {
-        if (_kiBars < 1f) return;
-        if (_isBlocking) ExecuteKIParry();
-        else if (_activeMove == null) ExecuteKIPowerUp();
-    }
-
-    private void ExecuteKIParry()
-    {
-        if (Time.time - _lastBlockStartTime <= KI_PARRY_WINDOW)
-        {
-            _kiBars -= 1f;
-            _animator.Play("KI_Parry_Pose");
-        }
-    }
-
-    private void ExecuteKIPowerUp()
-    {
-        _kiBars -= 1f;
-    }
+    public void HandleKIInput() => _block.HandleKIInput(_activeMove != null);
 
     public void ClearHitCache() => _hitCache.Clear();
     public void RegisterHit(Transform target) => _hitCache.Add(target);
     public bool HasHitTarget(Transform target) => _hitCache.Contains(target);
-
-    private void ForceReleaseBlock()
-    {
-        if (!_blockFrozen && !_blockAnimationPlaying) return;
-
-        _blockFrozen = false;
-        _blockReleased = false;
-        _blockHeld = false;
-        _blockAnimationPlaying = false;
-        _isBlocking = false;
-        _animator.SetFloat("animatorSpeed", 1f);
-
-        if (_movement != null)
-            _movement.isMovementLocked = false;
-    }
 
     #endregion
 
@@ -1184,17 +1081,9 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         }
         else if (exitEvent == AnimationExitEvent.EndBlock)
         {
-            _blockAnimationPlaying = false;
-            _blockFrozen   = false;
-            _blockReleased = false;
-            _blockHeld     = false;
-            _isBlocking    = false;
+            _block.OnBlockAnimationEnded();
             _state = CombatState.Idle;
-            _animator.SetFloat("animatorSpeed", 1f);
             _animator.SetBool(HashIsAction, false);
-
-            if (_movement != null)
-                _movement.isMovementLocked = false;
         }
         else if (exitEvent == AnimationExitEvent.EndAcrobatics)
         {
@@ -1203,6 +1092,14 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             if (_state != CombatState.Acrobatic) return;
 
             EnterFreefall();
+        }
+        else if (exitEvent == AnimationExitEvent.EndDrawWeapon)
+        {
+            if (_state == CombatState.DrawingWeapon)
+            {
+                _state = CombatState.Idle;
+                _animator.SetBool(HashIsAction, false);
+            }
         }
     }
 

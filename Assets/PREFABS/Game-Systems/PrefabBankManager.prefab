@@ -63,6 +63,9 @@ MonoBehaviour:
   smokeExplosionSfx: {fileID: 11400000, guid: 59b28a5e5ad1ace46a61b1ecb5287089, type: 2}
   shurikenHitSfx: {fileID: 0}
   DefaultPickupSound: {fileID: 11400000, guid: f520321739d28634083f39b5e292dcfa, type: 2}
+  KiPowerUpUsedSound: {fileID: 11400000, guid: 79bd195f96fc11242b242cc39a3e9a9a, type: 2}
+  KiPowerUpAvailableSound: {fileID: 11400000, guid: f9fd4a8774c48cf49b41db54e4962d41,
+    type: 2}
   AreaSoundSwamp: {fileID: 11400000, guid: 41814931271fba646bd66db07bbe79b9, type: 2}
   AreaSoundWater: {fileID: 0}
   AreaSoundForest: {fileID: 0}

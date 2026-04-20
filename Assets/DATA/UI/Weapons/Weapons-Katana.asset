@@ -18,4 +18,6 @@ MonoBehaviour:
   itemPrefab: {fileID: 0}
   fightingStyle: {fileID: 11400000, guid: 4e51965f6d0cb234985ce7038ad2359c, type: 2}
   pickupSound: {fileID: 0}
+  drawSound: {fileID: 11400000, guid: 54df32ebd212e8c4387122af088c484f, type: 2}
+  count: 0
   description: 

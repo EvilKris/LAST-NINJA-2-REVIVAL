@@ -52,6 +52,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: cc4ef2ec390fa8347a40019289fbad36, type: 2}
   - {fileID: 11400000, guid: 48da8172705d9514e836d53d16c4cdd7, type: 2}
   - {fileID: 11400000, guid: be2de82ae2cf17240ad6b2551cdb94c5, type: 2}
+  - {fileID: 11400000, guid: 54df32ebd212e8c4387122af088c484f, type: 2}
+  - {fileID: 11400000, guid: 2dadcb20f6aad2a43a4dbfb629ef480f, type: 2}
+  - {fileID: 11400000, guid: 6e9b56b7b05dc8c4291961bc2318af29, type: 2}
+  - {fileID: 11400000, guid: c6bea2fb3ec0b93488a1e067b5638305, type: 2}
+  - {fileID: 11400000, guid: 2b29a137a974db4468449ea5aeb7a2cc, type: 2}
+  - {fileID: 11400000, guid: f860ae2d3e81e2743b480dec2f744392, type: 2}
   Music:
   - {fileID: 11400000, guid: 08661f7bde1f75e42bdad31f5747c928, type: 2}
   - {fileID: 11400000, guid: dec5a987c10e1564c81c259e7259b54f, type: 2}
@@ -104,6 +110,12 @@ MonoBehaviour:
     - {fileID: 11400000, guid: cc4ef2ec390fa8347a40019289fbad36, type: 2}
     - {fileID: 11400000, guid: 48da8172705d9514e836d53d16c4cdd7, type: 2}
     - {fileID: 11400000, guid: be2de82ae2cf17240ad6b2551cdb94c5, type: 2}
+    - {fileID: 11400000, guid: 54df32ebd212e8c4387122af088c484f, type: 2}
+    - {fileID: 11400000, guid: 2dadcb20f6aad2a43a4dbfb629ef480f, type: 2}
+    - {fileID: 11400000, guid: 6e9b56b7b05dc8c4291961bc2318af29, type: 2}
+    - {fileID: 11400000, guid: c6bea2fb3ec0b93488a1e067b5638305, type: 2}
+    - {fileID: 11400000, guid: 2b29a137a974db4468449ea5aeb7a2cc, type: 2}
+    - {fileID: 11400000, guid: f860ae2d3e81e2743b480dec2f744392, type: 2}
     foldout: 1
   musicCategoriesToList:
   - name: LastNinja-Music

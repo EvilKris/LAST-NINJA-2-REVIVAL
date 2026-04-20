@@ -26,6 +26,12 @@ public class UIManager : MonoBehaviour
     [Tooltip("Charge meter display component.")]
     public UIChargeDisplay chargeMeter;
 
+    [Tooltip("Prefab for Inner Force icons in the UI, instantiated once per charge.")]
+    [SerializeField] private RectTransform innerForceIconPrefabHolder;
+    [SerializeField] private GameObject innerForceIconPrefabUI;
+
+
+    [Tooltip("Prefab for life icons in the UI, instantiated once per life.")]
     [SerializeField] private RectTransform lifeIconPrefabHolder;
     [SerializeField] private GameObject lifeIconPrefabUI;
 
@@ -51,6 +57,10 @@ public class UIManager : MonoBehaviour
 
     private EnemyHealthBarScript _enemyHealthBarScript;
     private readonly List<GameObject> _lifeIcons = new();
+    private readonly List<GameObject> _innerForceIcons = new();
+    private readonly List<Image> _innerForceFillImages = new();
+    private readonly List<Image> _innerForcePulseImages = new();
+    private bool[] _innerForcePulsing = System.Array.Empty<bool>();
     private HealthComponent _playerHealthComponent;
     private readonly HashSet<HealthComponent> _registeredHealthComponents = new();
 
@@ -97,7 +107,10 @@ public class UIManager : MonoBehaviour
             if (health == null) continue;
             health.OnHealthChanged -= OnHealthChanged;
             if (health.faction == Faction.Player)
+            {
                 health.OnDeath -= OnPlayerDeath;
+                health.OnInnerForceChanged -= OnInnerForceChanged;
+            }
         }
         _registeredHealthComponents.Clear();
 
@@ -163,6 +176,7 @@ public class UIManager : MonoBehaviour
         {
             _playerHealthComponent = health;
             health.OnDeath += OnPlayerDeath;
+            health.OnInnerForceChanged += OnInnerForceChanged;
         }
 
         Debug.Log($"[UIManager] Registered HealthComponent: '{health.gameObject.name}' (Faction: {health.faction})", health);
@@ -181,6 +195,7 @@ public class UIManager : MonoBehaviour
         if (health.faction == Faction.Player)
         {
             health.OnDeath -= OnPlayerDeath;
+            health.OnInnerForceChanged -= OnInnerForceChanged;
             if (_playerHealthComponent == health)
                 _playerHealthComponent = null;
         }
@@ -242,6 +257,90 @@ public class UIManager : MonoBehaviour
             int last = _lifeIcons.Count - 1;
             Destroy(_lifeIcons[last]);
             _lifeIcons.RemoveAt(last);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════
+    // Inner Force Icons
+    // ═══════════════════════════════════════════════════════════════════
+
+    /// <summary>
+    /// Populates <see cref="innerForceIconPrefabHolder"/> with one icon per Inner Force point.
+    /// Clears any existing icons first so it is safe to call on reset.
+    /// </summary>
+    private void BuildInnerForceIcons(int count)
+    {
+        if (innerForceIconPrefabHolder == null || innerForceIconPrefabUI == null) return;
+
+        // Kill any active colour tweens before destroying the icons
+        foreach (Image img in _innerForcePulseImages)
+            if (img != null) img.DOKill();
+
+        foreach (GameObject icon in _innerForceIcons)
+            Destroy(icon);
+        _innerForceIcons.Clear();
+        _innerForceFillImages.Clear();
+        _innerForcePulseImages.Clear();
+        _innerForcePulsing = new bool[count];
+
+        for (int i = 0; i < count; i++)
+        {
+            GameObject icon = Instantiate(innerForceIconPrefabUI, innerForceIconPrefabHolder);
+            _innerForceIcons.Add(icon);
+
+            // The Image with fillAmount sits on the root of the prefab itself
+            icon.TryGetComponent(out Image fillImage);
+            _innerForceFillImages.Add(fillImage);
+
+            // Fill-Graphic-FG is the overlay that pulses red while the bar is recharging
+            Image pulseImage = null;
+            Transform fgPulse = icon.transform.Find("Fill-Graphic-FG");
+            if (fgPulse != null) fgPulse.TryGetComponent(out pulseImage);
+            _innerForcePulseImages.Add(pulseImage);
+        }
+    }
+
+    /// <summary>
+    /// Called when the player's <see cref="HealthComponent.innerForcePoints"/> changes.
+    /// Removes icons from the end to match the new count, or rebuilds if the count grew.
+    /// </summary>
+    private void OnInnerForceChanged(float[] fills)
+    {
+        if (fills == null || innerForceIconPrefabHolder == null) return;
+
+        // Rebuild icons if the total bar count has changed
+        if (fills.Length != _innerForceIcons.Count)
+            BuildInnerForceIcons(fills.Length);
+
+        for (int i = 0; i < fills.Length; i++)
+        {
+            // Update fill bar
+            if (i < _innerForceFillImages.Count && _innerForceFillImages[i] != null)
+                _innerForceFillImages[i].fillAmount = fills[i];
+
+            // Drive the red pulse on Fill-Graphic-FG
+            if (i >= _innerForcePulseImages.Count) continue;
+            Image pulseImg = _innerForcePulseImages[i];
+            if (pulseImg == null) continue;
+
+            bool isFull     = fills[i] >= 1f;
+            bool isPulsing  = i < _innerForcePulsing.Length && _innerForcePulsing[i];
+
+            if (!isFull && !isPulsing)
+            {
+                // Bar was just spent or is mid-recharge — start red pulse loop
+                if (i < _innerForcePulsing.Length) _innerForcePulsing[i] = true;
+                pulseImg.DOKill();
+                pulseImg.color = Color.white;
+                pulseImg.DOColor(Color.red, 0.4f).SetLoops(-1, LoopType.Yoyo).SetEase(Ease.InOutSine);
+            }
+            else if (isFull && isPulsing)
+            {
+                // Bar fully recharged — stop pulsing and restore white
+                if (i < _innerForcePulsing.Length) _innerForcePulsing[i] = false;
+                pulseImg.DOKill();
+                pulseImg.color = Color.white;
+            }
         }
     }
 

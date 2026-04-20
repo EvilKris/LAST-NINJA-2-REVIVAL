@@ -5,7 +5,7 @@ using UnityEngine;
 public class FightingStyle : ScriptableObject
 {  
 
-    [Header("Clinch Config - Close Range Grappling Attacks + Throws")] 
+    [Header("Choose the fighting style type. This determines available combat mechanics (e.g. clinching).")]
     public FightingStyleType styleType; // Determines available combat mechanics (e.g. clinching)
 
     public CombatMove[] lightAttacks; // 1-3 move combo chain
@@ -48,5 +48,14 @@ public class FightingStyle : ScriptableObject
 
     [Tooltip("Local rotation offset applied to the weapon relative to the bone (Euler angles).")]
     public Vector3 weaponRotationOffset = Vector3.zero;
+
+    [Header("Sword Leap-Back (combo cancel)")]
+    [Tooltip("Upward impulse when leap-back is triggered from a combo window.")]
+    public float leapBackUpForce = 4f;
+    [Tooltip("Backward impulse when leap-back is triggered from a combo window.")]
+    public float leapBackForce = 5.5f;
+    [Tooltip("Extra gravity multiplier during the leap-back arc. Higher = heavier/snappier landing. 1 = normal gravity.")]
+    [Range(1f, 5f)]
+    public float leapBackGravityScale = 3f;
 
 }

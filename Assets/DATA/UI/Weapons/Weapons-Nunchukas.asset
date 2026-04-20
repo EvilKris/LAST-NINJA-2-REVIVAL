@@ -15,8 +15,11 @@ MonoBehaviour:
   itemName: Nunchukas
   category: 0
   icon: {fileID: 21300000, guid: 27d2205323943f94d8458ab62729367f, type: 3}
-  weaponPrefab: {fileID: 0}
-  moveset: []
+  itemPrefab: {fileID: 0}
+  fightingStyle: {fileID: 0}
+  pickupSound: {fileID: 0}
+  drawSound: {fileID: 11400000, guid: c6bea2fb3ec0b93488a1e067b5638305, type: 2}
+  count: 0
   description: 'Nunchukas
 
 '

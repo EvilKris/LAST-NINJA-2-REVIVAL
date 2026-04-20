@@ -33,7 +33,13 @@
         materializesfx,
         whooshtoss,
         shurikendraw,
-        shurikenthrow
+        shurikenthrow,
+        drawnsword,
+        drawnshuriken,
+        tossshuriken,
+        drawnnunchaku,
+        drawnstaff,
+        drawnsmokebomb
     }
     public enum MyCombatAudioLibraryMusic {
         Level1TheWastelands,

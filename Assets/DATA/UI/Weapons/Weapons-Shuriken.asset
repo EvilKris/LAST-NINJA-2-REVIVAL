@@ -18,5 +18,6 @@ MonoBehaviour:
   itemPrefab: {fileID: 0}
   fightingStyle: {fileID: 11400000, guid: beef4e4d92300f440ae1217e900a6162, type: 2}
   pickupSound: {fileID: 0}
+  drawSound: {fileID: 11400000, guid: 2dadcb20f6aad2a43a4dbfb629ef480f, type: 2}
   count: 10
   description: 'Shuriken - throwing stars '

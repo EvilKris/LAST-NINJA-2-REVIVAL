@@ -18,6 +18,7 @@ MonoBehaviour:
   itemPrefab: {fileID: 0}
   fightingStyle: {fileID: 11400000, guid: 5749c31f544363f4e9dc1b14d3b4501f, type: 2}
   pickupSound: {fileID: 0}
+  drawSound: {fileID: 11400000, guid: f860ae2d3e81e2743b480dec2f744392, type: 2}
   count: 5
   description: 'Smoke Bomb
 

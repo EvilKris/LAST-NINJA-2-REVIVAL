@@ -375,6 +375,17 @@
                 },
                 {
                     "name": "",
+                    "id": "7405d560-4a42-405a-82e2-6d08961e4878",
+                    "path": "<HID::QIXIONG Wire PS4 Controller>/button6",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Gamepad",
+                    "action": "KIButton",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "c6dbdf26-7467-476c-9633-ebd8e8b3b948",
                     "path": "<Keyboard>/w",
                     "interactions": "",

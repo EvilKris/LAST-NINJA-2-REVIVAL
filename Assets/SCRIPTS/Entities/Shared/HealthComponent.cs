@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System;
+using System.Collections;
 using JSAM;
 using DG.Tweening;
 
@@ -14,9 +15,21 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     [Header("Stats")]
     [Tooltip("Maximum health points for this entity.")]
     public float maxHealth = 100f;
-    
+
     [Tooltip("Current health points. Automatically set to maxHealth on Awake.")]
-    [SerializeField] private float currentHealth;    
+    [SerializeField] private float currentHealth;
+
+    [Tooltip("Inner Force points available to this entity. Used for KI actions. Default 3, max 5.")]
+    [Range(0, 5)]
+    public int innerForcePoints = 3;
+
+    [Tooltip("Time in seconds for each Inner Force bar to fully refill after being spent.")]
+    public float innerForceRefillTime = 10f;
+
+    /// <summary>Per-bar fill amounts (0–1). Length equals <see cref="innerForcePoints"/>.</summary>
+    private float[] _innerForceFills;
+
+  
    
     [Header("Faction & Targeting")]
     [Tooltip("Team/faction alignment. Used for friend-or-foe identification.")]
@@ -86,6 +99,25 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     public event Action<float, float, Faction> OnHealthChanged;
 
     /// <summary>
+    /// Fired when any Inner Force bar's fill amount changes.
+    /// Passes a snapshot of all bar fill values (0–1 each).
+    /// </summary>
+    public event Action<float[]> OnInnerForceChanged;
+
+    /// <summary>Number of Inner Force bars currently at full charge (fill == 1).</summary>
+    public int AvailableKI
+    {
+        get
+        {
+            if (_innerForceFills == null) return 0;
+            int count = 0;
+            foreach (float f in _innerForceFills)
+                if (f >= 1f) count++;
+            return count;
+        }
+    }
+
+    /// <summary>
     /// Initialize health to maximum value.
     /// </summary>
     private void Awake()
@@ -97,18 +129,33 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
         _deadLayerIndex  = LayerMaskToIndex(deadLayer);
         _floorLayerIndex = LayerMaskToIndex(floorLayer);
 
+        // Clamp in case the Inspector value exceeds the max
+        innerForcePoints = Mathf.Clamp(innerForcePoints, 0, 5);
+
+        _innerForceFills = new float[innerForcePoints];
+        for (int i = 0; i < _innerForceFills.Length; i++)
+            _innerForceFills[i] = 1f;
+
         ConfigureDeadLayer();
     }
 
     private void Start()
     {
-        MasterSingleton.Instance?.UIManager?.RegisterHealthComponent(this);
+        if (MasterSingleton.Instance != null && MasterSingleton.Instance.UIManager != null)
+        {
+            MasterSingleton.Instance.UIManager.RegisterHealthComponent(this);
+        }
+
+        // Notify after registration so UIManager can build icons and set initial fills
+        OnInnerForceChanged?.Invoke(_innerForceFills);
     }
 
     private void OnDestroy()
     {
         if (MasterSingleton.Instance != null && MasterSingleton.Instance.UIManager != null)
+        {
             MasterSingleton.Instance.UIManager.UnregisterHealthComponent(this);
+        }
     }
 
     /// <summary>
@@ -448,6 +495,55 @@ public class HealthComponent : MonoBehaviour, IDamageable, ITargetable
     {
         currentHealth = Mathf.Clamp(value, 0f, maxHealth);
         OnHealthChanged?.Invoke(currentHealth, maxHealth, faction);
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // Inner Force
+    // ───────────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Spends one Inner Force bar: drains the last fully-charged bar to zero and
+    /// begins refilling it over <see cref="innerForceRefillTime"/> seconds.
+    /// </summary>
+    /// <returns><c>true</c> if a bar was available and spent; <c>false</c> if all bars are depleted.</returns>
+    public bool SpendInnerForce()
+    {
+        if (_innerForceFills == null) return false;
+
+        // Find the last fully-charged bar (rightmost / bottom-most in the UI)
+        for (int i = _innerForceFills.Length - 1; i >= 0; i--)
+        {
+            if (_innerForceFills[i] >= 1f)
+            {
+                _innerForceFills[i] = 0f;
+                OnInnerForceChanged?.Invoke(_innerForceFills);
+                if (MasterSingleton.Instance != null)
+                    JSAM.AudioManager.PlaySound(MasterSingleton.Instance.PrefabBankManager.KiPowerUpUsedSound);
+                StartCoroutine(RefillInnerForce(i));
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private IEnumerator RefillInnerForce(int index)
+    {
+        float elapsed = 0f;
+        float duration = Mathf.Max(0.1f, innerForceRefillTime);
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            _innerForceFills[index] = Mathf.Clamp01(elapsed / duration);
+            OnInnerForceChanged?.Invoke(_innerForceFills);
+            yield return null;
+        }
+
+        _innerForceFills[index] = 1f;
+        OnInnerForceChanged?.Invoke(_innerForceFills);
+        if (MasterSingleton.Instance != null)
+            JSAM.AudioManager.PlaySound(MasterSingleton.Instance.PrefabBankManager.KiPowerUpAvailableSound);
     }
 
 

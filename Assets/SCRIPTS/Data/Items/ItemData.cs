@@ -20,6 +20,8 @@ public class ItemData : ScriptableObject
     [Header("Audio")]
     [Tooltip("Sound played on pickup. Leave empty to use the project-wide default in PrefabBankManager.")]
     public SoundFileObject pickupSound;
+    [Tooltip("Sound played when this item/weapon is drawn. Leave empty for no sound.")]
+    public SoundFileObject drawSound;
 
     [Header("Item Count")]
     [Tooltip("Number of this item to give the player on pickup. For stackable items like shurikens or health pickups.")]

@@ -5269,7 +5269,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9fb56e72cc945664780a5c3a118c8b98, type: 3}
   m_Name: 
   m_EditorClassIdentifier: GameScripts::AnimationStateExitNotifier
-  combatHandlerEvent: 0
+  combatHandlerEvent: 256
   movementEvent: 0
   clinchHandlerEvent: 0
   pickupDetectorEvent: 0
