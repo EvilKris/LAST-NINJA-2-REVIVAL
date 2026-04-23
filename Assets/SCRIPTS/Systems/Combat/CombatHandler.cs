@@ -76,8 +76,6 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
     #region Combo State
 
     private int _comboIndex;
-    private float _lastAttackTime;
-    private const float COMBO_RESET_TIME = 1.2f;
 
     #endregion
 
@@ -791,7 +789,10 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
             return;
         }
 
-        if (Time.time - _lastAttackTime > COMBO_RESET_TIME) _comboIndex = 0;
+        // Only continue the combo chain if the attack was pressed inside the previous
+        // move's combo window. Any press outside that window restarts from index 0.
+        if (!_canAcceptComboInput)
+            _comboIndex = 0;
 
         CombatMove move = currentStyle.lightAttacks[_comboIndex % currentStyle.lightAttacks.Length];
         PlayMove(move);
@@ -806,7 +807,6 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         }
 
         _comboIndex++;
-        _lastAttackTime = Time.time;
     }
 
     public void ExecuteHeavyAttack()
@@ -956,7 +956,9 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
         else
         {
             _overrideController[CLIP_SLOT_KEY] = move.animationClip;
-            _animator.Play("ReplaceableAttack", 0, 0f);
+            //_animator.Play("ReplaceableAttack", 0, 0f);
+            _animator.CrossFade("ReplaceableAttack", 0.05f, 0, 0f);
+
         }
         _animator.Update(0f);
     }

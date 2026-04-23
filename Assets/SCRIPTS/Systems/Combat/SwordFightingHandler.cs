@@ -85,7 +85,7 @@ public class SwordFightingHandler : MonoBehaviour, IWeaponHandler
     {
         if (_swordLayerIndex < 0 || _animator == null) return;
 
-        float targetWeight = _animator.GetBool(HashIsRunning) ? 1f : 0f;
+        float targetWeight = _animator.GetBool(HashIsRunning) && !_combat.IsBlocking ? 1f : 0f;
         if (Mathf.Approximately(_currentLayerWeight, targetWeight)) return;
 
         _currentLayerWeight = Mathf.MoveTowards(_currentLayerWeight, targetWeight, Time.deltaTime / LAYER_BLEND_DURATION);
