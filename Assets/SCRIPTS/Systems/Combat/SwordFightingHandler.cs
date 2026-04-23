@@ -4,11 +4,17 @@ public class SwordFightingHandler : MonoBehaviour, IWeaponHandler
 {
     private const string DRAW_CLIP_SLOT_KEY = "ReplaceableDrawWeapon";
     private const string DRAW_ANIM_STATE = "ReplaceableDrawWeapon";
+    private const string SWORD_LAYER_NAME = "SwordLayer";
+    private const float LAYER_BLEND_DURATION = 0.25f;
+
+    private static readonly int HashIsRunning = Animator.StringToHash("isRunningBool");
 
     private CombatHandler _combat;
     private Animator _animator;
     private GameObject _weaponInstance;
     private TrailRenderer[] _weaponTrails;
+    private int _swordLayerIndex = -1;
+    private float _currentLayerWeight;
 
     public void Initialize(CombatHandler combat)
     {
@@ -21,6 +27,9 @@ public class SwordFightingHandler : MonoBehaviour, IWeaponHandler
 
         _combat.OnHitboxOpened += OnHitboxOpened;
         _combat.OnHitboxClosed += OnHitboxClosed;
+
+        _swordLayerIndex = _animator.GetLayerIndex(SWORD_LAYER_NAME);
+        _currentLayerWeight = _swordLayerIndex >= 0 ? _animator.GetLayerWeight(_swordLayerIndex) : 0f;
     }
 
     private void SpawnWeapon()
@@ -67,6 +76,20 @@ public class SwordFightingHandler : MonoBehaviour, IWeaponHandler
             Destroy(_weaponInstance);
             _weaponInstance = null;
         }
+
+        if (_animator != null && _swordLayerIndex >= 0)
+            _animator.SetLayerWeight(_swordLayerIndex, 0f);
+    }
+
+    private void Update()
+    {
+        if (_swordLayerIndex < 0 || _animator == null) return;
+
+        float targetWeight = _animator.GetBool(HashIsRunning) ? 1f : 0f;
+        if (Mathf.Approximately(_currentLayerWeight, targetWeight)) return;
+
+        _currentLayerWeight = Mathf.MoveTowards(_currentLayerWeight, targetWeight, Time.deltaTime / LAYER_BLEND_DURATION);
+        _animator.SetLayerWeight(_swordLayerIndex, _currentLayerWeight);
     }
 
     private void Start()

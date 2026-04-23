@@ -272,6 +272,10 @@ public class CombatHandler : MonoBehaviour, IAnimationStateListener
 
     private void InitializeStyleModules()
     {
+        // Reset all non-default animator layers to 0 whenever a new style is activated.
+        for (int i = 1; i < _animator.layerCount; i++)
+            _animator.SetLayerWeight(i, 0f);
+
         if (currentStyle != null && currentStyle.clinchThrowDefault != null)
         {
             ClinchThrowAttackerClip = currentStyle.clinchThrowDefault.attackerThrowClip;

@@ -37067,7 +37067,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   thisLevelMusic: {fileID: 11400000, guid: 08661f7bde1f75e42bdad31f5747c928, type: 2}
-  playMusic: 1
+  playMusic: 0
   SetRetroMode: 1
   materializeDuration: 2
   materializeTag: Player

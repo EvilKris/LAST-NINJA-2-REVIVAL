@@ -14,8 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::FightingStyle
   styleType: 2
   lightAttacks:
+  - {fileID: 11400000, guid: 6a8c2f6dca8e6ad44b384e3df1ad8666, type: 2}
   - {fileID: 11400000, guid: c3fe25b2a2568ef4bae1786187257977, type: 2}
   - {fileID: 11400000, guid: 88a77dadefd9f5a459ffb4ce264c09ef, type: 2}
+  - {fileID: 11400000, guid: 5c74feaaaf358154cae12dc2514530c2, type: 2}
+  - {fileID: 11400000, guid: d3644be0e0ba3584a980fcd227e124a2, type: 2}
   mediumAttack: {fileID: 11400000, guid: ce031f49184b31144bbf7beffab20076, type: 2}
   heavyAttack: {fileID: 11400000, guid: 8239a880578eab749a79dbd1032c43d4, type: 2}
   specialAttack: {fileID: 0}
