@@ -29,7 +29,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
     private MovementComponent _enemyMovement;
     private HealthComponent _enemyHealth;
     private CombatHandler _enemyCombat;
-    private CombatActorBrain _enemyBrain;
+    private ActorBrain _enemyBrain;
     private float _enemyOriginalAnimSpeed;
     private float _playerOriginalAnimSpeed;
     private ParentConstraint _enemyParentConstraint;
@@ -153,7 +153,7 @@ public class ClinchHandler : MonoBehaviour, IAnimationStateListener
         _enemyCollider = target.GetComponent<Collider>();
         _enemyHealth = targetHealth;
         _enemyCombat = target.GetComponent<CombatHandler>();
-        _enemyBrain = target.GetComponent<CombatActorBrain>();
+        _enemyBrain = target.GetComponent<ActorBrain>();
 
         if (_enemyHealth != null)
             _enemyHealth.OnDeath += AbortClinchOnEnemyDeath;

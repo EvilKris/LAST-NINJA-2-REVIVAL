@@ -932,6 +932,7 @@ MonoBehaviour:
   CanBeClinched: 1
   syncAnimationSource: {fileID: 0}
   syncAnimatorSpeed: 0
+  drownSinkSpeed: 0.4
 --- !u!114 &4361029597219818444
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -945,7 +946,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CombatHandler
   currentStyle: {fileID: 11400000, guid: f0d2b02056d92274ca48f8a72c895230, type: 2}
-  ChargeCount: 2
   jumpForce: 8.5
   forwardForce: 6
   acrobaticGravityScale: 1.8
@@ -966,6 +966,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HealthComponent
   maxHealth: 100
   currentHealth: 100
+  innerForcePoints: 3
+  innerForceRefillTime: 10
   faction: 0
   lockOnPoint: {fileID: 0}
   cameraTrackingTarget: {fileID: 0}
@@ -977,6 +979,7 @@ MonoBehaviour:
   floorLayer:
     serializedVersion: 2
     m_Bits: 0
+  StunTime: 2
 --- !u!114 &4948865570488888835
 MonoBehaviour:
   m_ObjectHideFlags: 0

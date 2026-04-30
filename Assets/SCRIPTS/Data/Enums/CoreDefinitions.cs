@@ -71,6 +71,30 @@ public enum HitReactionType
 }
 
 /// <summary>
+/// Return type for ActorBrain tick methods so the brain has no dependency on Unity.Behavior.
+/// Behavior nodes map this directly to <see cref="Unity.Behavior.Action.Status"/>.
+/// </summary>
+public enum ActorBrainStatus
+{
+    Running,
+    Success,
+    Failure
+}
+
+/// <summary>
+/// High-level states for the AI CombatActorBrain state machine.
+/// Drives which Behavior Graph nodes are active for an AI-controlled actor.
+/// </summary>
+public enum ActorCombatState
+{
+    Idle,
+    Chasing,
+    Stalking,
+    Attacking,
+    Suppressed
+}
+
+/// <summary>
 /// High-level states for the CombatHandler state machine.
 /// Only one state is active at a time; transitions are handled explicitly.
 /// </summary>
