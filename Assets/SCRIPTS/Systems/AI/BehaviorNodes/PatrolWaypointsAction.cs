@@ -1,3 +1,4 @@
+using System;
 using Unity.Behavior;
 using UnityEngine;
 using Action = Unity.Behavior.Action;
@@ -16,6 +17,7 @@ using Action = Unity.Behavior.Action;
     story: "[Brain] patrols along [WayPoints]",
     category: "Last Ninja/Combat",
     id: "action_patrol_waypoints")]
+[Serializable]
 public class PatrolWaypointsAction : Action
 {
     [SerializeReference] public BlackboardVariable<ActorBrain>   Brain;
@@ -25,7 +27,7 @@ public class PatrolWaypointsAction : Action
     {
         ActorBrain brain = Brain?.Value;
         if (brain == null)                         return Status.Failure;
-        if (WayPoints?.Value == null)              return Status.Failure;
+        if (WayPoints == null || WayPoints.Value == null) return Status.Failure;
         if (WayPoints.Value.Count == 0)            return Status.Failure;
 
         brain.currentState = ActorCombatState.Idle;
@@ -37,7 +39,9 @@ public class PatrolWaypointsAction : Action
         ActorBrain brain = Brain?.Value;
         if (brain == null) return Status.Failure;
 
-        return brain.TickPatrol(WayPoints?.Value) switch
+        WaypointPath path = WayPoints?.Value;
+
+        return brain.TickPatrol(path) switch
         {
             ActorBrainStatus.Running => Status.Running,
             ActorBrainStatus.Success => Status.Success,
@@ -47,6 +51,9 @@ public class PatrolWaypointsAction : Action
 
     protected override void OnEnd()
     {
-        Brain?.Value?.StopMovement();
+        if (Brain != null && Brain.Value != null)
+        {
+            Brain.Value.StopMovement();
+        }
     }
 }

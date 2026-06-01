@@ -3050,7 +3050,7 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  motionScale: 1
+  motionScale: 1.5
   damage: 10
   isHeavy: 0
   EnemyReaction: 1

@@ -14360,7 +14360,7 @@ MonoBehaviour:
     LookAtTarget: {fileID: 0}
     CustomLookAtTarget: 0
   Lens:
-    FieldOfView: 10
+    FieldOfView: 6
     OrthographicSize: 6
     NearClipPlane: 0.1
     FarClipPlane: 1000
@@ -36898,7 +36898,7 @@ GameObject:
   - component: {fileID: 2051616064}
   - component: {fileID: 2051616065}
   m_Layer: 6
-  m_Name: WayPointPath
+  m_Name: WayPointPath-WastelandGuard1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -36912,9 +36912,9 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2051616063}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 386.2, y: 0.53167754, z: 612.61}
+  m_LocalScale: {x: 1.085, y: 1.085, z: 1.085}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1411732697}
@@ -36922,7 +36922,7 @@ Transform:
   - {fileID: 2064644492}
   - {fileID: 1875390787}
   - {fileID: 179760547}
-  m_Father: {fileID: 1304958832}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &2051616065
 MonoBehaviour:
@@ -37277,7 +37277,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   thisLevelMusic: {fileID: 11400000, guid: 08661f7bde1f75e42bdad31f5747c928, type: 2}
-  playMusic: 1
+  playMusic: 0
   SetRetroMode: 1
   materializeDuration: 2
   materializeTag: Player
@@ -38615,6 +38615,16 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7553595537639746535, guid: 9f00625944c8da040a3c0dfdb84c4449,
+        type: 3}
+      propertyPath: movementSpeed
+      value: 0.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 7553595537639746535, guid: 9f00625944c8da040a3c0dfdb84c4449,
+        type: 3}
+      propertyPath: movementAnimSpeedModifier
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 7584965410055891901, guid: 9f00625944c8da040a3c0dfdb84c4449,
         type: 3}
       propertyPath: m_Name
@@ -38628,10 +38638,6 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 1301162016}
-    - targetCorrespondingSourceObject: {fileID: 7064148311014502663, guid: 9f00625944c8da040a3c0dfdb84c4449,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2051616064}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 7584965410055891901, guid: 9f00625944c8da040a3c0dfdb84c4449,
         type: 3}
@@ -38693,17 +38699,17 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GameScripts::ActorBrain
   faction: 2
-  detectionRange: 12
+  detectionRange: 2
   targetLayers:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   stalkRange: 2.5
   chaseResumeRange: 4
   attackRange: 1.4
   clinchBreakMinTime: 0.8
   clinchBreakMaxTime: 2.5
   clinchBreakChance: 0.5
-  _waypointPathOverride: {fileID: 0}
+  _waypointPathOverride: {fileID: 2051616065}
   currentState: 0
   currentTarget: {fileID: 0}
 --- !u!1 &6922896682202117105
@@ -39105,7 +39111,6 @@ SceneRoots:
   - {fileID: 1241573312}
   - {fileID: 1056878978}
   - {fileID: 1588570656}
-  - {fileID: 2132692035}
   - {fileID: 587846163}
   - {fileID: 6911578228669481013}
   - {fileID: 1109043739}
@@ -39119,3 +39124,5 @@ SceneRoots:
   - {fileID: 34141066}
   - {fileID: 2139989369}
   - {fileID: 1582657497}
+  - {fileID: 2132692035}
+  - {fileID: 2051616064}

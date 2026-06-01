@@ -10,7 +10,7 @@ public class MovementComponent : MonoBehaviour, IAnimationStateListener, ISMBRec
 
     [Header("Speed Modifiers")]
     [Tooltip("Controls movement and rotation speed. 1.0 = normal, 0.5 = half speed, 2.0 = double speed.")]
-    [Range(1f, 10f)]
+    [Range(0.1f, 10f)]
     public float movementSpeed = 5f;
     [Range(0.1f, 2f)]
     [Tooltip("Modifies the speed of movement animations (walking, running). 1.0 = normal, 0.5 = half speed, 2.0 = double speed.")]

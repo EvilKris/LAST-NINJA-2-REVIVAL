@@ -30,8 +30,9 @@ public class ActorBrain : MonoBehaviour
     public Faction faction = Faction.Enemy;
 
     [Header("Detection")]
-    [Tooltip("Radius within which this actor will detect and acquire a target.")]
-    public float detectionRange = 12f;
+    [Tooltip("Radius within which this actor detects a target. Set ~2 units above stalkRange " +
+             "so the enemy notices the player just before closing to stalk distance.")]
+    public float detectionRange = 4.5f;
 
     [Tooltip("Layer mask used for the detection overlap sphere. Should include the Player and Companion layers.")]
     public LayerMask targetLayers;
@@ -351,14 +352,21 @@ public class ActorBrain : MonoBehaviour
 #if UNITY_EDITOR
     private void OnDrawGizmosSelected()
     {
+        // Detection — enemy notices player inside this ring
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, detectionRange);
 
+        // Stalk — enemy stops chasing and begins circling inside this ring
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(transform.position, stalkRange);
 
+        // Chase-resume — enemy resumes chasing if target moves outside this ring
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, chaseResumeRange);
+
+        // Attack — enemy can land a hit inside this ring
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, attackRange);
     }
 #endif
 }
